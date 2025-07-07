@@ -10,6 +10,9 @@ from tools.ScrapeWebsiteToolEnhanced import ScrapeWebsiteToolEnhanced
 from tools.ScrapflyScrapeWebsiteTool import ScrapflyScrapeWebsiteTool
 
 from tools.DuckDuckGoSearchTool import DuckDuckGoSearchTool
+from tools.TelegramBotTool import TelegramBotTool
+from tools.PDFJournalTool import PDFJournalTool
+from tools.HealthDataParserTool import HealthDataParserTool
 
 from langchain_community.tools import YahooFinanceNewsTool
 
@@ -396,6 +399,38 @@ class MyScrapflyScrapeWebsiteTool(MyTool):
             api_key=api_key
         )
 
+class MyTelegramBotTool(MyTool):
+    def __init__(self, tool_id=None, bot_token=None):
+        parameters = {
+            'bot_token': {'mandatory': True}
+        }
+        super().__init__(tool_id, 'TelegramBotTool', "Tool to interact with Telegram bot - send messages, files, and receive updates", parameters, bot_token=bot_token)
+
+    def create_tool(self) -> TelegramBotTool:
+        return TelegramBotTool(
+            bot_token=self.parameters.get('bot_token')
+        )
+
+class MyPDFJournalTool(MyTool):
+    def __init__(self, tool_id=None, journals_dir=None):
+        parameters = {
+            'journals_dir': {'mandatory': False}
+        }
+        super().__init__(tool_id, 'PDFJournalTool', "Tool to manage persistent PDF health journals - append entries and maintain state", parameters, journals_dir=journals_dir)
+
+    def create_tool(self) -> PDFJournalTool:
+        return PDFJournalTool(
+            journals_dir=self.parameters.get('journals_dir') if self.parameters.get('journals_dir') else "journals"
+        )
+
+class MyHealthDataParserTool(MyTool):
+    def __init__(self, tool_id=None):
+        parameters = {}
+        super().__init__(tool_id, 'HealthDataParserTool', "Parse natural language health messages into structured data (weight, calories, macros, workouts, fasting)", parameters)
+
+    def create_tool(self) -> HealthDataParserTool:
+        return HealthDataParserTool()
+
 # Register all tools here
 TOOL_CLASSES = {
     'DuckDuckGoSearchTool': MyDuckDuckGoSearchTool,
@@ -429,5 +464,10 @@ TOOL_CLASSES = {
     'JSONSearchTool': MyJSONSearchTool,
     'MDXSearchTool': MyMDXSearchTool,
     'PDFSearchTool': MyPDFSearchTool,
-    'PGSearchTool': MyPGSearchTool    
+    'PGSearchTool': MyPGSearchTool,
+    
+    # Health tracking tools
+    'TelegramBotTool': MyTelegramBotTool,
+    'PDFJournalTool': MyPDFJournalTool,
+    'HealthDataParserTool': MyHealthDataParserTool
 }

@@ -16,6 +16,33 @@ from tools.HealthDataParserTool import HealthDataParserTool
 
 from langchain_community.tools import YahooFinanceNewsTool
 
+try:
+    from crewai_tools import ReadPdfTextTool
+except ImportError:
+    # Fallback stub so the rest of the app can still work even if crewai_tools
+    # is missing this specific helper.  Provides a minimal no-op interface that
+    # just returns the raw PDF bytes (or an error message) when invoked.
+    class ReadPdfTextTool:  # type: ignore
+        def __init__(self, file_path=None):
+            self.file_path = file_path
+
+        def __call__(self, *args, **kwargs):  # Streamlit and CrewAI expect tools to be callable
+            try:
+                import PyPDF2
+                if self.file_path and os.path.exists(self.file_path):
+                    with open(self.file_path, "rb") as f:
+                        reader = PyPDF2.PdfReader(f)
+                        return "\n".join(page.extract_text() or "" for page in reader.pages)
+                return "[ReadPdfTextTool] File not found: {}".format(self.file_path)
+            except Exception as e:
+                return f"[ReadPdfTextTool] Error reading PDF – {e}"
+
+        # CrewAI tools may look for a run() method – alias it to __call__ for safety
+        run = __call__
+
+    # Indicate to the rest of the module that a fallback is in use
+    ReadPdfTextTool._is_stub = True  # type: ignore
+
 class MyTool:
     def __init__(self, tool_id, name, description, parameters, **kwargs):
         self.tool_id = tool_id or rnd_id()
@@ -431,6 +458,60 @@ class MyHealthDataParserTool(MyTool):
     def create_tool(self) -> HealthDataParserTool:
         return HealthDataParserTool()
 
+class MyMCPServerAdapterTool(MyTool):
+    def __init__(self, tool_id=None, server_url=None, transport=None, tool_names=None):
+        """A wrapper around crewai_tools.MCPServerAdapter so it can be enabled via the Tools UI.
+        Parameters
+        ----------
+        server_url : str (mandatory)
+            URL of the MCP server (e.g. http://localhost:8001/mcp).
+        transport : str, optional
+            Transport mechanism (stdio, sse, streamable-http). Defaults to MCP default.
+        tool_names : str, optional
+            Comma-separated list of tool names to whitelist (leave blank to load all).
+        """
+        parameters = {
+            'server_url': {'mandatory': True},
+            'transport': {'mandatory': False},
+            'tool_names': {'mandatory': False}
+        }
+        super().__init__(
+            tool_id,
+            'MCPServerAdapter',
+            "Connect to an MCP server and expose its tools inside CrewAI.",
+            parameters,
+            server_url=server_url,
+            transport=transport,
+            tool_names=tool_names
+        )
+
+    def create_tool(self):
+        from crewai_tools import MCPServerAdapter
+        # Build server_params dict expected by MCPServerAdapter
+        server_params = {
+            'url': self.parameters.get('server_url')
+        }
+        if self.parameters.get('transport'):
+            server_params['transport'] = self.parameters.get('transport')
+
+        # Handle optional filtering of tool names (comma separated)
+        tool_names_raw = self.parameters.get('tool_names')
+        if tool_names_raw:
+            tool_filters = [name.strip() for name in tool_names_raw.split(',') if name.strip()]
+            return MCPServerAdapter(server_params, *tool_filters)
+        # No filters – expose all tools
+        return MCPServerAdapter(server_params)
+
+class MyReadPdfTextTool(MyTool):
+    def __init__(self, tool_id=None, file_path=None):
+        parameters = {
+            'file_path': {'mandatory': True}
+        }
+        super().__init__(tool_id, 'ReadPdfTextTool', "Read text from a PDF file (no embeddings).", parameters, file_path=file_path)
+
+    def create_tool(self) -> ReadPdfTextTool:
+        return ReadPdfTextTool(file_path=self.parameters.get('file_path'))
+
 # Register all tools here
 TOOL_CLASSES = {
     'DuckDuckGoSearchTool': MyDuckDuckGoSearchTool,
@@ -469,5 +550,7 @@ TOOL_CLASSES = {
     # Health tracking tools
     'TelegramBotTool': MyTelegramBotTool,
     'PDFJournalTool': MyPDFJournalTool,
-    'HealthDataParserTool': MyHealthDataParserTool
+    'HealthDataParserTool': MyHealthDataParserTool,
+    'MCPServerAdapter': MyMCPServerAdapterTool,
+    'ReadPdfTextTool': MyReadPdfTextTool
 }

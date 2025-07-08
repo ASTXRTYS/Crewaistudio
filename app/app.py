@@ -59,6 +59,12 @@ def main():
             print(f"Error initializing AgentOps: {str(e)}")            
         
     db_utils.initialize_db()
+    # Load configuration from YAML into the database before pulling it into session state
+    try:
+        from config.config_loader import load_config_to_db
+        load_config_to_db()
+    except Exception as e:
+        print(f"YAML config load skipped/failed: {e}")
     load_data()
     draw_sidebar()
     PageCrewRun.maintain_session_state() #this will persist the session state for the crew run page so crew run can be run in a separate thread

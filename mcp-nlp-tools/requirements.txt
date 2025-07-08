@@ -1,0 +1,6 @@
+fastmcp==2.7.0
+torch==2.7.1
+transformers==4.53.1
+sentence-transformers==2.7.0
+dateparser==1.2.0
+scikit-learn==1.7.0 

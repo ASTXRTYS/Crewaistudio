@@ -1,0 +1,168 @@
+- id: Wd245pRF
+  entity_type: tool
+  data:
+    name: TelegramBotTool
+    description: Tool to interact with Telegram bot - send messages, files, and receive
+      updates
+    parameters:
+      bot_token: null
+- id: C_VnWLifDr
+  entity_type: crew
+  data:
+    name: Auren
+    process: hierarchical
+    verbose: true
+    agent_ids: []
+    task_ids: []
+    memory: true
+    cache: true
+    planning: true
+    max_rpm: 1000
+    manager_llm: 'OpenAI: gpt-4o-mini'
+    manager_agent_id: null
+    created_at: '2025-07-06T23:21:14.012749'
+    knowledge_source_ids: []
+- id: KS_sIFUFJWe
+  entity_type: knowledge_source
+  data:
+    name: Journal PDF
+    source_type: pdf
+    source_path: ''
+    content: ''
+    metadata: {}
+    chunk_size: 4000
+    chunk_overlap: 200
+    created_at: '2025-07-06T23:28:42.342845'
+
+# --- Added tools for Auren Intake Concierge ---
+- id: T_HealthParser
+  entity_type: tool
+  data:
+    name: HealthDataParserTool
+    description: Parse natural language health messages into structured data.
+    parameters: {}
+
+- id: T_AliasFileRead
+  entity_type: tool
+  data:
+    name: FileReadTool
+    description: Read the user context JSON file.
+    parameters:
+      file_path: "user_context.json"
+
+- id: T_AliasFileWrite
+  entity_type: tool
+  data:
+    name: CustomFileWriteTool
+    description: Write/update the user context JSON file.
+    parameters:
+      base_folder: "."
+      filename: "user_context.json"
+
+- id: T_ProtocolRead
+  entity_type: tool
+  data:
+    name: FileReadTool
+    description: Read the static AUREN protocol JSON.
+    parameters:
+      file_path: "protocol_static.json"
+
+- id: T_ReadPdf
+  entity_type: tool
+  data:
+    name: ReadPdfTextTool
+    description: Read-only access to the history PDF.
+    parameters:
+      file_path: "history/auren_history.pdf"
+
+# --- Auren Intake Concierge Agent ---
+- id: A_intake
+  entity_type: agent
+  data:
+    role: AUREN Intake Concierge
+    backstory: >
+      Human-facing gateway for the AUREN Protocol. Parses free-form chat into
+      structured logs, enforces safety / escalation, adapts its confidence
+      thresholds, and schedules weekly progress reviews.
+
+    ########################################
+    # Memory / context files
+    ########################################
+    memory_files:
+      - protocol_static.json
+      - user_context.json
+      - learning_state.json
+
+    ########################################
+    # Scheduled triggers
+    ########################################
+    schedule_triggers:
+      - id: weekly_progress_review
+        type: interval
+        every_days: 7
+        at_local_time: "19:00"
+        action: emit_weekly_review
+
+    ########################################
+    # Primary goal / logic
+    ########################################
+    goal: |
+      1. **Load memory files** at session start.
+         • If user_context.json missing, create: {"aliases": {}, "tz_history": {}, "synonym_usage": {}}
+
+      2. **Channel & time-zone detection**
+         • Infer channel_id & sender_tz from metadata.
+         • If sender_tz differs from tz_history[channel_id], update record.
+         • Default `date` = today in sender_tz (fallback EDT).
+
+      3. **Parse required metrics** from free-form text
+         • date · weight_lbs · calories_kcal
+         • Any other detected info → extras{}.
+
+      4. **Alias & synonym handling**
+         • Map nicknames via aliases.
+         • Increment synonym_usage[token] for unknown tokens.
+           – When a token is confirmed twice, auto-promote it to aliases.
+
+      5. **Confidence gate** (thresholds in learning_state.json)
+         • score ≥ 0.80 → accept silently
+         • 0.60 – 0.79 → quick Y/N confirmation prompt
+         • < 0.60      → open clarification request
+
+      6. **Safety escalation**
+         • On trigger (“safety concerns”, etc.):
+           – Send HIGH-PRIORITY Telegram alert.
+           – HALT downstream logging until user sends `/acknowledge`.
+
+      7. **Emit actions**
+         a) Confirmed daily entry → package JSON (schema v1.0) for downstream agent.
+         b) Weekly progress review trigger (`emit_weekly_review`):
+            • Compile last-7-days data via Storage agent.
+            • Request one-page PDF summary from Bookkeeper.
+            • Send summary link to user.
+
+      8. **Adaptive threshold tuning**
+         • After every 10 confirmed entries, evaluate prompt rate.
+         • Adjust confidence_thresholds.high ±0.05 (bounds 0.50-0.95).
+         • `/reset_thresholds` restores defaults {high:0.80, medium:0.60, low:0.40}.
+
+      9. **Persist new aliases** to user_context.json whenever a token is auto-promoted.
+
+    ########################################
+    # Delegation & verbosity
+    ########################################
+    allow_delegation: false
+    verbose: true
+
+    llm_provider_model: "OpenAI: gpt-4o-mini"
+    cache: true
+    temperature: 0.2
+    max_iter: 12
+    tool_ids:
+      - Wd245pRF          # TelegramBotTool
+      - T_HealthParser
+      - T_AliasFileRead
+      - T_AliasFileWrite
+      - T_ProtocolRead
+      - T_ReadPdf
+    knowledge_source_ids: []

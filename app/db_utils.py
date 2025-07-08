@@ -1,7 +1,17 @@
 import sqlite3
 import os
 import json
-from my_tools import TOOL_CLASSES
+
+# Import tool registry with fallback to avoid circular-import issues during early app startup
+try:
+    from my_tools import TOOL_CLASSES as _TOOL_CLASSES  # type: ignore  # root-level module
+except (ImportError, AttributeError):
+    # Fallback to the module inside the app package
+    from app.my_tools import TOOL_CLASSES as _TOOL_CLASSES  # type: ignore
+
+# Re-export under the expected name so the rest of the module can use it without mypy/flake errors
+TOOL_CLASSES = _TOOL_CLASSES
+
 from sqlalchemy import create_engine, text
 
 # If you have an environment variable DB_URL for Postgres, use that. 

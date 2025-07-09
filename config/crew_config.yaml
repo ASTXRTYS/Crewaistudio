@@ -9,18 +9,18 @@
 - id: C_VnWLifDr
   entity_type: crew
   data:
-    name: Auren
-    process: hierarchical
+    name: Auren Elite Performance
+    process: sequential
     verbose: true
-    agent_ids: []
-    task_ids: []
+    agent_ids: [ui_agent]
+    task_ids: [ui_intake_task]
     memory: true
     cache: true
     planning: true
     max_rpm: 1000
-    manager_llm: 'OpenAI: gpt-4o-mini'
+    manager_llm: 'OpenAI: gpt-4o'
     manager_agent_id: null
-    created_at: '2025-07-06T23:21:14.012749'
+    created_at: '2025-07-08T21:10:00.000000'
     knowledge_source_ids: []
 - id: KS_sIFUFJWe
   entity_type: knowledge_source
@@ -34,7 +34,31 @@
     chunk_overlap: 200
     created_at: '2025-07-06T23:28:42.342845'
 
-# --- Added tools for Auren Intake Concierge ---
+# --- Enhanced Tools for Elite Performance UI Agent ---
+- id: T_WhatsAppWebhook
+  entity_type: tool
+  data:
+    name: TelegramBotTool
+    description: WhatsApp webhook functionality (using Telegram as proxy)
+    parameters:
+      bot_token: null
+
+- id: T_JSONLogger
+  entity_type: tool
+  data:
+    name: CustomFileWriteTool
+    description: JSON logging functionality for structured data capture
+    parameters:
+      base_folder: "logs"
+      filename: "athlete_interactions.json"
+
+- id: T_IntentClassifier
+  entity_type: tool
+  data:
+    name: HealthDataParserTool
+    description: Intent classification and athlete request parsing
+    parameters: {}
+
 - id: T_HealthParser
   entity_type: tool
   data:
@@ -75,94 +99,83 @@
     parameters:
       file_path: "history/auren_history.pdf"
 
-# --- Auren Intake Concierge Agent ---
-- id: A_intake
+# --- Enhanced UI Agent for Elite Performance ---
+- id: ui_agent
   entity_type: agent
   data:
-    role: AUREN Intake Concierge
-    backstory: >
-      Human-facing gateway for the AUREN Protocol. Parses free-form chat into
-      structured logs, enforces safety / escalation, adapts its confidence
-      thresholds, and schedules weekly progress reviews.
-
-    ########################################
-    # Memory / context files
-    ########################################
-    memory_files:
-      - protocol_static.json
-      - user_context.json
-      - learning_state.json
-
-    ########################################
-    # Scheduled triggers
-    ########################################
-    schedule_triggers:
-      - id: weekly_progress_review
-        type: interval
-        every_days: 7
-        at_local_time: "19:00"
-        action: emit_weekly_review
-
-    ########################################
-    # Primary goal / logic
-    ########################################
-    goal: |
-      1. **Load memory files** at session start.
-         • If user_context.json missing, create: {"aliases": {}, "tz_history": {}, "synonym_usage": {}}
-
-      2. **Channel & time-zone detection**
-         • Infer channel_id & sender_tz from metadata.
-         • If sender_tz differs from tz_history[channel_id], update record.
-         • Default `date` = today in sender_tz (fallback EDT).
-
-      3. **Parse required metrics** from free-form text
-         • date · weight_lbs · calories_kcal
-         • Any other detected info → extras{}.
-
-      4. **Alias & synonym handling**
-         • Map nicknames via aliases.
-         • Increment synonym_usage[token] for unknown tokens.
-           – When a token is confirmed twice, auto-promote it to aliases.
-
-      5. **Confidence gate** (thresholds in learning_state.json)
-         • score ≥ 0.80 → accept silently
-         • 0.60 – 0.79 → quick Y/N confirmation prompt
-         • < 0.60      → open clarification request
-
-      6. **Safety escalation**
-         • On trigger (“safety concerns”, etc.):
-           – Send HIGH-PRIORITY Telegram alert.
-           – HALT downstream logging until user sends `/acknowledge`.
-
-      7. **Emit actions**
-         a) Confirmed daily entry → package JSON (schema v1.0) for downstream agent.
-         b) Weekly progress review trigger (`emit_weekly_review`):
-            • Compile last-7-days data via Storage agent.
-            • Request one-page PDF summary from Bookkeeper.
-            • Send summary link to user.
-
-      8. **Adaptive threshold tuning**
-         • After every 10 confirmed entries, evaluate prompt rate.
-         • Adjust confidence_thresholds.high ±0.05 (bounds 0.50-0.95).
-         • `/reset_thresholds` restores defaults {high:0.80, medium:0.60, low:0.40}.
-
-      9. **Persist new aliases** to user_context.json whenever a token is auto-promoted.
-
-    ########################################
-    # Delegation & verbosity
-    ########################################
-    allow_delegation: false
+    role: Elite Performance Interface Specialist
+    goal: >-
+      Capture athlete intent with zero friction, normalize all inputs into structured data,
+      and seamlessly dispatch optimization requests to specialist agents while maintaining
+      conversational flow and athlete engagement
+    backstory: >-
+      You are the first point of contact for world-class athletes seeking peak performance.
+      You understand that every interaction could impact training, recovery, or competition prep.
+      You excel at reading between the lines—whether an athlete sends "feeling tired" or uploads
+      a training video, you intuitively categorize the request and route it to the right specialist.
+      You maintain professional warmth while being precise about data collection.
+    
+    llm_provider_model: "OpenAI: gpt-4o"
     verbose: true
-
-    llm_provider_model: "OpenAI: gpt-4o-mini"
+    max_iter: 1
+    allow_delegation: false
     cache: true
-    temperature: 0.2
-    max_iter: 12
+    temperature: 0.3
+    
+    # Enhanced configuration parameters
+    respect_context_window: true
+    inject_date: true
+    date_format: "%Y-%m-%d %H:%M:%S UTC"
+    reasoning: true
+    max_reasoning_attempts: 2
+    
     tool_ids:
-      - Wd245pRF          # TelegramBotTool
-      - T_HealthParser
-      - T_AliasFileRead
-      - T_AliasFileWrite
-      - T_ProtocolRead
-      - T_ReadPdf
+      - T_WhatsAppWebhook  # WhatsAppWebhookTool
+      - T_JSONLogger       # JSONLoggerTool
+      - T_IntentClassifier # IntentClassifierTool
     knowledge_source_ids: []
+
+# --- Enhanced UI Intake Task for Elite Performance ---
+- id: ui_intake_task
+  entity_type: task
+  data:
+    description: >-
+      Process incoming athlete communication through WhatsApp webhook.
+      
+      WORKFLOW:
+      1. Extract message content, media attachments, and metadata
+      2. Classify intent using these categories:
+         - TRAINING_LOG (workout data, performance metrics)
+         - NUTRITION_QUERY (meal logging, dietary questions)  
+         - RECOVERY_STATUS (sleep, fatigue, readiness)
+         - BODY_COMPOSITION (progress photos, measurements)
+         - SUPPLEMENT_PROTOCOL (peptide scheduling, dosing questions)
+         - GENERAL_INQUIRY (questions, scheduling, misc)
+      3. Normalize data into standardized JSON schema
+      4. Log structured entry with intent classification
+      5. Generate immediate acknowledgment response
+      6. Dispatch to appropriate specialist agent via task delegation
+
+      CONSTRAINTS:
+      - Respond within 3 seconds for acknowledgment
+      - Maintain athlete confidentiality (no names in logs)
+      - Handle multimedia gracefully (photos, voice, video)
+      - Preserve original message context for specialist agents
+    expected_output: >-
+      JSON object containing:
+      {
+        "session_id": "uuid4",
+        "timestamp": "ISO datetime", 
+        "athlete_id": "hashed_identifier",
+        "intent_category": "enum_value",
+        "confidence_score": 0.0-1.0,
+        "extracted_data": {},
+        "media_attachments": [],
+        "acknowledgment_sent": "message_text",
+        "next_agent_dispatch": "agent_role"
+      }
+    agent_id: ui_agent
+    async_execution: false
+    context_from_async_tasks_ids: []
+    context_from_sync_tasks_ids: []
+    created_at: "2025-07-08T21:05:00.000000"

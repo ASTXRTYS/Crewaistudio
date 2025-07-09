@@ -13,6 +13,9 @@ from tools.DuckDuckGoSearchTool import DuckDuckGoSearchTool
 from tools.TelegramBotTool import TelegramBotTool
 from tools.PDFJournalTool import PDFJournalTool
 from tools.HealthDataParserTool import HealthDataParserTool
+from tools.WhatsAppWebhookTool import WhatsAppWebhookTool
+from tools.JSONLoggerTool import JSONLoggerTool
+from tools.IntentClassifierTool import IntentClassifierTool
 
 from langchain_community.tools import YahooFinanceNewsTool
 
@@ -458,6 +461,30 @@ class MyHealthDataParserTool(MyTool):
     def create_tool(self) -> HealthDataParserTool:
         return HealthDataParserTool()
 
+class MyWhatsAppWebhookTool(MyTool):
+    def __init__(self, tool_id=None):
+        parameters = {}
+        super().__init__(tool_id, 'WhatsAppWebhookTool', "Process WhatsApp Business API webhooks with message parsing, media download, and response delivery", parameters)
+
+    def create_tool(self) -> WhatsAppWebhookTool:
+        return WhatsAppWebhookTool()
+
+class MyJSONLoggerTool(MyTool):
+    def __init__(self, tool_id=None):
+        parameters = {}
+        super().__init__(tool_id, 'JSONLoggerTool', "Log structured data to JSON files with timestamps and session tracking", parameters)
+
+    def create_tool(self) -> JSONLoggerTool:
+        return JSONLoggerTool()
+
+class MyIntentClassifierTool(MyTool):
+    def __init__(self, tool_id=None):
+        parameters = {}
+        super().__init__(tool_id, 'IntentClassifierTool', "Classify athlete messages into intent categories (TRAINING_LOG, NUTRITION_QUERY, etc.)", parameters)
+
+    def create_tool(self) -> IntentClassifierTool:
+        return IntentClassifierTool()
+
 class MyMCPServerAdapterTool(MyTool):
     def __init__(self, tool_id=None, server_url=None, transport=None, tool_names=None):
         """A wrapper around crewai_tools.MCPServerAdapter so it can be enabled via the Tools UI.
@@ -551,6 +578,9 @@ TOOL_CLASSES = {
     'TelegramBotTool': MyTelegramBotTool,
     'PDFJournalTool': MyPDFJournalTool,
     'HealthDataParserTool': MyHealthDataParserTool,
+    'WhatsAppWebhookTool': MyWhatsAppWebhookTool,
+    'JSONLoggerTool': MyJSONLoggerTool,
+    'IntentClassifierTool': MyIntentClassifierTool,
     'MCPServerAdapter': MyMCPServerAdapterTool,
     'ReadPdfTextTool': MyReadPdfTextTool
 }

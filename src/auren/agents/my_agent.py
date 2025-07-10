@@ -1,5 +1,7 @@
 import os
 import sys
+from auren.repositories import Database, AgentRepository
+
 
 # Ensure app directory in path for imports of utils, db_utils, llms
 APP_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, 'app'))

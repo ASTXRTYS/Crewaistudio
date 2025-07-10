@@ -38,39 +38,36 @@
 - id: T_WhatsAppWebhook
   entity_type: tool
   data:
-    name: TelegramBotTool
-    description: WhatsApp webhook functionality (using Telegram as proxy)
-    parameters:
-      bot_token: null
+    name: WhatsAppWebhookTool
+    description: Process WhatsApp Business API webhooks with message parsing, media download, and response delivery
+    parameters: {}
 
 - id: T_JSONLogger
   entity_type: tool
   data:
-    name: CustomFileWriteTool
-    description: JSON logging functionality for structured data capture
-    parameters:
-      base_folder: "logs"
-      filename: "athlete_interactions.json"
+    name: JSONLoggerTool
+    description: Log structured data to JSON files with timestamps and session tracking
+    parameters: {}
 
 - id: T_IntentClassifier
   entity_type: tool
   data:
-    name: HealthDataParserTool
-    description: Intent classification and athlete request parsing
+    name: IntentClassifierTool
+    description: Classify athlete messages into intent categories (TRAINING_LOG, NUTRITION_QUERY, etc.)
     parameters: {}
 
 - id: T_HealthParser
   entity_type: tool
   data:
     name: HealthDataParserTool
-    description: Parse natural language health messages into structured data.
+    description: Parse natural language health messages into structured data (weight, calories, macros, workouts, fasting)
     parameters: {}
 
 - id: T_AliasFileRead
   entity_type: tool
   data:
     name: FileReadTool
-    description: Read the user context JSON file.
+    description: Read the user context JSON file
     parameters:
       file_path: "user_context.json"
 
@@ -78,7 +75,7 @@
   entity_type: tool
   data:
     name: CustomFileWriteTool
-    description: Write/update the user context JSON file.
+    description: Write/update the user context JSON file
     parameters:
       base_folder: "."
       filename: "user_context.json"
@@ -87,7 +84,7 @@
   entity_type: tool
   data:
     name: FileReadTool
-    description: Read the static AUREN protocol JSON.
+    description: Read the static AUREN protocol JSON
     parameters:
       file_path: "protocol_static.json"
 
@@ -95,7 +92,7 @@
   entity_type: tool
   data:
     name: ReadPdfTextTool
-    description: Read-only access to the history PDF.
+    description: Read-only access to the history PDF
     parameters:
       file_path: "history/auren_history.pdf"
 
@@ -133,6 +130,11 @@
       - T_WhatsAppWebhook  # WhatsAppWebhookTool
       - T_JSONLogger       # JSONLoggerTool
       - T_IntentClassifier # IntentClassifierTool
+      - T_HealthParser     # HealthDataParserTool
+      - T_AliasFileRead    # FileReadTool (user context)
+      - T_AliasFileWrite   # CustomFileWriteTool (user context)
+      - T_ProtocolRead     # FileReadTool (protocol)
+      - T_ReadPdf          # ReadPdfTextTool (history)
     knowledge_source_ids: []
 
 # --- Enhanced UI Intake Task for Elite Performance ---

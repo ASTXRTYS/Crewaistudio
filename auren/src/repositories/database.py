@@ -2,12 +2,13 @@ import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
 
+
 class Database:
     def __init__(self, db_path: str = "data/auren.db"):
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
-    
+
     @contextmanager
     def get_connection(self):
         conn = sqlite3.connect(self.db_path)
@@ -20,10 +21,11 @@ class Database:
             raise
         finally:
             conn.close()
-    
+
     def _init_db(self):
         with self.get_connection() as conn:
-            conn.executescript('''
+            conn.executescript(
+                """
                 CREATE TABLE IF NOT EXISTS agents (
                     id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
@@ -60,4 +62,5 @@ class Database:
                 CREATE INDEX IF NOT EXISTS idx_agents_name ON agents(name);
                 CREATE INDEX IF NOT EXISTS idx_tasks_agent_id ON tasks(agent_id);
                 CREATE INDEX IF NOT EXISTS idx_crews_name ON crews(name);
-            ''')
+            """
+            )

@@ -11,13 +11,13 @@ This file should come **before** any other code attempts to import the
 
 from importlib import import_module as _imp
 
-_app_utils = _imp('app.utils')
+_app_utils = _imp("app.utils")
 
 # Re-export public names
-__all__ = getattr(_app_utils, '__all__', dir(_app_utils))
+__all__ = getattr(_app_utils, "__all__", dir(_app_utils))
 
 for _name in __all__:
     globals()[_name] = getattr(_app_utils, _name)
 
 # Clean-up namespace
-del _imp, _app_utils, _name 
+del _imp, _app_utils, _name

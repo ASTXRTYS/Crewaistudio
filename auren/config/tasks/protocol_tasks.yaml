@@ -1,0 +1,41 @@
+tasks:
+  user_query_routing:
+    description: |
+      Analyze the user's message to determine which protocol(s) and specialist(s) 
+      should handle the query. Consider:
+      - Keywords related to peptides, dosing, side effects → Journal Protocol
+      - Keywords related to face, ptosis, inflammation, symmetry → MIRAGE Protocol
+      - Keywords related to photos, media, visual tracking → VISOR Protocol
+      - General questions → UI Orchestrator provides warm guidance
+    expected_output: |
+      A routing decision specifying:
+      1. Primary protocol to use (journal/mirage/visor/general)
+      2. Specialist agent(s) to engage
+      3. Brief reasoning for the routing decision
+    agent: ui_orchestrator
+
+  protocol_analysis:
+    description: |
+      Based on the routing decision, analyze the relevant protocol data and provide
+      a comprehensive response. Pull actual data from the user's protocols and
+      provide specific, actionable insights.
+    expected_output: |
+      A detailed analysis including:
+      1. Current status from relevant protocol(s)
+      2. Trends and patterns identified
+      3. Specific recommendations
+      4. Any alerts or concerns
+    agent: varies_by_protocol
+
+  synthesis_response:
+    description: |
+      Synthesize all gathered information into a warm, encouraging response that
+      maintains AUREN's personality while delivering clinical insights. Ensure the
+      response is actionable and supportive.
+    expected_output: |
+      A final response that:
+      1. Addresses the user's question directly
+      2. Provides data-backed insights
+      3. Offers clear next steps
+      4. Maintains warm, encouraging tone
+    agent: ui_orchestrator 

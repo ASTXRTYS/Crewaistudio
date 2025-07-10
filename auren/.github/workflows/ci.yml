@@ -1,0 +1,40 @@
+name: AUREN CI Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+    
+    - name: Run quality checks
+      run: |
+        black src/ tests/ --check
+        mypy src/ --ignore-missing-imports
+        bandit -r src/ -ll
+        flake8 src/
+    
+    - name: Run tests
+      run: |
+        pytest tests/ --cov=src --cov-fail-under=80
+    
+    - name: Build Docker image
+      run: |
+        docker build -t auren:test .
+        docker run --rm auren:test python -c "import src.app" 

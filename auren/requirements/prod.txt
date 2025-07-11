@@ -1,0 +1,5 @@
+-r base.txt
+-r ai.txt
+-r cv.txt
+prometheus-client==0.19.0
+structlog==24.1.0

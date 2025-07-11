@@ -121,7 +121,7 @@ Rather than acting as a preprocessing step, RAG becomes a tool the agent intenti
 
 ⸻
 
-#### 🔄 The Agentic Reasoning Loop
+#### 🔄  Reasoning Loop
 
 For a complex query, the agent executes the following loop:
   1. **Plan**  

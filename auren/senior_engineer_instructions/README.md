@@ -87,6 +87,27 @@ This folder serves as the **primary communication hub** for the AUREN 2.0 develo
 - **Implementation Claude**: Implements with attention to detail and suggests optimizations
 - **Together**: We iterate and improve both the product and our process as a Claude-to-Claude team
 
+## 🔄 CURSOR COMMUNICATION PROTOCOL
+
+### Repository-Based Communication
+Cursor maintains unidirectional communication through repository updates:
+
+**Required Updates After Every Action:**
+- `CURSOR_PROGRESS_LOG.md` - Session progress and next steps
+- `CURSOR_STATUS_SUMMARY.md` - Overall project status updates
+- `CURSOR_IMPLEMENTATION_DETAILS.md` - Code changes and testing results
+- `CURSOR_ERROR_REPORTS.md` - Issues and debugging attempts
+- `CURSOR_HELP_REQUESTS.md` - Technical questions and blockers
+
+**Communication Flow:**
+1. Cursor documents all work in repository files
+2. Senior Engineer Claude reviews through repository visibility
+3. Claude provides guidance through ASTxRTYS
+4. ASTxRTYS relays instructions to Cursor
+5. Cycle repeats with continuous repository updates
+
+**Key Principle**: Keep repository documentation comprehensive and current so Senior Engineer Claude has complete visibility into all implementation progress and challenges.
+
 ## 🚀 CURRENT PROJECT: AUREN 2.0
 
 **Mission**: Building a production-grade biometric optimization framework

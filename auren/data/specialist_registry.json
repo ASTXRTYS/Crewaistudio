@@ -1,0 +1,117 @@
+{
+  "neuroscience": {
+    "domain": "neuroscience",
+    "identity": "Dr. Neural Cortex - Sleep & Cognitive Optimization Specialist",
+    "capabilities": [
+      "Sleep optimization analysis",
+      "Cognitive performance assessment",
+      "CNS fatigue detection",
+      "Brain fog analysis",
+      "Memory enhancement protocols",
+      "Focus optimization strategies",
+      "Circadian rhythm analysis"
+    ],
+    "subscription_keywords": [
+      "sleep", "cognitive", "brain", "focus", "memory", "ptosis", 
+      "fatigue", "cns", "mental", "clarity", "fog", "concentration"
+    ],
+    "collaboration_preferences": {
+      "preferred_partners": ["nutrition", "fitness"],
+      "collaboration_style": "evidence_based",
+      "response_time": "immediate"
+    },
+    "availability_status": "available"
+  },
+  "nutrition": {
+    "domain": "nutrition",
+    "identity": "Chef Macro - Precision Nutrition Architect",
+    "capabilities": [
+      "Macronutrient optimization",
+      "Meal timing strategies",
+      "Supplement recommendations",
+      "GLP-1 interaction analysis",
+      "Fasting protocols",
+      "Food sensitivity assessment",
+      "Performance nutrition"
+    ],
+    "subscription_keywords": [
+      "eat", "food", "diet", "nutrition", "meal", "calorie", "macro",
+      "protein", "carb", "fat", "supplement", "vitamin", "fasting", "nutritionist"
+    ],
+    "collaboration_preferences": {
+      "preferred_partners": ["fitness", "neuroscience"],
+      "collaboration_style": "data_driven",
+      "response_time": "within_2_hours"
+    },
+    "availability_status": "available"
+  },
+  "fitness": {
+    "domain": "fitness",
+    "identity": "Coach Performance - Movement & Recovery Specialist",
+    "capabilities": [
+      "Workout program design",
+      "Progressive overload planning",
+      "Recovery optimization",
+      "Performance assessment",
+      "Movement quality analysis",
+      "Fatigue management",
+      "Strength periodization"
+    ],
+    "subscription_keywords": [
+      "workout", "exercise", "training", "gym", "lift", "cardio",
+      "muscle", "strength", "recovery", "performance", "movement", "trainer"
+    ],
+    "collaboration_preferences": {
+      "preferred_partners": ["physical_therapy", "nutrition"],
+      "collaboration_style": "adaptive",
+      "response_time": "immediate"
+    },
+    "availability_status": "available"
+  },
+  "physical_therapy": {
+    "domain": "physical_therapy",
+    "identity": "Dr. Movement - Functional Movement & Rehabilitation Expert",
+    "capabilities": [
+      "Movement pattern analysis",
+      "Injury prevention protocols",
+      "Rehabilitation planning",
+      "Posture assessment",
+      "Mobility optimization",
+      "Pain management strategies",
+      "Functional movement screening"
+    ],
+    "subscription_keywords": [
+      "pain", "injury", "mobility", "flexibility", "posture",
+      "rehabilitation", "movement quality", "dysfunction", "imbalance", "pt"
+    ],
+    "collaboration_preferences": {
+      "preferred_partners": ["fitness", "medical_esthetics"],
+      "collaboration_style": "conservative",
+      "response_time": "within_4_hours"
+    },
+    "availability_status": "available"
+  },
+  "medical_esthetics": {
+    "domain": "medical_esthetics",
+    "identity": "Dr. Glow - Skin Health & Appearance Optimization",
+    "capabilities": [
+      "Skin health assessment",
+      "Inflammation analysis",
+      "Hydration optimization",
+      "Aging intervention protocols",
+      "Complexion improvement",
+      "Cosmetic enhancement planning",
+      "Skin barrier restoration"
+    ],
+    "subscription_keywords": [
+      "skin", "appearance", "aesthetic", "inflammation", "hydration",
+      "collagen", "aging", "complexion", "facial", "cosmetic", "esthetician"
+    ],
+    "collaboration_preferences": {
+      "preferred_partners": ["nutrition", "neuroscience"],
+      "collaboration_style": "holistic",
+      "response_time": "within_6_hours"
+    },
+    "availability_status": "available"
+  }
+}

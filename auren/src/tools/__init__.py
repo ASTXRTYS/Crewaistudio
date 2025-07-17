@@ -1,41 +1,44 @@
 """
-AUREN Tools Package - Specialized tools for the cognitive twin system.
+AUREN Tools Package - Routing and specialist communication tools.
 
-This package contains all the tools that enable AUREN's intelligent routing,
-specialist collaboration, and context management capabilities.
+This package provides the routing infrastructure that enables AUREN to:
+- Analyze messages and route them to appropriate specialists
+- Handle direct specialist requests
+- Manage specialist configurations and availability
+- Build comprehensive context packets for specialist handoff
 """
 
 from .routing_tools import (
-    RoutingLogicTool,
-    DirectRoutingTool,
-    SpecialistRegistry,
-    PacketBuilder,
     create_routing_logic_tool,
     create_direct_routing_tool,
     create_specialist_registry,
     create_packet_builder,
+    RoutingLogicTool,
+    DirectRoutingTool,
+    SpecialistRegistry,
+    PacketBuilder,
     SpecialistDomain,
     RoutingDecision,
-    SpecialistRegistration,
-    ContextPacket
+    ContextPacket,
+    SpecialistRegistration
 )
 
 __all__ = [
-    # Routing Tools
-    'RoutingLogicTool',
-    'DirectRoutingTool',
-    'SpecialistRegistry',
-    'PacketBuilder',
-    
-    # Factory Functions
+    # Factory functions for CrewAI integration
     'create_routing_logic_tool',
     'create_direct_routing_tool',
     'create_specialist_registry',
     'create_packet_builder',
     
-    # Data Classes
+    # Tool classes
+    'RoutingLogicTool',
+    'DirectRoutingTool',
+    'SpecialistRegistry',
+    'PacketBuilder',
+    
+    # Data structures
     'SpecialistDomain',
     'RoutingDecision',
-    'SpecialistRegistration',
-    'ContextPacket'
+    'ContextPacket',
+    'SpecialistRegistration'
 ]

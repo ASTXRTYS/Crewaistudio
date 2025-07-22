@@ -40,8 +40,11 @@ class EventConsumer:
             auto_offset_reset='earliest',
             client_id=f'auren-event-consumer-{group_id}',
             max_poll_records=100,
-            session_timeout_ms=30000,
-            heartbeat_interval_ms=3000
+            session_timeout_ms=30000,      # Already set
+            heartbeat_interval_ms=3000,    # Already set
+            # Add additional timeout configurations
+            request_timeout_ms=30000,      # 30 seconds
+            api_version_auto_timeout_ms=10000  # 10 seconds
         )
         self.running = False
         self.executor = ThreadPoolExecutor(max_workers=4)

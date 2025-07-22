@@ -6,7 +6,7 @@ import pytest
 import tempfile
 import shutil
 from pathlib import Path
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import Mock, AsyncMock, patch, MagicMock
 import numpy as np
 
 # Add src to Python path
@@ -85,12 +85,20 @@ def mock_whatsapp_api():
 @pytest.fixture
 def mock_openai():
     """Mock OpenAI API for testing."""
-    with patch('openai.ChatCompletion.create') as mock_create:
-        mock_create.return_value = {
-            "choices": [{
-                "message": {
-                    "content": "Test response from AUREN"
-                }
-            }]
-        }
-        yield mock_create 
+    with patch('openai.AsyncOpenAI') as mock_client:
+        # Create mock response structure matching v1.x API
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message.content = "Test response from AUREN"
+        mock_response.usage.prompt_tokens = 10
+        mock_response.usage.completion_tokens = 15
+        mock_response.usage.total_tokens = 25
+        mock_response.id = "test-response-id"
+        mock_response.choices[0].finish_reason = "stop"
+        
+        # Set up the mock client
+        mock_instance = MagicMock()
+        mock_client.return_value = mock_instance
+        mock_instance.chat.completions.create = AsyncMock(return_value=mock_response)
+        
+        yield mock_instance 

@@ -1,12 +1,14 @@
-"""
-AUREN Configuration Settings
-Uses pydantic BaseSettings for environment variable management
+"""Configuration settings for the AUREN system.
+
+This module centralizes all environment variables and configuration
+settings with proper validation and defaults.
 """
 
 import os
 from pathlib import Path
 from typing import Optional, Dict, Any
-from pydantic import BaseSettings, Field, validator
+from pydantic import Field, validator
+from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 
 # Load .env file if it exists

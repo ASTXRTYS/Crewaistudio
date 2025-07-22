@@ -7,8 +7,7 @@ or when budget constraints require cheaper alternatives.
 import asyncio
 import logging
 from typing import Optional, AsyncGenerator, Dict, Any
-import openai
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, RateLimitError
 
 from .base import BaseLLMProvider, LLMResponse
 
@@ -67,7 +66,7 @@ class OpenAIProvider(BaseLLMProvider):
                         **kwargs
                     )
                     break
-                except openai.RateLimitError as e:
+                except RateLimitError as e:
                     if attempt < 2:
                         wait_time = 2 ** attempt  # Exponential backoff
                         logger.warning(f"Rate limit hit, waiting {wait_time}s before retry")

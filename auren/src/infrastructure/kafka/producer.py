@@ -36,7 +36,12 @@ class EventProducer:
             retries=3,
             acks='all',  # Wait for all replicas
             max_in_flight_requests_per_connection=5,
-            client_id='auren-event-producer'
+            client_id='auren-event-producer',
+            # Add timeout configurations
+            request_timeout_ms=30000,      # 30 seconds
+            api_version_auto_timeout_ms=10000,  # 10 seconds
+            max_block_ms=60000,            # 60 seconds
+            retry_backoff_ms=100
         )
         self._delivery_reports = []
     

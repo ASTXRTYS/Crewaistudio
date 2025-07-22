@@ -10,6 +10,10 @@ import asyncpg
 from pathlib import Path
 import logging
 from typing import Optional
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -242,14 +246,14 @@ async def main():
     
     args = parser.parse_args()
     
-    await init_database(
+    initializer = DatabaseInitializer(
         host=args.host,
         port=args.port,
         user=args.user,
         password=args.password,
-        database=args.database,
-        include_test_data=not args.no_test_data
+        database=args.database
     )
+    await initializer.initialize(include_test_data=not args.no_test_data)
 
 
 if __name__ == "__main__":

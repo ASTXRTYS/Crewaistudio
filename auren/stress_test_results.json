@@ -1,0 +1,85 @@
+{
+  "timestamp": "2025-07-22T05:46:42.996039",
+  "environment": {
+    "python_version": "3.9.6 (default, Apr 30 2025, 02:07:17) \n[Clang 17.0.0 (clang-1700.0.13.5)]",
+    "platform": "darwin"
+  },
+  "components": {
+    "postgresql": {
+      "status": "operational",
+      "details": {
+        "connection_time": "0.075s",
+        "table_count": 11,
+        "tables": [
+          "conversation_insights",
+          "user_facts",
+          "biometric_readings",
+          "biometric_baselines",
+          "user_profiles",
+          "hypotheses",
+          "consultation_nodes",
+          "consultation_edges",
+          "events",
+          "milestones",
+          "biometric_timeline"
+        ],
+        "insert_performance": "707.0 ops/sec",
+        "query_performance": "3395.1 ops/sec"
+      }
+    },
+    "redis": {
+      "status": "operational",
+      "details": {
+        "connection_time": "0.006s",
+        "set_performance": "4262.8 ops/sec",
+        "get_performance": "5869.5 ops/sec",
+        "memory_used": "1.31M"
+      }
+    },
+    "kafka": {
+      "status": "failed",
+      "details": {
+        "topic_count": 3,
+        "topics": [
+          "conversations.events",
+          "triggers.detected",
+          "health.biometrics"
+        ]
+      },
+      "error": "KafkaTimeoutError: Failed to update metadata after 60.0 secs."
+    },
+    "openai_api": {
+      "status": "operational",
+      "details": {
+        "response_time": "1.411s",
+        "model_used": "gpt-3.5-turbo-0125",
+        "tokens_used": 22
+      }
+    },
+    "framework": {
+      "status": "failed",
+      "modules": {
+        "AI Gateway": "loaded",
+        "Token Tracker": "loaded",
+        "Database Connection": "loaded",
+        "Config Settings": "failed: `BaseSettings` has been moved to the `pydantic-settings` package. See https://docs.pydantic.dev/2.5/migration/#basesettings-has-moved-to-pydantic-settings for more details.\n\nFor further information visit https://errors.pydantic.dev/2.5/u/import-error",
+        "CEP HRV Rules": "failed: `BaseSettings` has been moved to the `pydantic-settings` package. See https://docs.pydantic.dev/2.5/migration/#basesettings-has-moved-to-pydantic-settings for more details.\n\nFor further information visit https://errors.pydantic.dev/2.5/u/import-error",
+        "Kafka Producer": "failed: `BaseSettings` has been moved to the `pydantic-settings` package. See https://docs.pydantic.dev/2.5/migration/#basesettings-has-moved-to-pydantic-settings for more details.\n\nFor further information visit https://errors.pydantic.dev/2.5/u/import-error",
+        "Kafka Consumer": "failed: `BaseSettings` has been moved to the `pydantic-settings` package. See https://docs.pydantic.dev/2.5/migration/#basesettings-has-moved-to-pydantic-settings for more details.\n\nFor further information visit https://errors.pydantic.dev/2.5/u/import-error"
+      }
+    }
+  },
+  "performance_metrics": {},
+  "recommendations": [
+    {
+      "component": "Kafka",
+      "severity": "medium",
+      "recommendation": "Kafka is not accessible. Real-time event streaming will not work. Ensure Kafka container is running."
+    },
+    {
+      "component": "Framework",
+      "severity": "high",
+      "recommendation": "Some framework modules failed to load: Config Settings, CEP HRV Rules, Kafka Producer, Kafka Consumer. Check import paths and dependencies."
+    }
+  ]
+}

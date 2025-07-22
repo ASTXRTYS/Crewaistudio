@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 import json
 
-from auren.src.agents.ui_orchestrator import AUREN, create_auren, AURENContext
+from src.agents.ui_orchestrator import AUREN, create_auren, AURENContext
 
 
 class TestAUREN:

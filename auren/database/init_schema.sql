@@ -2,9 +2,8 @@
 -- This script creates all necessary tables for the Neuroscientist MVP
 -- Includes biometric data, memory systems, and hypothesis tracking
 
--- Create database if not exists
-CREATE DATABASE IF NOT EXISTS auren_development;
-\c auren_development;
+-- Note: Database creation is handled by init_db.py
+-- This script assumes you're already connected to the correct database
 
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

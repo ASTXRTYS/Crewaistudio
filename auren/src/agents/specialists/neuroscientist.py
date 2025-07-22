@@ -15,11 +15,11 @@ from crewai import Agent, Task
 from pathlib import Path
 
 # Import our custom components
-from auren.src.agents.specialists.base_specialist import BaseSpecialist
-from auren.src.auren.ai.crewai_gateway_adapter import CrewAIGatewayAdapter
-from auren.src.database.connection import DatabaseConnection
-from auren.src.auren.monitoring.decorators import track_tokens
-from auren.src.auren.monitoring.otel_config import otel_trace
+from src.agents.specialists.base_specialist import BaseSpecialist
+from src.auren.ai.crewai_gateway_adapter import CrewAIGatewayAdapter
+from src.database.connection import DatabaseConnection
+from src.auren.monitoring.decorators import track_tokens
+from src.auren.monitoring.otel_config import otel_trace
 
 logger = logging.getLogger(__name__)
 
@@ -721,8 +721,8 @@ def create_neuroscientist(gateway_adapter: CrewAIGatewayAdapter) -> Neuroscienti
 # Example usage for testing
 if __name__ == "__main__":
     import asyncio
-    from auren.src.auren.ai.gateway import AIGateway
-    from auren.src.auren.ai.crewai_gateway_adapter import CrewAIGatewayAdapter
+    from src.auren.ai.gateway import AIGateway
+    from src.auren.ai.crewai_gateway_adapter import CrewAIGatewayAdapter
     
     async def test_neuroscientist():
         """Test the Neuroscientist agent"""

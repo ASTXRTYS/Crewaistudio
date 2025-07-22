@@ -8,8 +8,34 @@ import asyncpg
 from typing import Optional, Dict, Any
 import logging
 from contextlib import asynccontextmanager
+import asyncio
+from functools import wraps
 
 logger = logging.getLogger(__name__)
+
+
+def with_retry(max_attempts: int = 3, delay: float = 1.0):
+    """Decorator to add retry logic to async functions"""
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            last_exception = None
+            for attempt in range(max_attempts):
+                try:
+                    return await func(*args, **kwargs)
+                except (asyncpg.PostgresConnectionError, asyncpg.CannotConnectNowError) as e:
+                    last_exception = e
+                    if attempt < max_attempts - 1:
+                        logger.warning(f"Database connection attempt {attempt + 1} failed: {e}")
+                        await asyncio.sleep(delay * (attempt + 1))  # Exponential backoff
+                    else:
+                        logger.error(f"All {max_attempts} connection attempts failed")
+                except Exception as e:
+                    # Don't retry on other exceptions
+                    raise
+            raise last_exception
+        return wrapper
+    return decorator
 
 
 class DatabaseConnection:
@@ -25,6 +51,7 @@ class DatabaseConnection:
     _initialized: bool = False
     
     @classmethod
+    @with_retry(max_attempts=3, delay=1.0)
     async def initialize(cls, **kwargs) -> asyncpg.Pool:
         """
         Initialize the database connection pool

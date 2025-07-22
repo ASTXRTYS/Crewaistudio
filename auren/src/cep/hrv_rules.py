@@ -15,11 +15,11 @@ from dataclasses import dataclass
 from collections import deque
 import statistics
 
-from auren.src.database.connection import DatabaseConnection
-from auren.src.infrastructure.kafka.producer import EventProducer
-from auren.src.infrastructure.kafka.consumer import EventConsumer
-from auren.src.auren.monitoring.decorators import track_tokens
-from auren.src.auren.monitoring.otel_config import otel_trace
+from src.database.connection import DatabaseConnection
+from src.infrastructure.kafka.producer import EventProducer
+from src.infrastructure.kafka.consumer import EventConsumer
+from src.auren.monitoring.decorators import track_tokens
+from src.auren.monitoring.otel_config import otel_trace
 
 logger = logging.getLogger(__name__)
 

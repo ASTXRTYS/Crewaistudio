@@ -17,12 +17,13 @@ from datetime import datetime, timedelta
 from typing import Dict, Any
 import time
 
-from auren.src.database.connection import DatabaseConnection, init_db, close_db
-from auren.src.agents.specialists.neuroscientist import Neuroscientist, create_neuroscientist
-from auren.src.cep.hrv_rules import HRVRuleEngine, BiometricEvent, HRVMonitoringService
-from auren.src.auren.ai.gateway import AIGateway
-from auren.src.auren.ai.crewai_gateway_adapter import CrewAIGatewayAdapter
-from auren.src.auren.monitoring.decorators import get_token_tracker
+from src.database.connection import DatabaseConnection, init_db, close_db
+from src.agents.specialists.neuroscientist import Neuroscientist, create_neuroscientist
+from src.cep.hrv_rules import HRVRuleEngine, BiometricEvent, HRVMonitoringService
+from src.auren.ai.gateway import AIGateway
+from src.auren.ai.crewai_gateway_adapter import CrewAIGatewayAdapter
+from src.auren.monitoring.decorators import get_token_tracker
+from src.config.settings import get_settings
 
 
 class TestNeuroscientistIntegration:
@@ -36,13 +37,16 @@ class TestNeuroscientistIntegration:
     @classmethod
     async def setup_class(cls):
         """Initialize test environment"""
-        # Initialize database connection
+        # Get settings
+        settings = get_settings()
+        
+        # Initialize database connection using settings
         await init_db(
-            host='localhost',
-            port=5432,
-            user='postgres',
-            password='auren_dev',
-            database='auren_development'
+            host=settings.database.host,
+            port=settings.database.port,
+            user=settings.database.user,
+            password=settings.database.password,
+            database=settings.database.name
         )
         
         # Initialize AI components

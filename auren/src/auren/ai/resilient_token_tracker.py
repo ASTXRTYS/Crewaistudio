@@ -134,7 +134,10 @@ class RedisTokenTracker:
         try:
             # Store usage record
             key = f"usage:{usage.user_id}:{usage.timestamp.date().isoformat()}"
-            value = json.dumps(asdict(usage))
+            # Convert to dict with datetime as ISO string
+            usage_dict = asdict(usage)
+            usage_dict['timestamp'] = usage.timestamp.isoformat()
+            value = json.dumps(usage_dict)
             await self.redis_client.lpush(key, value)
             await self.redis_client.expire(key, 86400 * 30)  # 30 days
             

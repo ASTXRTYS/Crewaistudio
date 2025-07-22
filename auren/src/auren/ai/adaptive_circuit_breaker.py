@@ -35,7 +35,7 @@ class AdaptiveCircuitBreaker(CircuitBreaker):
     """
     
     def __init__(self, config: CircuitBreakerConfig, model_name: str):
-        super().__init__(config)
+        super().__init__(config, model_name)
         self.model_name = model_name
         self.failure_history: deque[FailurePattern] = deque(maxlen=100)
         self.recovery_history: deque[float] = deque(maxlen=50)
@@ -75,13 +75,13 @@ class AdaptiveCircuitBreaker(CircuitBreaker):
             weighted_recovery = (avg_recovery * 0.3) + (recent_avg * 0.7)
             
             # Adjust based on failure frequency
-            failure_rate = len(recent_failures) / 60.0  # failures per hour
+            failure_rate = len(recent_failures) / 3600.0  # failures per hour (3600 seconds)
             
-            if failure_rate > 1.0:  # More than 1 failure per hour
+            if failure_rate > 0.01:  # More than ~36 failures per hour
                 # Service is unstable, reduce recovery time
                 self.stability_score = max(0.1, self.stability_score - 0.2)
                 return max(10, weighted_recovery * 0.5)  # Minimum 10 seconds
-            elif failure_rate > 0.1:  # 1 failure per 10 hours
+            elif failure_rate > 0.001:  # More than ~3.6 failures per hour
                 # Moderate instability
                 self.stability_score = max(0.5, self.stability_score - 0.1)
                 return weighted_recovery
@@ -94,6 +94,10 @@ class AdaptiveCircuitBreaker(CircuitBreaker):
         
     def record_failure(self, error_type: str, duration: float):
         """Record a failure event with timing information."""
+        # Note: This is a synchronous method that records failure patterns
+        # The parent class's async _record_failure is called separately by the circuit breaker
+        
+        # Record in our history
         failure = FailurePattern(
             timestamp=time.time(),
             duration=duration,
@@ -101,6 +105,9 @@ class AdaptiveCircuitBreaker(CircuitBreaker):
             recovery_time=self.config.recovery_timeout
         )
         self.failure_history.append(failure)
+        
+        # Update stability score based on recent failures
+        self.calculate_adaptive_recovery_time()
         
         logger.info(
             f"Recorded failure for {self.model_name}: "

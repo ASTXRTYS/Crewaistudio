@@ -118,12 +118,19 @@ class AIGateway:
         if request.budget_limit and request.budget_limit < remaining_budget:
             remaining_budget = request.budget_limit
             
+        # Check if budget is too low for any request
+        if remaining_budget < 0.02:  # Minimum budget threshold
+            raise ValueError(f"Insufficient budget: ${remaining_budget:.4f} remaining. Minimum required: $0.02")
+            
         # Select optimal model
+        # If user has a preference for speed, set prefer_fast
+        prefer_fast = request.model_preference == "fast" if request.model_preference else False
+        
         selected_model = self.model_selector.select_model(
             prompt=request.prompt,
             remaining_budget=remaining_budget,
             available_models=list(self.providers.keys()),
-            user_preference=request.model_preference
+            prefer_fast=prefer_fast
         )
         
         if not selected_model:

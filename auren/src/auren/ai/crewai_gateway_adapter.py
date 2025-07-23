@@ -21,7 +21,7 @@ import logging
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
 
-from ..gateway import AIGateway, GatewayRequest
+from .gateway import AIGateway, GatewayRequest
 from ..models import ModelConfig
 from ...monitoring.decorators import track_tokens
 from ...memory.cognitive_twin_profile import CognitiveTwinProfile

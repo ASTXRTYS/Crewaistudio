@@ -300,3 +300,23 @@ class ModelSelector:
             name for name, config in self.models.items()
             if config.provider == provider
         ]
+    
+    def create_model_config(
+        self,
+        name: str,
+        provider: str,
+        input_cost_per_1k: float,
+        output_cost_per_1k: float,
+        max_tokens: int,
+        supports_streaming: bool = True,
+        tags: List[str] = None
+    ) -> ModelConfig:
+        """Create a new model configuration."""
+        return ModelConfig(
+            name=name,
+            provider=provider,
+            input_cost_per_1k=input_cost_per_1k,
+            output_cost_per_1k=output_cost_per_1k,
+            max_tokens=max_tokens,
+            supports_streaming=supports_streaming
+        )

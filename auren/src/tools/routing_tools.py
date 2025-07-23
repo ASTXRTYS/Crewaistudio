@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any, Set
 import asyncio
 
-from crewai.tools import BaseTool
+from crewai.tools.agent_tools import StructuredTool as BaseTool
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)

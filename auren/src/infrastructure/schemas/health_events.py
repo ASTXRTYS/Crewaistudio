@@ -37,6 +37,14 @@ class TriggerType(str, Enum):
     COGNITIVE_FATIGUE = "cognitive_fatigue"
 
 
+class EventPriority(str, Enum):
+    """Priority levels for health events"""
+    LOW = "low"
+    NORMAL = "normal"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
 class BiometricMetadata(BaseModel):
     """Metadata for biometric measurements"""
     percentile_rank: Optional[float] = Field(None, ge=0.0, le=1.0)
@@ -138,6 +146,15 @@ class SystemEvent(BaseModel):
     def from_json(cls, json_str: str) -> 'SystemEvent':
         """Create from JSON string"""
         return cls.model_validate_json(json_str)
+
+
+class HealthEvent(BaseModel):
+    """Base class for all health-related events"""
+    event_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    event_type: str
+    timestamp: datetime = Field(default_factory=datetime.now)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
 class EventEnvelope(BaseModel):

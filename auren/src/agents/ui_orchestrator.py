@@ -11,9 +11,11 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 from pathlib import Path
+from dataclasses import dataclass
+from pydantic import Field
 
 from crewai import Agent, Task, Crew
-from crewai_tools import BaseTool
+from crewai.tools.agent_tools import StructuredTool as BaseTool
 
 # Import routing tools
 from src.tools.routing_tools import (
@@ -230,6 +232,20 @@ class AURENUIOrchestrator:
 def create_auren_ui_orchestrator(user_id: str, cognitive_profile: Any) -> AURENUIOrchestrator:
     """Create an AUREN UI orchestrator instance."""
     return AURENUIOrchestrator(user_id, cognitive_profile)
+
+
+# Alias for backward compatibility
+AUREN = AURENUIOrchestrator
+create_auren = create_auren_ui_orchestrator
+
+
+@dataclass
+class AURENContext:
+    """Context for AUREN operations."""
+    user_id: str
+    cognitive_profile: Any
+    session_id: str
+    timestamp: datetime = Field(default_factory=datetime.now)
 
 
 # Example usage

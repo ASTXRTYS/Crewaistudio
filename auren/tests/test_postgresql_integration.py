@@ -11,10 +11,10 @@ import tempfile
 import json
 import os
 
-from auren.data_layer.connection import AsyncPostgresManager
-from auren.data_layer.event_store import EventStore, EventType
-from auren.data_layer.memory_backend import PostgreSQLMemoryBackend, MemoryType
-from auren.data_layer.crewai_integration import AURENCrewMemoryIntegration, JSONToPostgreSQLMigrator
+from data_layer.connection import AsyncPostgresManager
+from data_layer.event_store import EventStore, EventType
+from data_layer.memory_backend import PostgreSQLMemoryBackend, MemoryType
+from data_layer.crewai_integration import AURENCrewMemoryIntegration, JSONToPostgreSQLMigrator
 
 # Test configuration
 TEST_DSN = "postgresql://localhost:5432/auren_test"

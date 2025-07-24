@@ -7,9 +7,9 @@ import asyncio
 import logging
 from pathlib import Path
 
-from auren.data_layer.connection import AsyncPostgresManager
-from auren.data_layer.event_store import EventStore
-from auren.data_layer.memory_backend import PostgreSQLMemoryBackend
+from data_layer.connection import AsyncPostgresManager
+from data_layer.event_store import EventStore
+from data_layer.memory_backend import PostgreSQLMemoryBackend
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

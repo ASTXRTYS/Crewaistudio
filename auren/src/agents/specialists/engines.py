@@ -12,7 +12,7 @@ from dataclasses import dataclass
 import json
 import uuid
 
-from .base_specialist import (
+from .shared_types import (
     EvolutionRecord,
     ConsensusPosition,
     Hypothesis,
@@ -127,22 +127,12 @@ class SpecialistCollaborationEngine:
         else:
             confidence = base_confidence
         
-        # Determine willingness to compromise
-        willing_to_compromise = agreement_level < self.consensus_strategies["compromise_threshold"]
-        
-        # Generate alternatives if willing to compromise
-        alternatives = []
-        if willing_to_compromise:
-            alternatives = self._generate_compromise_alternatives(topic, other_positions)
-        
         return ConsensusPosition(
             specialist_id=self.specialist.get_domain().value,
             position=specialist_recommendation,
             confidence=confidence,
             reasoning=f"My {self.specialist.get_domain().value} perspective considers...",
-            supporting_evidence=supporting_data,
-            willing_to_compromise=willing_to_compromise,
-            alternative_proposals=alternatives[:2]  # Limit to 2 alternatives
+            supporting_evidence=supporting_data
         )
     
     def _generate_compromise_alternatives(

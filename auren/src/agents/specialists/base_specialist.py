@@ -5,8 +5,8 @@ This module provides the base class for all AUREN specialists, implementing
 the core functionality for autonomous, self-evolving AI colleagues that
 maintain their own knowledge, hypotheses, and relationships over time.
 
-Phase 1: Added synchronous wrappers for CrewAI compatibility
-while maintaining the async architecture for future scalability.
+Phase 2: Refactored to use internal engines for better modularity while
+maintaining the unified specialist metaphor.
 """
 
 import asyncio
@@ -21,151 +21,18 @@ from typing import Dict, List, Optional, Any, Union
 import portalocker
 import logging
 
+from .shared_types import (
+    SpecialistDomain,
+    SpecialistTraits,
+    SpecialistGenesis,
+    EvolutionRecord,
+    ConsensusPosition,
+    Hypothesis,
+    HypothesisTracker
+)
+from .engines import SpecialistCollaborationEngine, SpecialistMemoryEngine
+
 logger = logging.getLogger(__name__)
-
-
-class SpecialistDomain(Enum):
-    """Domains of expertise for specialists."""
-    NEUROSCIENCE = "neuroscience"
-    NUTRITION = "nutrition"
-    FITNESS = "fitness"
-    PHYSICAL_THERAPY = "physical_therapy"
-    MEDICAL_ESTHETICS = "medical_esthetics"
-
-
-@dataclass
-class SpecialistTraits:
-    """Personality traits that influence specialist behavior."""
-    risk_tolerance: float = 0.5  # 0.0 to 1.0
-    collaboration_style: str = "balanced"  # assertive, accommodating, balanced
-    learning_rate: float = 0.1  # How quickly they update beliefs
-    skepticism_level: float = 0.5  # How much evidence they need
-    innovation_tendency: float = 0.5  # Preference for novel approaches
-
-
-@dataclass
-class SpecialistGenesis:
-    """Initial configuration for specialist creation."""
-    identity: str
-    mission: str
-    expertise: List[str]
-    collaboration_philosophy: str
-    initial_hypotheses: List[str]
-    learning_objectives: List[str]
-    traits: SpecialistTraits
-    
-    def to_backstory(self) -> str:
-        """Convert genesis to CrewAI backstory format."""
-        return f"""
-        I am {self.identity}, a specialist focused on {self.mission}.
-        
-        My expertise includes: {', '.join(self.expertise)}.
-        
-        My collaboration philosophy: {self.collaboration_philosophy}.
-        
-        I approach problems with {self.traits.collaboration_style} collaboration,
-        {self.traits.risk_tolerance * 100:.0f}% risk tolerance, and
-        {self.traits.innovation_tendency * 100:.0f}% innovation tendency.
-        
-        My learning objectives: {', '.join(self.learning_objectives)}.
-        """
-
-
-@dataclass
-class Hypothesis:
-    """Represents a testable hypothesis."""
-    id: str
-    statement: str
-    confidence: float  # 0.0 to 1.0
-    evidence_for: List[str]
-    evidence_against: List[str]
-    test_count: int = 0
-    last_tested: Optional[datetime] = None
-    
-    def update_confidence(self, supporting: bool, weight: float = 0.1):
-        """Update confidence based on evidence."""
-        if supporting:
-            self.confidence = min(1.0, self.confidence + weight * (1 - self.confidence))
-        else:
-            self.confidence = max(0.0, self.confidence - weight * self.confidence)
-
-
-class HypothesisTracker:
-    """Manages specialist hypotheses and their evolution."""
-    
-    def __init__(self):
-        self.hypotheses: Dict[str, Hypothesis] = {}
-    
-    def add_hypothesis(self, statement: str, initial_confidence: float = 0.5) -> Hypothesis:
-        """Add a new hypothesis."""
-        hypothesis = Hypothesis(
-            id=str(uuid.uuid4()),
-            statement=statement,
-            confidence=initial_confidence,
-            evidence_for=[],
-            evidence_against=[]
-        )
-        self.hypotheses[hypothesis.id] = hypothesis
-        return hypothesis
-    
-    def update_confidence(
-        self,
-        hypothesis_id: str,
-        supporting: bool,
-        evidence: str,
-        weight: float = 0.1
-    ):
-        """Update hypothesis confidence with new evidence."""
-        if hypothesis_id in self.hypotheses:
-            hypothesis = self.hypotheses[hypothesis_id]
-            if supporting:
-                hypothesis.evidence_for.append(evidence)
-            else:
-                hypothesis.evidence_against.append(evidence)
-            hypothesis.update_confidence(supporting, weight)
-            hypothesis.test_count += 1
-            hypothesis.last_tested = datetime.now()
-    
-    def get_testable_hypotheses(
-        self,
-        min_confidence: float = 0.3,
-        max_confidence: float = 0.7
-    ) -> List[Hypothesis]:
-        """Get hypotheses ready for testing."""
-        return [
-            h for h in self.hypotheses.values()
-            if min_confidence <= h.confidence <= max_confidence
-        ]
-    
-    def prune_failed_hypotheses(self, threshold: float = 0.2) -> List[str]:
-        """Remove hypotheses with very low confidence."""
-        failed = [
-            h_id for h_id, h in self.hypotheses.items()
-            if h.confidence < threshold and h.test_count > 0
-        ]
-        for h_id in failed:
-            del self.hypotheses[h_id]
-        return failed
-
-
-@dataclass
-class EvolutionRecord:
-    """Records how a specialist evolves over time."""
-    timestamp: datetime
-    interaction_type: str
-    learning: str
-    confidence_delta: float
-    relationship_impact: float = 0.0
-
-
-@dataclass
-class ConsensusPosition:
-    """Represents a specialist's position on a consensus topic."""
-    specialist_id: str
-    position: str
-    confidence: float
-    reasoning: str
-    supporting_evidence: List[str]
 
 
 class JSONFileMemoryBackend:
@@ -209,16 +76,28 @@ class BaseSpecialist(ABC):
     knowledge, hypotheses, and relationships over time. They can
     collaborate with other specialists and learn from interactions.
     
-    Phase 1: Added synchronous wrappers for CrewAI compatibility
-    while maintaining the async architecture for future scalability.
+    Phase 2: Refactored to use internal engines for better modularity.
     """
     
     def __init__(
         self,
         genesis: SpecialistGenesis,
         cognitive_profile: Any,
-        memory_path: Path
+        memory_path: Path,
+        memory_retention_limit: int = 1000,
+        override_agent: Optional[Any] = None
     ):
+        """
+        Initialize a specialist with their genesis configuration.
+        
+        Args:
+            genesis: Birth configuration defining identity and mission
+            cognitive_profile: Reference to user's cognitive twin profile
+            memory_path: Path to persistent memory storage
+            memory_retention_limit: Maximum evolution records to retain
+            override_agent: Optional pre-configured CrewAI agent (advanced use case)
+                          Default None maintains self-birthing behavior
+        """
         self.identity = genesis.identity
         self.mission = genesis.mission
         self.expertise = genesis.expertise
@@ -227,12 +106,19 @@ class BaseSpecialist(ABC):
         self.cognitive_profile = cognitive_profile
         
         # Memory management
-        self.memory_backend = JSONFileMemoryBackend(memory_path)
+        self.memory_backend = JSONFileMemoryBackend(memory_path, memory_retention_limit)
         self.evolution_history: List[EvolutionRecord] = []
         self.hypothesis_tracker = HypothesisTracker()
         
         # Relationship tracking
         self.relationship_score = 0.5  # 0.0 to 1.0
+        
+        # Initialize internal engines for better modularity
+        self._collaboration_engine = SpecialistCollaborationEngine(self)
+        self._memory_engine = SpecialistMemoryEngine(
+            self.memory_backend,
+            memory_retention_limit
+        )
         
         # Load existing memory or initialize
         self._load_memory()
@@ -333,14 +219,14 @@ class BaseSpecialist(ABC):
         
         This is the main async method for specialist interaction.
         """
-        # Record interaction
+        # Record interaction using memory engine
         evolution = EvolutionRecord(
             timestamp=datetime.now(),
             interaction_type="user_interaction",
             learning=f"Processed: {message[:50]}...",
             confidence_delta=0.0
         )
-        self.evolution_history.append(evolution)
+        self._memory_engine.store_evolution(evolution, self.evolution_history)
         
         # Check for testable hypotheses
         testable = self.hypothesis_tracker.get_testable_hypotheses()
@@ -366,33 +252,85 @@ class BaseSpecialist(ABC):
         """
         Collaborate with other specialists to reach consensus.
         
-        This async method allows specialists to participate in consensus building.
+        Uses the collaboration engine for sophisticated consensus building.
         """
-        # Analyze other positions
-        my_position = ConsensusPosition(
-            specialist_id=self.identity,
-            position=f"Based on {self.domain.value} expertise...",
-            confidence=self.relationship_score,
-            reasoning=f"My {self.domain.value} perspective considers...",
-            supporting_evidence=[h.statement for h in self.hypothesis_tracker.hypotheses.values() if h.confidence > 0.7]
+        # Use collaboration engine for sophisticated analysis
+        agreement_level = self._collaboration_engine.analyze_agreement_level(other_positions)
+        
+        # Generate specialist recommendation
+        recommendation = f"Based on {self.get_domain().value} expertise, I recommend..."
+        supporting_data = [h.statement for h in self.hypothesis_tracker.hypotheses.values() if h.confidence > 0.7]
+        
+        # Use collaboration engine to build consensus position
+        position = self._collaboration_engine.build_consensus_position(
+            topic=topic,
+            other_positions=other_positions,
+            specialist_recommendation=recommendation,
+            supporting_data=supporting_data
         )
         
-        # Update relationship based on collaboration
-        collaboration_bonus = 0.05 if self.traits.collaboration_style == "accommodating" else 0.02
-        self.relationship_score = min(1.0, self.relationship_score + collaboration_bonus)
+        # Update collaboration relationships
+        self._collaboration_engine.update_collaboration_relationships(
+            other_positions,
+            outcome_success=True
+        )
         
-        # Record collaboration
+        # Update relationship score from engine
+        self.relationship_score = min(1.0, self.relationship_score + 0.02)
+        
+        # Record collaboration using memory engine
         evolution = EvolutionRecord(
             timestamp=datetime.now(),
             interaction_type="collaboration",
             learning=f"Collaborated on: {topic}",
             confidence_delta=0.02,
-            relationship_impact=collaboration_bonus
+            relationship_impact=0.02
         )
-        self.evolution_history.append(evolution)
+        self._memory_engine.store_evolution(evolution, self.evolution_history)
         self._save_memory()
         
-        return my_position
+        return position
+    
+    def get_collaboration_insights(self) -> Dict[str, Any]:
+        """
+        Get insights about this specialist's collaboration patterns.
+        
+        Returns:
+            Dictionary with collaboration statistics and patterns
+        """
+        return self._collaboration_engine.get_collaboration_insights()
+    
+    def search_memories(self, query: str, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Search specialist's memories for relevant information.
+        
+        Args:
+            query: Search query
+            limit: Maximum results
+            
+        Returns:
+            List of relevant memories
+        """
+        memories = self._memory_engine.search_memories(
+            self.evolution_history,
+            query,
+            limit
+        )
+        
+        return [
+            {
+                "timestamp": m.timestamp.isoformat(),
+                "type": m.interaction_type,
+                "learning": m.learning,
+                "confidence_delta": m.confidence_delta,
+                "adaptation": m.learning
+            }
+            for m in memories
+        ]
+    
+    def get_memory_statistics(self) -> Dict[str, Any]:
+        """Get statistics about memory usage."""
+        return self._memory_engine.get_memory_statistics(self.evolution_history)
     
     # === PHASE 1: SYNCHRONOUS WRAPPERS FOR CREWAI COMPATIBILITY ===
     
@@ -484,6 +422,66 @@ class BaseSpecialist(ABC):
             response_parts.append(f"Next Steps: {', '.join(result['next_steps'])}")
         
         return '\n'.join(response_parts)
+    
+    def to_yaml_config(self) -> Dict[str, Any]:
+        """
+        Export specialist configuration in YAML-compatible format.
+        
+        This allows basic interoperability with CrewAI YAML workflows
+        while maintaining the dynamic nature of specialists.
+        
+        Note: This exports a snapshot of current state. The specialist's
+        autonomous evolution and trait-based behaviors are not captured
+        in static YAML.
+        
+        Returns:
+            Dictionary suitable for YAML serialization
+        """
+        # Get current tools
+        tool_names = []
+        for tool in self.get_specialist_tools():
+            if hasattr(tool, '__name__'):
+                tool_names.append(tool.__name__)
+            elif hasattr(tool, 'name'):
+                tool_names.append(tool.name)
+            else:
+                tool_names.append(str(tool))
+        
+        config = {
+            "role": self.identity,
+            "goal": self.mission,
+            "backstory": self.genesis.to_backstory() if hasattr(self, 'genesis') else self.identity,
+            "memory": True,
+            "verbose": True,
+            "allow_delegation": True,
+            "tools": tool_names,
+            "metadata": {
+                "domain": self.get_domain().value,
+                "traits": {
+                    "risk_tolerance": self.traits.risk_tolerance,
+                    "collaboration_style": self.traits.collaboration_style,
+                    "learning_rate": self.traits.learning_rate,
+                    "skepticism_level": self.traits.skepticism_level,
+                    "innovation_tendency": self.traits.innovation_tendency
+                },
+                "relationship_score": self.relationship_score,
+                "hypothesis_count": len(self.hypothesis_tracker.hypotheses),
+                "evolution_count": len(self.evolution_history),
+                "collaboration_insights": self.get_collaboration_insights()
+            }
+        }
+        
+        return config
+    
+    def to_yaml_string(self) -> str:
+        """
+        Export specialist configuration as YAML string.
+        
+        Returns:
+            YAML formatted string
+        """
+        import yaml
+        return yaml.dump(self.to_yaml_config(), default_flow_style=False)
     
     @property
     def domain(self) -> SpecialistDomain:

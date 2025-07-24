@@ -1,260 +1,216 @@
-#!/usr/bin/env python3
 """
-Database initialization script for AUREN
-Handles PostgreSQL database creation and schema setup
+Database Initialization Script
+Sets up PostgreSQL schema for AUREN Cognitive Twin
 """
 
-import os
 import asyncio
-import asyncpg
-from pathlib import Path
 import logging
-from typing import Optional
-from dotenv import load_dotenv
+from pathlib import Path
 
-# Load environment variables
-load_dotenv()
+from auren.data_layer.connection import AsyncPostgresManager
+from auren.data_layer.event_store import EventStore
+from auren.data_layer.memory_backend import PostgreSQLMemoryBackend
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+async def initialize_database(dsn: str = "postgresql://localhost:5432/auren") -> None:
+    """
+    Initialize the complete AUREN database schema
+    
+    Args:
+        dsn: PostgreSQL connection string
+    """
+    logger.info("Initializing AUREN database...")
+    
+    try:
+        # Initialize connection pool
+        await AsyncPostgresManager.initialize(dsn)
+        
+        # Initialize event store
+        event_store = EventStore()
+        await event_store.initialize()
+        logger.info("✅ Event store initialized")
+        
+        # Initialize memory backend
+        memory_backend = PostgreSQLMemoryBackend(event_store)
+        await memory_backend.initialize()
+        logger.info("✅ Memory backend initialized")
+        
+        # Verify health
+        health = await AsyncPostgresManager.health_check()
+        if health["status"] == "healthy":
+            logger.info("✅ Database health check passed")
+        else:
+            logger.error(f"❌ Database health check failed: {health}")
+            return False
+        
+        # Test basic operations
+        await _test_basic_operations(event_store, memory_backend)
+        
+        logger.info("🎉 AUREN database initialization complete!")
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ Database initialization failed: {e}")
+        return False
+    finally:
+        await AsyncPostgresManager.close()
 
-class DatabaseInitializer:
-    """Handles database creation and schema initialization for AUREN"""
+async def _test_basic_operations(event_store: EventStore, memory_backend: PostgreSQLMemoryBackend) -> None:
+    """Test basic database operations"""
+    logger.info("Testing basic operations...")
     
-    def __init__(self, 
-                 host: str = None,
-                 port: int = None,
-                 user: str = None,
-                 password: str = None,
-                 database: str = None):
-        """Initialize with database connection parameters"""
-        # Use environment variables with fallbacks
-        self.host = host or os.getenv('DB_HOST', 'localhost')
-        self.port = port or int(os.getenv('DB_PORT', 5432))
-        self.user = user or os.getenv('DB_USER', 'postgres')
-        self.password = password or os.getenv('DB_PASSWORD', 'auren_dev')
-        self.database = database or os.getenv('DB_NAME', 'auren_development')
+    # Test event store
+    test_stream = "test_user_123"
+    event = await event_store.append_event(
+        stream_id=test_stream,
+        event_type=EventStore.EventType.MEMORY_CREATED,
+        payload={"test": "data"}
+    )
+    logger.info(f"✅ Event stored: {event.event_id}")
+    
+    # Test memory backend
+    memory_id = await memory_backend.store_memory(
+        agent_id="test_agent",
+        memory_type=memory_backend.MemoryType.FACT,
+        content={"fact": "test_fact"},
+        user_id=test_stream,
+        confidence=0.9
+    )
+    logger.info(f"✅ Memory stored: {memory_id}")
+    
+    # Test retrieval
+    memories = await memory_backend.retrieve_memories(
+        agent_id="test_agent",
+        user_id=test_stream,
+        limit=5
+    )
+    logger.info(f"✅ Retrieved {len(memories)} memories")
+    
+    # Test search
+    search_results = await memory_backend.search_memories(
+        agent_id="test_agent",
+        query="test",
+        user_id=test_stream,
+        limit=5
+    )
+    logger.info(f"✅ Found {len(search_results)} search results")
+
+async def reset_database(dsn: str = "postgresql://localhost:5432/auren") -> None:
+    """
+    Reset the database (drop and recreate tables)
+    
+    Args:
+        dsn: PostgreSQL connection string
+    """
+    logger.warning("Resetting database - this will delete all data!")
+    
+    try:
+        await AsyncPostgresManager.initialize(dsn)
         
-        # Schema file path
-        self.schema_file = Path(__file__).parent / 'init_schema.sql'
-    
-    async def database_exists(self) -> bool:
-        """Check if the database already exists"""
-        try:
-            # Connect to default postgres database
-            conn = await asyncpg.connect(
-                host=self.host,
-                port=self.port,
-                user=self.user,
-                password=self.password,
-                database='postgres'
-            )
-            
-            # Check if our database exists
-            exists = await conn.fetchval(
-                "SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = $1)",
-                self.database
-            )
-            
-            await conn.close()
-            return exists
-            
-        except Exception as e:
-            logger.error(f"Error checking database existence: {e}")
-            raise
-    
-    async def create_database(self):
-        """Create the database if it doesn't exist"""
-        try:
-            # Connect to default postgres database
-            conn = await asyncpg.connect(
-                host=self.host,
-                port=self.port,
-                user=self.user,
-                password=self.password,
-                database='postgres'
-            )
-            
-            # Check if database exists
-            if not await self.database_exists():
-                # Create database
-                await conn.execute(f'CREATE DATABASE {self.database}')
-                logger.info(f"Created database: {self.database}")
-            else:
-                logger.info(f"Database already exists: {self.database}")
-            
-            await conn.close()
-            
-        except Exception as e:
-            logger.error(f"Error creating database: {e}")
-            raise
-    
-    async def load_schema(self):
-        """Load the schema from SQL file"""
-        if not self.schema_file.exists():
-            raise FileNotFoundError(f"Schema file not found: {self.schema_file}")
+        async with AsyncPostgresManager.connection() as conn:
+            # Drop existing tables
+            await conn.execute("""
+                DROP TABLE IF EXISTS agent_memories CASCADE;
+                DROP TABLE IF EXISTS conversation_memories CASCADE;
+                DROP TABLE IF EXISTS user_profiles CASCADE;
+                DROP TABLE IF EXISTS specialist_knowledge CASCADE;
+                DROP TABLE IF EXISTS events CASCADE;
+            """)
+            logger.info("✅ Existing tables dropped")
         
-        # Read and process schema file
-        with open(self.schema_file, 'r') as f:
-            schema_content = f.read()
+        # Reinitialize
+        await initialize_database(dsn)
         
-        # Remove the CREATE DATABASE statement since we handle it in Python
-        lines = schema_content.split('\n')
-        filtered_lines = []
-        skip_next = False
-        
-        for line in lines:
-            # Skip CREATE DATABASE and \c commands
-            if 'CREATE DATABASE' in line or line.strip().startswith('\\c'):
-                skip_next = False
-                continue
-            if skip_next:
-                skip_next = False
-                continue
-            filtered_lines.append(line)
-        
-        return '\n'.join(filtered_lines)
+    except Exception as e:
+        logger.error(f"❌ Database reset failed: {e}")
+    finally:
+        await AsyncPostgresManager.close()
+
+async def verify_installation(dsn: str = "postgresql://localhost:5432/auren") -> bool:
+    """
+    Verify the database installation
     
-    async def apply_schema(self):
-        """Apply the schema to the database"""
-        try:
-            # Connect to our database
-            conn = await asyncpg.connect(
-                host=self.host,
-                port=self.port,
-                user=self.user,
-                password=self.password,
-                database=self.database
-            )
-            
-            # Load schema
-            schema = await self.load_schema()
-            
-            # Split by semicolons but handle multi-line statements
-            statements = []
-            current_statement = []
-            
-            for line in schema.split('\n'):
-                current_statement.append(line)
-                if line.strip().endswith(';'):
-                    statement = '\n'.join(current_statement).strip()
-                    if statement and not statement.startswith('--'):
-                        statements.append(statement)
-                    current_statement = []
-            
-            # Execute each statement
-            for i, statement in enumerate(statements):
-                if statement.strip():
-                    try:
-                        await conn.execute(statement)
-                    except asyncpg.exceptions.DuplicateTableError:
-                        # Table already exists, skip
-                        pass
-                    except Exception as e:
-                        logger.warning(f"Error executing statement {i}: {e}")
-                        logger.debug(f"Statement: {statement[:100]}...")
-            
-            logger.info("Schema applied successfully")
-            await conn.close()
-            
-        except Exception as e:
-            logger.error(f"Error applying schema: {e}")
-            raise
+    Args:
+        dsn: PostgreSQL connection string
+        
+    Returns:
+        bool: True if installation is valid
+    """
+    logger.info("Verifying database installation...")
     
-    async def insert_test_data(self):
-        """Insert test data for development"""
-        try:
-            conn = await asyncpg.connect(
-                host=self.host,
-                port=self.port,
-                user=self.user,
-                password=self.password,
-                database=self.database
-            )
+    try:
+        await AsyncPostgresManager.initialize(dsn)
+        
+        # Check if tables exist
+        async with AsyncPostgresManager.connection() as conn:
+            tables = await conn.fetch("""
+                SELECT tablename FROM pg_tables 
+                WHERE schemaname = 'public' 
+                AND tablename IN ('events', 'agent_memories', 'conversation_memories', 
+                                 'user_profiles', 'specialist_knowledge')
+            """)
             
-            # Check if test user already exists
-            exists = await conn.fetchval(
-                "SELECT EXISTS(SELECT 1 FROM user_profiles WHERE external_id = $1)",
-                'test_user_001'
-            )
+            expected_tables = 5
+            actual_tables = len(tables)
             
-            if not exists:
-                # Insert test user
-                await conn.execute("""
-                    INSERT INTO user_profiles (external_id, profile_data)
-                    VALUES ($1, $2)
-                """, 'test_user_001', {
-                    'name': 'Test User',
-                    'preferences': {
-                        'notifications': True,
-                        'analysis_depth': 'detailed'
-                    }
-                })
+            if actual_tables == expected_tables:
+                logger.info(f"✅ All {expected_tables} tables present")
                 
-                # Insert test biometric baseline
-                await conn.execute("""
-                    INSERT INTO biometric_baselines (user_id, metric_type, baseline_value, calculation_method)
-                    VALUES ('test_user_001', 'hrv_rmssd', 55.0, 'rolling_7d_average')
-                """)
+                # Test basic functionality
+                event_store = EventStore()
+                memory_backend = PostgreSQLMemoryBackend(event_store)
                 
-                logger.info("Test data inserted successfully")
+                # Test memory storage
+                memory_id = await memory_backend.store_memory(
+                    agent_id="verification_test",
+                    memory_type=memory_backend.MemoryType.FACT,
+                    content={"test": "verification"},
+                    user_id="test_user",
+                    confidence=1.0
+                )
+                
+                # Test retrieval
+                memories = await memory_backend.retrieve_memories(
+                    agent_id="verification_test",
+                    user_id="test_user",
+                    limit=1
+                )
+                
+                if len(memories) > 0:
+                    logger.info("✅ Memory storage and retrieval working")
+                    return True
+                else:
+                    logger.error("❌ Memory retrieval failed")
+                    return False
             else:
-                logger.info("Test data already exists")
-            
-            await conn.close()
-            
-        except Exception as e:
-            logger.error(f"Error inserting test data: {e}")
-            # Don't raise, test data is optional
-    
-    async def initialize(self, include_test_data: bool = True):
-        """Run the complete initialization process"""
-        logger.info("Starting database initialization...")
-        
-        # Create database if needed
-        await self.create_database()
-        
-        # Apply schema
-        await self.apply_schema()
-        
-        # Optionally insert test data
-        if include_test_data:
-            await self.insert_test_data()
-        
-        logger.info("Database initialization complete!")
+                logger.error(f"❌ Expected {expected_tables} tables, found {actual_tables}")
+                return False
+                
+    except Exception as e:
+        logger.error(f"❌ Installation verification failed: {e}")
+        return False
+    finally:
+        await AsyncPostgresManager.close()
 
-
-# Convenience functions
-async def init_database(**kwargs):
-    """Initialize the database with given parameters"""
-    initializer = DatabaseInitializer(**kwargs)
-    await initializer.initialize()
-
-
-async def main():
-    """Main function for command-line usage"""
+if __name__ == "__main__":
     import argparse
     
-    parser = argparse.ArgumentParser(description='Initialize AUREN database')
-    parser.add_argument('--host', default=None, help='Database host')
-    parser.add_argument('--port', type=int, default=None, help='Database port')
-    parser.add_argument('--user', default=None, help='Database user')
-    parser.add_argument('--password', default=None, help='Database password')
-    parser.add_argument('--database', default=None, help='Database name')
-    parser.add_argument('--no-test-data', action='store_true', help='Skip test data insertion')
+    parser = argparse.ArgumentParser(description="AUREN Database Management")
+    parser.add_argument("--dsn", default="postgresql://localhost:5432/auren",
+                        help="PostgreSQL connection string")
+    parser.add_argument("--reset", action="store_true",
+                        help="Reset database (drops all tables)")
+    parser.add_argument("--verify", action="store_true",
+                        help="Verify installation")
     
     args = parser.parse_args()
     
-    initializer = DatabaseInitializer(
-        host=args.host,
-        port=args.port,
-        user=args.user,
-        password=args.password,
-        database=args.database
-    )
-    await initializer.initialize(include_test_data=not args.no_test_data)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    if args.reset:
+        asyncio.run(reset_database(args.dsn))
+    elif args.verify:
+        success = asyncio.run(verify_installation(args.dsn))
+        exit(0 if success else 1)
+    else:
+        asyncio.run(initialize_database(args.dsn))

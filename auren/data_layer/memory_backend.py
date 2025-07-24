@@ -80,13 +80,16 @@ class PostgreSQLMemoryBackend:
                     updated_at TIMESTAMPTZ DEFAULT NOW(),
                     version INTEGER DEFAULT 1,
                     parent_id INTEGER REFERENCES agent_memory(id),
-                    metadata JSONB DEFAULT '{}',
-                    
-                    INDEX idx_agent_user (agent_type, user_id),
-                    INDEX idx_memory_type (memory_type),
-                    INDEX idx_created_at (created_at DESC),
-                    INDEX idx_validation_status (validation_status)
+                    metadata JSONB DEFAULT '{}'
                 );
+            """)
+            
+            # Create indexes
+            await conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_agent_user ON agent_memory (agent_type, user_id);
+                CREATE INDEX IF NOT EXISTS idx_memory_type ON agent_memory (memory_type);
+                CREATE INDEX IF NOT EXISTS idx_created_at ON agent_memory (created_at);
+                CREATE INDEX IF NOT EXISTS idx_validation_status ON agent_memory (validation_status);
             """)
             
             # Create hypothesis tracking table
@@ -104,12 +107,15 @@ class PostgreSQLMemoryBackend:
                     created_at TIMESTAMPTZ DEFAULT NOW(),
                     last_tested_at TIMESTAMPTZ,
                     test_count INTEGER DEFAULT 0,
-                    validation_outcomes JSONB DEFAULT '[]',
-                    
-                    INDEX idx_hypothesis_agent (agent_type, user_id),
-                    INDEX idx_hypothesis_status (status),
-                    INDEX idx_confidence_delta (current_confidence - initial_confidence)
+                    validation_outcomes JSONB DEFAULT '[]'
                 );
+            """)
+            
+            # Create indexes for hypotheses
+            await conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_hypothesis_agent ON agent_hypotheses (agent_type, user_id);
+                CREATE INDEX IF NOT EXISTS idx_hypothesis_status ON agent_hypotheses (status);
+                CREATE INDEX IF NOT EXISTS idx_confidence_delta ON agent_hypotheses ((current_confidence - initial_confidence));
             """)
             
             self._initialized = True

@@ -78,13 +78,16 @@ class EventStore:
                 stream_type VARCHAR(100) NOT NULL,
                 event_type VARCHAR(100) NOT NULL,
                 event_data JSONB NOT NULL,
-                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                INDEX idx_events_stream (stream_id),
-                INDEX idx_events_type (stream_type),
-                INDEX idx_events_event_type (event_type),
-                INDEX idx_events_created (created_at DESC),
-                INDEX idx_events_gin (event_data) USING GIN
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
             )
+            """,
+            
+            """
+            CREATE INDEX IF NOT EXISTS idx_events_stream ON events (stream_id);
+            CREATE INDEX IF NOT EXISTS idx_events_type ON events (stream_type);
+            CREATE INDEX IF NOT EXISTS idx_events_event_type ON events (event_type);
+            CREATE INDEX IF NOT EXISTS idx_events_created ON events (created_at);
+            CREATE INDEX IF NOT EXISTS idx_events_gin ON events USING GIN (event_data);
             """,
             
             """
@@ -94,11 +97,14 @@ class EventStore:
                 stream_type VARCHAR(100) NOT NULL,
                 current_version INTEGER DEFAULT 0,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                INDEX idx_streams_id (stream_id),
-                INDEX idx_streams_type (stream_type),
-                INDEX idx_streams_updated (updated_at DESC)
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
             )
+            """,
+            
+            """
+            CREATE INDEX IF NOT EXISTS idx_streams_id ON event_streams (stream_id);
+            CREATE INDEX IF NOT EXISTS idx_streams_type ON event_streams (stream_type);
+            CREATE INDEX IF NOT EXISTS idx_streams_updated ON event_streams (updated_at);
             """,
             
             """
@@ -110,11 +116,14 @@ class EventStore:
                 callback_url VARCHAR(500),
                 is_active BOOLEAN DEFAULT TRUE,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                INDEX idx_subscriptions_type (stream_type),
-                INDEX idx_subscriptions_active (is_active),
-                INDEX idx_subscriptions_updated (updated_at DESC)
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
             )
+            """,
+            
+            """
+            CREATE INDEX IF NOT EXISTS idx_subscriptions_type ON event_subscriptions (stream_type);
+            CREATE INDEX IF NOT EXISTS idx_subscriptions_active ON event_subscriptions (is_active);
+            CREATE INDEX IF NOT EXISTS idx_subscriptions_updated ON event_subscriptions (updated_at);
             """
         ]
         

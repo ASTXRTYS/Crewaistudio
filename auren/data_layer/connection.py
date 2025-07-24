@@ -5,6 +5,7 @@ Handles PostgreSQL connections with connection pooling
 
 import asyncio
 import logging
+import os
 from typing import Optional, Dict, Any
 import asyncpg
 from asyncpg.pool import Pool
@@ -18,23 +19,33 @@ class DatabaseConnection:
     """
     
     def __init__(self, 
-                 database_url: str = "postgresql://localhost:5432/auren",
-                 min_connections: int = 1,
-                 max_connections: int = 10,
-                 connection_timeout: int = 30):
+                 database_url: Optional[str] = None,
+                 min_connections: Optional[int] = None,
+                 max_connections: Optional[int] = None,
+                 connection_timeout: Optional[int] = None):
         """
         Initialize database connection manager
         
         Args:
-            database_url: PostgreSQL connection string
-            min_connections: Minimum pool connections
-            max_connections: Maximum pool connections
-            connection_timeout: Connection timeout in seconds
+            database_url: PostgreSQL connection string (defaults to env var or localhost)
+            min_connections: Minimum pool connections (defaults to env var or 1)
+            max_connections: Maximum pool connections (defaults to env var or 10)
+            connection_timeout: Connection timeout in seconds (defaults to env var or 30)
         """
-        self.database_url = database_url
-        self.min_connections = min_connections
-        self.max_connections = max_connections
-        self.connection_timeout = connection_timeout
+        # Use environment variables with fallback defaults
+        self.database_url = database_url or os.getenv(
+            'DATABASE_URL', 
+            'postgresql://localhost:5432/auren'
+        )
+        self.min_connections = min_connections or int(
+            os.getenv('DATABASE_MIN_CONNECTIONS', '1')
+        )
+        self.max_connections = max_connections or int(
+            os.getenv('DATABASE_MAX_CONNECTIONS', '10')
+        )
+        self.connection_timeout = connection_timeout or int(
+            os.getenv('DATABASE_CONNECTION_TIMEOUT', '30')
+        )
         self.pool: Optional[Pool] = None
     
     async def initialize(self) -> bool:
@@ -142,7 +153,7 @@ class DatabaseConnection:
         async with self.pool.acquire() as conn:
             return await conn.fetchval(query, *args)
     
-    async def transaction(self):
+    def transaction(self):
         """
         Get a transaction context manager
         
@@ -233,14 +244,17 @@ async def initialize_schema():
             last_applied TIMESTAMP WITH TIME ZONE,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-            metadata JSONB DEFAULT '{}',
-            INDEX idx_knowledge_user (user_id),
-            INDEX idx_knowledge_agent (agent_id),
-            INDEX idx_knowledge_domain (domain),
-            INDEX idx_knowledge_type (knowledge_type),
-            INDEX idx_knowledge_status (validation_status),
-            INDEX idx_knowledge_created (created_at DESC)
+            metadata JSONB DEFAULT '{}'
         )
+        """,
+        
+        """
+        CREATE INDEX IF NOT EXISTS idx_knowledge_user ON knowledge_items (user_id);
+        CREATE INDEX IF NOT EXISTS idx_knowledge_agent ON knowledge_items (agent_id);
+        CREATE INDEX IF NOT EXISTS idx_knowledge_domain ON knowledge_items (domain);
+        CREATE INDEX IF NOT EXISTS idx_knowledge_type ON knowledge_items (knowledge_type);
+        CREATE INDEX IF NOT EXISTS idx_knowledge_status ON knowledge_items (validation_status);
+        CREATE INDEX IF NOT EXISTS idx_knowledge_created ON knowledge_items (created_at);
         """,
         
         """
@@ -250,12 +264,15 @@ async def initialize_schema():
             stream_type VARCHAR(100) NOT NULL,
             event_type VARCHAR(100) NOT NULL,
             event_data JSONB NOT NULL,
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-            INDEX idx_events_stream (stream_id),
-            INDEX idx_events_type (stream_type),
-            INDEX idx_events_event_type (event_type),
-            INDEX idx_events_created (created_at DESC)
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         )
+        """,
+        
+        """
+        CREATE INDEX IF NOT EXISTS idx_events_stream ON events (stream_id);
+        CREATE INDEX IF NOT EXISTS idx_events_type ON events (stream_type);
+        CREATE INDEX IF NOT EXISTS idx_events_event_type ON events (event_type);
+        CREATE INDEX IF NOT EXISTS idx_events_created ON events (created_at);
         """,
         
         """
@@ -274,19 +291,21 @@ async def initialize_schema():
             status VARCHAR(50) NOT NULL,
             metadata JSONB DEFAULT '{}',
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-            INDEX idx_hypotheses_user (user_id),
-            INDEX idx_hypotheses_agent (agent_id),
-            INDEX idx_hypotheses_domain (domain),
-            INDEX idx_hypotheses_status (status),
-            INDEX idx_hypotheses_expires (expires_at)
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         )
+        """,
+        
+        """
+        CREATE INDEX IF NOT EXISTS idx_hypotheses_user ON hypotheses (user_id);
+        CREATE INDEX IF NOT EXISTS idx_hypotheses_agent ON hypotheses (agent_id);
+        CREATE INDEX IF NOT EXISTS idx_hypotheses_domain ON hypotheses (domain);
+        CREATE INDEX IF NOT EXISTS idx_hypotheses_status ON hypotheses (status);
+        CREATE INDEX IF NOT EXISTS idx_hypotheses_expires ON hypotheses (expires_at);
         """
     ]
     
-    async with conn.transaction() as tx:
-        for query in schema_queries:
-            await conn.execute(query)
+    for query in schema_queries:
+        await conn.execute(query)
     
     logger.info("✅ Database schema initialized successfully")
 

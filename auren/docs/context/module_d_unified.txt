@@ -1,0 +1,1092 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module id="module_d" name="CrewAI Integration & Agent Orchestration">
+  <metadata>
+    <implements>CrewAI Integration, Memory Hooks, Agent Orchestration, Biometric Context</implements>
+    <dependencies>Master Control Document, Module A (Data Persistence), Module B (Intelligence Systems)</dependencies>
+    <load_manifest>
+      <always_load>Master Control Document</always_load>
+      <primary_module>This document (Module D)</primary_module>
+      <reference_modules>Module A, Module B</reference_modules>
+      <token_budget>Master (30k) + This (40k) + Module A (35k) = 105k used</token_budget>
+    </load_manifest>
+  </metadata>
+
+  <quick_context>
+    <description>
+      This module bridges AUREN's advanced capabilities with CrewAI, providing custom memory integration,
+      specialist agent implementations, and sophisticated orchestration patterns. It combines the clarity
+      of basic integration with advanced features like biometric context handling, multi-agent collaboration
+      patterns, and hypothesis-driven intelligence.
+    </description>
+    <key_innovation>
+      AURENMemory class that integrates with PostgreSQL backend, event sourcing, and intelligence systems
+      while maintaining CrewAI compatibility. The orchestrator supports both simple single-agent responses
+      and complex multi-agent collaboration workflows.
+    </key_innovation>
+  </quick_context>
+
+  <implementation_checklist>
+    <task>AURENMemory class implementing CrewAI memory interface</task>
+    <task>Biometric context integration with memory system</task>
+    <task>Specialist agent implementations with domain expertise</task>
+    <task>AUREN Orchestrator with collaboration patterns</task>
+    <task>Custom tools for hypothesis and knowledge management</task>
+    <task>Memory context passing between CrewAI tasks</task>
+    <task>Real-time biometric data integration with workflows</task>
+    <task>Agent decision tracking and outcome correlation</task>
+    <task>Multi-agent collaboration protocols (sequential, parallel, consensus)</task>
+    <task>Comprehensive testing with realistic scenarios</task>
+  </implementation_checklist>
+
+  <detailed_implementation>
+    <!-- Core Memory Integration -->
+    <section name="auren_memory_backend">
+      <title>AUREN Memory Backend for CrewAI</title>
+      <description>Custom memory implementation that integrates AUREN's three-tier system with CrewAI</description>
+      <code language="python"><![CDATA[
+"""
+AUREN Memory Backend integrating with CrewAI
+Combines Version 3's clarity with Version 1's advanced features
+"""
+
+import asyncio
+import json
+from datetime import datetime, timezone, timedelta
+from typing import Dict, List, Optional, Any, Union
+from crewai.memory.memory import Memory
+from crewai.memory.storage.base_memory_storage import BaseMemoryStorage
+import uuid
+import logging
+
+logger = logging.getLogger(__name__)
+
+class AURENMemoryStorage(BaseMemoryStorage):
+    """
+    AUREN-specific memory storage implementing CrewAI interface
+    
+    Features:
+    - Integration with PostgreSQL backend (Module A)
+    - Event sourcing for all memory operations
+    - Hypothesis and knowledge management (Module B)
+    - Biometric context integration
+    - Cross-agent memory sharing
+    """
+    
+    def __init__(self, 
+                 memory_backend,
+                 event_store,
+                 hypothesis_validator,
+                 knowledge_manager,
+                 agent_id: str,
+                 user_id: Optional[str] = None):
+        super().__init__()
+        self.memory_backend = memory_backend
+        self.event_store = event_store
+        self.hypothesis_validator = hypothesis_validator
+        self.knowledge_manager = knowledge_manager
+        self.agent_id = agent_id
+        self.user_id = user_id
+        
+        # CrewAI compatibility
+        self._memories: Dict[str, Any] = {}
+        self._last_sync = datetime.now(timezone.utc)
+    
+    async def save(self, data: Dict[str, Any]) -> None:
+        """Save memory data to AUREN backend with intelligence integration"""
+        
+        try:
+            # Classify memory type and extract content
+            memory_type = self._classify_memory_type(data)
+            content = self._extract_content(data)
+            metadata = self._extract_metadata(data)
+            confidence = self._calculate_confidence(data)
+            
+            # Store in AUREN memory backend
+            memory_id = await self.memory_backend.store_memory(
+                agent_id=self.agent_id,
+                memory_type=memory_type,
+                content=content,
+                user_id=self.user_id,
+                metadata=metadata,
+                confidence=confidence
+            )
+            
+            # Intelligence integration - check for hypothesis triggers
+            await self._check_hypothesis_triggers(content, metadata, confidence)
+            
+            # Knowledge management - check for new insights
+            await self._check_knowledge_creation(content, metadata, confidence)
+            
+            # Update local cache
+            self._memories[memory_id] = data
+            
+            logger.debug(f"Saved memory {memory_id} for agent {self.agent_id}")
+            
+        except Exception as e:
+            logger.error(f"Error saving memory: {e}")
+            raise
+    
+    async def load(self, query: str = "", limit: int = 100) -> List[Dict[str, Any]]:
+        """Load memories with biometric context integration"""
+        
+        try:
+            # Load from memory backend
+            memories = await self.memory_backend.retrieve_memories(
+                agent_id=self.agent_id,
+                user_id=self.user_id,
+                limit=limit
+            )
+            
+            # Convert to CrewAI format
+            crew_memories = []
+            for memory in memories:
+                crew_memory = self._convert_to_crew_format(memory)
+                if self._matches_query(crew_memory, query):
+                    crew_memories.append(crew_memory)
+            
+            # Sort by relevance and recency
+            crew_memories.sort(
+                key=lambda x: (x.get("relevance_score", 0.5), x.get("created_at", "")),
+                reverse=True
+            )
+            
+            return crew_memories[:limit]
+            
+        except Exception as e:
+            logger.error(f"Error loading memories: {e}")
+            return []
+    
+    async def get_biometric_context(self, time_window_hours: int = 24) -> Dict[str, Any]:
+        """Get biometric context for agent decision making"""
+        
+        try:
+            # Get recent biometric events from event store
+            events = await self.event_store.get_stream_events(
+                stream_id=self.user_id,
+                from_version=0
+            )
+            
+            # Filter biometric events within time window
+            cutoff_time = datetime.now(timezone.utc) - timedelta(hours=time_window_hours)
+            biometric_events = [
+                e for e in events 
+                if e.event_type.startswith("biometric_") and e.timestamp > cutoff_time
+            ]
+            
+            # Aggregate biometric data
+            biometric_context = {
+                "time_window_hours": time_window_hours,
+                "data_points": len(biometric_events),
+                "latest_metrics": {},
+                "trends": {},
+                "alerts": []
+            }
+            
+            # Extract latest values for each metric type
+            metric_data = {}
+            for event in sorted(biometric_events, key=lambda x: x.timestamp, reverse=True):
+                metric_type = event.payload.get("metric_type")
+                if metric_type and metric_type not in biometric_context["latest_metrics"]:
+                    biometric_context["latest_metrics"][metric_type] = {
+                        "value": event.payload.get("value"),
+                        "timestamp": event.timestamp.isoformat(),
+                        "quality": event.payload.get("quality", 1.0)
+                    }
+                
+                # Collect for trend analysis
+                if metric_type not in metric_data:
+                    metric_data[metric_type] = []
+                metric_data[metric_type].append({
+                    "value": event.payload.get("value"),
+                    "timestamp": event.timestamp
+                })
+            
+            # Analyze trends
+            for metric_type, data_points in metric_data.items():
+                if len(data_points) >= 3:
+                    values = [dp["value"] for dp in data_points[-10:]]
+                    trend = self._analyze_trend(values)
+                    biometric_context["trends"][metric_type] = trend
+            
+            return biometric_context
+            
+        except Exception as e:
+            logger.error(f"Error getting biometric context: {e}")
+            return {"error": str(e)}
+    
+    def _classify_memory_type(self, data: Dict[str, Any]) -> str:
+        """Classify memory type from data structure"""
+        if "observation" in data or "perception" in data:
+            return "observation"
+        elif "insight" in data or "analysis" in data:
+            return "insight" 
+        elif "decision" in data or "action" in data:
+            return "decision"
+        elif "hypothesis" in data:
+            return "hypothesis"
+        elif "knowledge" in data:
+            return "knowledge"
+        elif "conversation" in data or "message" in data:
+            return "conversation"
+        else:
+            return "general"
+    
+    async def _check_hypothesis_triggers(self, content: Dict[str, Any], metadata: Dict[str, Any], confidence: float) -> None:
+        """Check if memory should trigger hypothesis formation"""
+        
+        if confidence > 0.75 and any(key in content for key in ["pattern", "prediction", "correlation"]):
+            try:
+                description = content.get("pattern", content.get("prediction", "Pattern detected"))
+                prediction = content.get("prediction", {})
+                
+                hypothesis = await self.hypothesis_validator.form_hypothesis(
+                    agent_id=self.agent_id,
+                    user_id=self.user_id,
+                    domain=self._get_agent_domain(),
+                    description=description,
+                    prediction=prediction,
+                    evidence_criteria=content.get("evidence_criteria", []),
+                    confidence=confidence
+                )
+                
+                logger.info(f"Formed hypothesis {hypothesis.hypothesis_id} from memory")
+                
+            except Exception as e:
+                logger.error(f"Error forming hypothesis: {e}")
+    
+    def _get_agent_domain(self) -> str:
+        """Get domain for current agent"""
+        domain_mapping = {
+            "neuroscientist": "neuroscience",
+            "nutritionist": "nutrition", 
+            "training_agent": "training",
+            "recovery_agent": "recovery",
+            "sleep_agent": "sleep",
+            "mental_health_agent": "mental_health"
+        }
+        return domain_mapping.get(self.agent_id, "general")
+
+class AURENMemory(Memory):
+    """
+    Custom Memory class for AUREN agents in CrewAI
+    Integrates all AUREN memory types with CrewAI's memory system
+    """
+    
+    def __init__(self, 
+                 agent_id: str,
+                 user_id: Optional[str] = None,
+                 memory_backend=None,
+                 event_store=None,
+                 hypothesis_validator=None,
+                 knowledge_manager=None):
+        
+        # Create AUREN storage backend
+        self.storage = AURENMemoryStorage(
+            memory_backend=memory_backend,
+            event_store=event_store,
+            hypothesis_validator=hypothesis_validator,
+            knowledge_manager=knowledge_manager,
+            agent_id=agent_id,
+            user_id=user_id
+        )
+        
+        # Initialize CrewAI memory with AUREN storage
+        super().__init__(storage=self.storage)
+        
+        self.agent_id = agent_id
+        self.user_id = user_id
+]]></code>
+    </section>
+
+    <!-- Specialist Agent Implementation -->
+    <section name="specialist_agents">
+      <title>Specialist Agent Implementations</title>
+      <description>Domain-specific agents with integrated tools and capabilities</description>
+      <code language="python"><![CDATA[
+"""
+Specialist Agent implementations with custom tools
+Combines simple patterns with advanced capabilities
+"""
+
+from crewai import Agent, Task, Crew
+from crewai.tools import BaseTool
+from typing import Dict, List, Any, Optional
+import asyncio
+from datetime import datetime, timezone
+
+class AURENSpecialistTool(BaseTool):
+    """Base class for AUREN specialist tools with common functionality"""
+    
+    def __init__(self, user_id: str, hypothesis_validator=None, knowledge_manager=None):
+        super().__init__()
+        self.user_id = user_id
+        self.hypothesis_validator = hypothesis_validator
+        self.knowledge_manager = knowledge_manager
+
+class FormulateHypothesisTool(AURENSpecialistTool):
+    name: str = "Formulate Hypothesis"
+    description: str = "Formulates and saves a new hypothesis about user health patterns. Input: hypothesis description"
+    
+    def _run(self, hypothesis_text: str) -> str:
+        try:
+            # Create hypothesis through validator
+            hypothesis = self.hypothesis_validator.form_hypothesis(
+                agent_id="neuroscientist",
+                user_id=self.user_id,
+                domain="neuroscience",
+                description=hypothesis_text,
+                confidence=0.7
+            )
+            return f"Hypothesis '{hypothesis.hypothesis_id}' formulated and tracking for validation."
+        except Exception as e:
+            return f"Error formulating hypothesis: {str(e)}"
+
+class QueryKnowledgeGraphTool(AURENSpecialistTool):
+    name: str = "Query Knowledge Graph"
+    description: str = "Queries validated knowledge about a concept. Input: concept to query"
+    
+    def _run(self, concept: str) -> str:
+        try:
+            knowledge = self.knowledge_manager.get_knowledge_by_domain("neuroscience")
+            related = [k for k in knowledge if concept.lower() in k.description.lower()]
+            return f"Found {len(related)} validated insights related to '{concept}'"
+        except Exception as e:
+            return f"Error querying knowledge: {str(e)}"
+
+class BiometricAnalysisTool(AURENSpecialistTool):
+    name: str = "Analyze Biometric Context"
+    description: str = "Analyzes recent biometric data for patterns. Input: time window in hours"
+    
+    def _run(self, time_window: str = "24") -> str:
+        try:
+            hours = int(time_window)
+            # This would integrate with biometric context from memory
+            return f"Analyzed biometric data from last {hours} hours - HRV trending downward, sleep efficiency at 78%"
+        except Exception as e:
+            return f"Error analyzing biometrics: {str(e)}"
+
+class NeuroscientistAgent:
+    """Neuroscientist specialist agent with domain expertise"""
+    
+    def __init__(self, user_id: str, memory: AURENMemory, hypothesis_validator=None, knowledge_manager=None):
+        self.user_id = user_id
+        self.memory = memory
+        
+        # Create specialized tools
+        self.tools = [
+            FormulateHypothesisTool(user_id, hypothesis_validator, knowledge_manager),
+            QueryKnowledgeGraphTool(user_id, hypothesis_validator, knowledge_manager),
+            BiometricAnalysisTool(user_id, hypothesis_validator, knowledge_manager)
+        ]
+        
+        # Create CrewAI agent
+        self.crew_agent = Agent(
+            role="Neuroscientist and Stress Physiology Expert",
+            goal="Analyze nervous system patterns, stress responses, and autonomic balance to optimize mental and physical performance",
+            backstory="""You are a leading neuroscientist specializing in stress physiology and autonomic nervous system function. 
+            You have deep expertise in HRV analysis, circadian rhythms, and the neurobiological basis of performance optimization. 
+            You can formulate and track hypotheses about user patterns and access validated knowledge from previous analyses.""",
+            tools=self.tools,
+            memory=memory,
+            verbose=True,
+            allow_delegation=True
+        )
+    
+    async def analyze_with_context(self, query: str, biometric_context: Dict[str, Any]) -> str:
+        """Analyze query with full biometric context"""
+        
+        # Create context-enriched task
+        task = Task(
+            description=f"""
+            Analyze the following user query with full biometric context:
+            
+            Query: {query}
+            
+            Biometric Context: {biometric_context}
+            
+            Provide analysis focusing on:
+            1. HRV patterns and autonomic balance
+            2. Stress response indicators  
+            3. Recovery vs. sympathetic dominance
+            4. Actionable recommendations
+            5. Any new hypotheses worth tracking
+            """,
+            agent=self.crew_agent,
+            expected_output="Comprehensive analysis with specific recommendations and any new hypotheses"
+        )
+        
+        # Execute with single-agent crew
+        crew = Crew(agents=[self.crew_agent], tasks=[task], verbose=True)
+        result = crew.kickoff()
+        
+        return result
+
+# Additional specialist agents would follow similar pattern
+class TrainingAgent:
+    """Training specialist focusing on exercise optimization"""
+    
+    def __init__(self, user_id: str, memory: AURENMemory):
+        self.user_id = user_id
+        self.memory = memory
+        
+        self.crew_agent = Agent(
+            role="Exercise Physiologist and Training Optimization Specialist",
+            goal="Design and adapt training programs based on real-time recovery data and performance metrics",
+            backstory="""You are an exercise physiologist with expertise in training periodization and adaptation. 
+            You specialize in data-driven training optimization, using biometric feedback to maximize training 
+            adaptations while minimizing overtraining risk.""",
+            tools=[],  # Would have training-specific tools
+            memory=memory,
+            verbose=True,
+            allow_delegation=True
+        )
+]]></code>
+    </section>
+
+    <!-- Orchestrator Implementation -->
+    <section name="auren_orchestrator">
+      <title>AUREN Orchestrator System</title>
+      <description>Multi-agent orchestration with collaboration patterns</description>
+      <code language="python"><![CDATA[
+"""
+AUREN Orchestrator for managing multi-agent collaborations
+Supports simple single-agent responses and complex collaboration patterns
+"""
+
+from crewai import Crew, Process
+from typing import Dict, List, Any, Optional
+import asyncio
+from datetime import datetime, timezone
+from enum import Enum
+
+class CollaborationType(Enum):
+    SINGLE_AGENT = "single_agent"
+    SEQUENTIAL = "sequential_with_synthesis"
+    PARALLEL = "parallel_with_consensus" 
+    COLLABORATIVE = "collaborative_analysis"
+
+class AURENOrchestrator:
+    """
+    Orchestrates collaboration between AUREN specialist agents
+    
+    Features:
+    - Intelligent agent selection
+    - Multiple collaboration patterns
+    - Biometric context integration
+    - Conflict resolution and synthesis
+    """
+    
+    def __init__(self, 
+                 user_id: str,
+                 memory_backend,
+                 event_store,
+                 hypothesis_validator,
+                 knowledge_manager):
+        
+        self.user_id = user_id
+        self.memory_backend = memory_backend
+        self.event_store = event_store
+        self.hypothesis_validator = hypothesis_validator
+        self.knowledge_manager = knowledge_manager
+        
+        # Initialize agents
+        self.agents = self._initialize_agents()
+        
+        # Collaboration patterns
+        self.collaboration_patterns = {
+            "stress_analysis": {
+                "type": CollaborationType.SEQUENTIAL,
+                "primary": "neuroscientist",
+                "collaborators": ["sleep_agent", "mental_health_agent"]
+            },
+            "performance_optimization": {
+                "type": CollaborationType.PARALLEL,
+                "primary": "training_agent",
+                "collaborators": ["nutritionist", "recovery_agent"]
+            },
+            "general_health": {
+                "type": CollaborationType.SINGLE_AGENT,
+                "primary": "neuroscientist",
+                "collaborators": []
+            }
+        }
+    
+    def _initialize_agents(self) -> Dict[str, Any]:
+        """Initialize all specialist agents with shared context"""
+        
+        agents = {}
+        
+        # Create shared memory for each agent
+        for agent_id in ["neuroscientist", "training_agent", "nutritionist", "recovery_agent"]:
+            memory = AURENMemory(
+                agent_id=agent_id,
+                user_id=self.user_id,
+                memory_backend=self.memory_backend,
+                event_store=self.event_store,
+                hypothesis_validator=self.hypothesis_validator,
+                knowledge_manager=self.knowledge_manager
+            )
+            
+            if agent_id == "neuroscientist":
+                agents[agent_id] = NeuroscientistAgent(
+                    self.user_id, memory, self.hypothesis_validator, self.knowledge_manager
+                )
+            elif agent_id == "training_agent":
+                agents[agent_id] = TrainingAgent(self.user_id, memory)
+            # Add other agents as needed
+        
+        return agents
+    
+    async def handle_user_message(self, session_id: str, message: str) -> str:
+        """
+        Main entry point for processing user messages
+        Intelligently selects collaboration pattern and executes
+        """
+        
+        # 1. Get biometric context
+        biometric_context = await self._get_biometric_context()
+        
+        # 2. Determine collaboration strategy
+        collaboration_type = await self._determine_collaboration_strategy(message, biometric_context)
+        pattern = self.collaboration_patterns.get(collaboration_type, self.collaboration_patterns["general_health"])
+        
+        # 3. Execute based on collaboration type
+        if pattern["type"] == CollaborationType.SINGLE_AGENT:
+            result = await self._execute_single_agent(message, pattern, biometric_context)
+        elif pattern["type"] == CollaborationType.SEQUENTIAL:
+            result = await self._execute_sequential_collaboration(message, pattern, biometric_context)
+        elif pattern["type"] == CollaborationType.PARALLEL:
+            result = await self._execute_parallel_collaboration(message, pattern, biometric_context)
+        else:
+            # Fallback to single agent
+            result = await self._execute_single_agent(message, pattern, biometric_context)
+        
+        return result
+    
+    async def _get_biometric_context(self) -> Dict[str, Any]:
+        """Get current biometric context for decision making"""
+        
+        # Get context from any agent's memory (they share the same event store)
+        neuroscientist = self.agents.get("neuroscientist")
+        if neuroscientist and hasattr(neuroscientist, "memory"):
+            return await neuroscientist.memory.storage.get_biometric_context(24)
+        return {}
+    
+    async def _determine_collaboration_strategy(self, message: str, biometric_context: Dict[str, Any]) -> str:
+        """Determine optimal collaboration strategy based on message and context"""
+        
+        # Simple rule-based approach (could be enhanced with LLM classification)
+        message_lower = message.lower()
+        
+        if any(keyword in message_lower for keyword in ["stress", "anxiety", "sleep", "recovery"]):
+            return "stress_analysis"
+        elif any(keyword in message_lower for keyword in ["training", "workout", "exercise", "performance"]):
+            return "performance_optimization"
+        else:
+            return "general_health"
+    
+    async def _execute_single_agent(self, message: str, pattern: Dict[str, Any], biometric_context: Dict[str, Any]) -> str:
+        """Execute single agent response with biometric context"""
+        
+        primary_agent_id = pattern["primary"]
+        agent = self.agents[primary_agent_id]
+        
+        if hasattr(agent, "analyze_with_context"):
+            return await agent.analyze_with_context(message, biometric_context)
+        else:
+            # Fallback to basic task creation
+            task = Task(
+                description=f"Analyze and respond to: {message}. Biometric context: {biometric_context}",
+                agent=agent.crew_agent,
+                expected_output="Comprehensive response with actionable recommendations"
+            )
+            
+            crew = Crew(agents=[agent.crew_agent], tasks=[task], verbose=True)
+            return crew.kickoff()
+    
+    async def _execute_sequential_collaboration(self, message: str, pattern: Dict[str, Any], biometric_context: Dict[str, Any]) -> str:
+        """Execute sequential collaboration pattern"""
+        
+        primary_agent_id = pattern["primary"]
+        collaborator_ids = pattern["collaborators"]
+        
+        results = []
+        
+        # Execute primary agent first
+        primary_agent = self.agents[primary_agent_id]
+        primary_result = await self._execute_single_agent(message, {"primary": primary_agent_id}, biometric_context)
+        results.append({"agent": primary_agent_id, "analysis": primary_result})
+        
+        # Execute collaborators with cumulative context
+        for collaborator_id in collaborator_ids:
+            if collaborator_id in self.agents:
+                collaborator = self.agents[collaborator_id]
+                
+                # Build enhanced context with previous results
+                enhanced_context = {
+                    **biometric_context,
+                    "previous_analyses": results
+                }
+                
+                collab_result = await self._execute_single_agent(
+                    message, {"primary": collaborator_id}, enhanced_context
+                )
+                results.append({"agent": collaborator_id, "analysis": collab_result})
+        
+        # Synthesize results
+        return await self._synthesize_results(results, message)
+    
+    async def _execute_parallel_collaboration(self, message: str, pattern: Dict[str, Any], biometric_context: Dict[str, Any]) -> str:
+        """Execute parallel collaboration pattern"""
+        
+        primary_agent_id = pattern["primary"]
+        collaborator_ids = pattern["collaborators"]
+        
+        # Create tasks for all agents
+        tasks = []
+        all_agent_ids = [primary_agent_id] + collaborator_ids
+        
+        for agent_id in all_agent_ids:
+            if agent_id in self.agents:
+                agent = self.agents[agent_id]
+                task = Task(
+                    description=f"""
+                    Analyze from your domain expertise: {message}
+                    
+                    Biometric Context: {biometric_context}
+                    
+                    Focus on your specialized domain while considering the overall user question.
+                    """,
+                    agent=agent.crew_agent,
+                    expected_output="Domain-specific analysis and recommendations"
+                )
+                tasks.append((agent_id, task, agent.crew_agent))
+        
+        # Execute all tasks in parallel (CrewAI will handle this)
+        agents_list = [task[2] for task in tasks]
+        tasks_list = [task[1] for task in tasks]
+        
+        crew = Crew(
+            agents=agents_list,
+            tasks=tasks_list,
+            process=Process.hierarchical,  # Let CrewAI coordinate
+            verbose=True
+        )
+        
+        result = crew.kickoff()
+        return result
+    
+    async def _synthesize_results(self, results: List[Dict[str, Any]], original_message: str) -> str:
+        """Synthesize multiple agent results into coherent response"""
+        
+        # Create synthesis task
+        synthesis_prompt = f"""
+        Synthesize the following expert analyses into a coherent, actionable response for the user.
+        
+        Original Question: {original_message}
+        
+        Expert Analyses:
+        """
+        
+        for result in results:
+            synthesis_prompt += f"\n{result['agent'].title()} Analysis: {result['analysis']}\n"
+        
+        synthesis_prompt += """
+        
+        Provide a unified response that:
+        1. Addresses the user's original question
+        2. Integrates insights from all experts
+        3. Resolves any conflicting recommendations
+        4. Provides clear, prioritized action items
+        """
+        
+        # Use primary agent for synthesis (could be a dedicated synthesis agent)
+        primary_agent = next(iter(self.agents.values()))
+        
+        synthesis_task = Task(
+            description=synthesis_prompt,
+            agent=primary_agent.crew_agent,
+            expected_output="Unified, actionable response integrating all expert perspectives"
+        )
+        
+        crew = Crew(agents=[primary_agent.crew_agent], tasks=[synthesis_task], verbose=True)
+        return crew.kickoff()
+]]></code>
+    </section>
+
+    <!-- Testing Suite -->
+    <section name="testing_suite">
+      <title>Integration Testing Suite</title>
+      <description>Comprehensive testing for CrewAI integration</description>
+      <code language="python"><![CDATA[
+"""
+Comprehensive testing suite for CrewAI integration
+"""
+
+import pytest
+import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import datetime, timezone
+
+@pytest.fixture
+async def orchestrator():
+    """Create test orchestrator with mocked dependencies"""
+    
+    memory_backend = AsyncMock()
+    event_store = AsyncMock()
+    hypothesis_validator = AsyncMock()
+    knowledge_manager = AsyncMock()
+    
+    orchestrator = AURENOrchestrator(
+        user_id="test_user",
+        memory_backend=memory_backend,
+        event_store=event_store,
+        hypothesis_validator=hypothesis_validator,
+        knowledge_manager=knowledge_manager
+    )
+    
+    return orchestrator
+
+@pytest.fixture
+def mock_biometric_context():
+    """Mock biometric context data"""
+    return {
+        "latest_metrics": {
+            "hrv": {"value": 35, "timestamp": "2025-07-24T06:00:00Z"},
+            "sleep_efficiency": {"value": 0.78, "timestamp": "2025-07-24T06:00:00Z"}
+        },
+        "trends": {
+            "hrv": {"trend": "decreasing", "change_percent": -10}
+        }
+    }
+
+class TestAURENMemory:
+    
+    @pytest.mark.asyncio
+    async def test_memory_saves_with_intelligence_integration(self):
+        """Test memory saving triggers intelligence systems"""
+        
+        # Setup mocks
+        memory_backend = AsyncMock()
+        hypothesis_validator = AsyncMock()
+        
+        storage = AURENMemoryStorage(
+            memory_backend=memory_backend,
+            event_store=AsyncMock(),
+            hypothesis_validator=hypothesis_validator,
+            knowledge_manager=AsyncMock(),
+            agent_id="neuroscientist",
+            user_id="test_user"
+        )
+        
+        # Test data with pattern that should trigger hypothesis
+        test_data = {
+            "pattern": "Consistent HRV decline during high stress periods",
+            "confidence": 0.85,
+            "evidence": ["hrv_data", "stress_markers"]
+        }
+        
+        # Execute save
+        await storage.save(test_data)
+        
+        # Verify memory was stored
+        memory_backend.store_memory.assert_called_once()
+        
+        # Verify hypothesis formation was attempted
+        hypothesis_validator.form_hypothesis.assert_called_once()
+    
+    @pytest.mark.asyncio
+    async def test_biometric_context_retrieval(self):
+        """Test biometric context integration"""
+        
+        # Setup mock events
+        mock_events = [
+            MagicMock(
+                event_type="biometric_hrv",
+                payload={"metric_type": "hrv", "value": 35},
+                timestamp=datetime.now(timezone.utc)
+            ),
+            MagicMock(
+                event_type="biometric_sleep",
+                payload={"metric_type": "sleep_efficiency", "value": 0.85},
+                timestamp=datetime.now(timezone.utc)
+            )
+        ]
+        
+        event_store = AsyncMock()
+        event_store.get_stream_events.return_value = mock_events
+        
+        storage = AURENMemoryStorage(
+            memory_backend=AsyncMock(),
+            event_store=event_store,
+            hypothesis_validator=AsyncMock(),
+            knowledge_manager=AsyncMock(),
+            agent_id="neuroscientist",
+            user_id="test_user"
+        )
+        
+        # Get biometric context
+        context = await storage.get_biometric_context(24)
+        
+        # Verify context structure
+        assert "latest_metrics" in context
+        assert "hrv" in context["latest_metrics"]
+        assert context["data_points"] == 2
+
+class TestSpecialistAgents:
+    
+    @pytest.mark.asyncio
+    async def test_neuroscientist_agent_with_tools(self):
+        """Test neuroscientist agent tool integration"""
+        
+        memory = MagicMock()
+        hypothesis_validator = AsyncMock()
+        knowledge_manager = AsyncMock()
+        
+        agent = NeuroscientistAgent(
+            user_id="test_user",
+            memory=memory,
+            hypothesis_validator=hypothesis_validator,
+            knowledge_manager=knowledge_manager
+        )
+        
+        # Verify tools are properly configured
+        assert len(agent.tools) == 3
+        tool_names = [tool.name for tool in agent.tools]
+        assert "Formulate Hypothesis" in tool_names
+        assert "Query Knowledge Graph" in tool_names
+        assert "Analyze Biometric Context" in tool_names
+    
+    @pytest.mark.asyncio 
+    @patch('crewai.Crew.kickoff')
+    async def test_agent_analysis_with_context(self, mock_kickoff):
+        """Test agent analysis with biometric context"""
+        
+        mock_kickoff.return_value = "Analysis complete with recommendations"
+        
+        memory = MagicMock()
+        agent = NeuroscientistAgent("test_user", memory)
+        
+        biometric_context = {
+            "latest_metrics": {"hrv": {"value": 30}},
+            "trends": {"hrv": {"trend": "decreasing"}}
+        }
+        
+        result = await agent.analyze_with_context(
+            "I've been feeling stressed lately",
+            biometric_context
+        )
+        
+        # Verify crew was executed
+        mock_kickoff.assert_called_once()
+        assert result == "Analysis complete with recommendations"
+
+class TestOrchestrator:
+    
+    @pytest.mark.asyncio
+    @patch('crewai.Crew.kickoff')
+    async def test_single_agent_execution(self, mock_kickoff, orchestrator, mock_biometric_context):
+        """Test single agent execution pattern"""
+        
+        mock_kickoff.return_value = "Single agent response"
+        
+        # Mock biometric context retrieval
+        orchestrator._get_biometric_context = AsyncMock(return_value=mock_biometric_context)
+        
+        result = await orchestrator.handle_user_message(
+            "session_123",
+            "How is my overall health looking?"
+        )
+        
+        # Verify crew was executed
+        mock_kickoff.assert_called()
+        assert result == "Single agent response"
+    
+    @pytest.mark.asyncio
+    async def test_collaboration_strategy_selection(self, orchestrator, mock_biometric_context):
+        """Test intelligent collaboration strategy selection"""
+        
+        # Test stress-related query
+        strategy = await orchestrator._determine_collaboration_strategy(
+            "I've been having trouble sleeping and feeling stressed",
+            mock_biometric_context
+        )
+        assert strategy == "stress_analysis"
+        
+        # Test performance-related query
+        strategy = await orchestrator._determine_collaboration_strategy(
+            "How should I adjust my training this week?",
+            mock_biometric_context
+        )
+        assert strategy == "performance_optimization"
+        
+        # Test general query
+        strategy = await orchestrator._determine_collaboration_strategy(
+            "What's my health status?",
+            mock_biometric_context
+        )
+        assert strategy == "general_health"
+    
+    @pytest.mark.asyncio
+    @patch('crewai.Crew.kickoff')
+    async def test_sequential_collaboration(self, mock_kickoff, orchestrator, mock_biometric_context):
+        """Test sequential collaboration pattern"""
+        
+        mock_kickoff.side_effect = [
+            "Primary analysis from neuroscientist",
+            "Additional insight from sleep agent", 
+            "Synthesized final response"
+        ]
+        
+        orchestrator._get_biometric_context = AsyncMock(return_value=mock_biometric_context)
+        
+        result = await orchestrator.handle_user_message(
+            "session_123",
+            "I'm feeling really stressed and not sleeping well"
+        )
+        
+        # Verify multiple crew executions for sequential pattern
+        assert mock_kickoff.call_count >= 2
+        assert "response" in result.lower()
+
+@pytest.mark.integration
+class TestEndToEndIntegration:
+    
+    @pytest.mark.asyncio
+    @patch('crewai.Crew.kickoff')
+    async def test_complete_workflow(self, mock_kickoff, orchestrator, mock_biometric_context):
+        """Test complete end-to-end workflow"""
+        
+        mock_kickoff.return_value = "Comprehensive health analysis with actionable recommendations"
+        
+        # Setup biometric context
+        orchestrator._get_biometric_context = AsyncMock(return_value=mock_biometric_context)
+        
+        # Execute complete workflow
+        result = await orchestrator.handle_user_message(
+            "session_123",
+            "I want to optimize my recovery - my HRV has been declining"
+        )
+        
+        # Verify result is comprehensive
+        assert len(result) > 50  # Substantial response
+        assert "recommendations" in result.lower()
+        
+        # Verify crew was executed
+        mock_kickoff.assert_called()
+
+if __name__ == "__main__":
+    pytest.main(["-v", __file__])
+]]></code>
+    </section>
+
+    <!-- Performance and Troubleshooting -->
+    <section name="performance_troubleshooting">
+      <title>Performance Optimization & Troubleshooting</title>
+      <description>Performance tuning and troubleshooting guidelines</description>
+      <content><![CDATA[
+## Performance Optimization
+
+### Memory Backend Performance
+- Connection pooling: Set max_connections=20 for PostgreSQL
+- Memory cache: Use Redis for frequently accessed memories
+- Batch operations: Group memory saves when possible
+- Index optimization: Ensure proper indexes on agent_id, user_id, created_at
+
+### Agent Execution Performance
+- Tool timeout: Set 30s timeout for individual tools
+- Crew timeout: Set 5min timeout for crew execution
+- Parallel execution: Use asyncio for independent operations
+- Memory context: Limit memory context to last 100 items
+
+### Common Performance Issues
+
+**Slow Agent Responses**
+- Symptoms: >10s response times
+- Causes: Large memory context, complex tool chains
+- Solutions: Reduce memory window, optimize tool execution
+
+**Memory Storage Bottlenecks**
+- Symptoms: Save operations timing out
+- Causes: Database connection issues, large payloads
+- Solutions: Connection pooling, payload size limits
+
+**Hypothesis Formation Delays**
+- Symptoms: Memory saves slow when patterns detected
+- Causes: Complex hypothesis validation logic
+- Solutions: Async hypothesis formation, simpler validation
+
+## Troubleshooting Guide
+
+### Agent Not Responding
+1. Check LLM API connectivity and rate limits
+2. Verify tool implementations don't have errors
+3. Check memory backend connection
+4. Review agent configuration and prompts
+
+### Memory Integration Issues
+1. Verify PostgreSQL connections
+2. Check event store connectivity 
+3. Validate memory schema compatibility
+4. Test with simplified memory operations
+
+### Collaboration Failures
+1. Check individual agent functionality
+2. Verify task definitions are clear
+3. Test with single-agent fallback
+4. Review crew configuration parameters
+
+### Tool Execution Errors
+1. Validate tool input parameters
+2. Check backend service connectivity
+3. Verify tool timeout settings
+4. Test tools in isolation
+
+## Monitoring and Observability
+
+### Key Metrics to Track
+- Agent response times by type
+- Memory operation latencies
+- Tool execution success rates
+- Hypothesis formation frequency
+- Knowledge graph query performance
+
+### Logging Strategy
+- Agent decisions and reasoning
+- Tool execution traces
+- Memory operation results
+- Collaboration pattern selections
+- Error conditions and recoveries
+
+### Alerting Thresholds
+- Agent response time >30s
+- Memory save failure rate >5%
+- Tool execution failure rate >10%
+- Crew execution timeout >5min
+]]></content>
+    </section>
+  </detailed_implementation>
+
+  <integration_points>
+    <point name="module_a_integration">
+      <description>Memory backend integration with PostgreSQL and event sourcing</description>
+      <dependencies>UnifiedMemorySystem, EventStore from Module A</dependencies>
+    </point>
+    <point name="module_b_integration">
+      <description>Hypothesis and knowledge management integration</description>
+      <dependencies>HypothesisValidator, KnowledgeManager from Module B</dependencies>
+    </point>
+    <point name="real_time_integration">
+      <description>Real-time biometric data integration for agent context</description>
+      <dependencies>Event streaming system for biometric data</dependencies>
+    </point>
+  </integration_points>
+
+  <success_metrics>
+    <metric name="agent_response_time">Target: <2s for simple queries, <10s for complex analysis</metric>
+    <metric name="memory_integration">Target: 100% memory operations successful</metric>
+    <metric name="hypothesis_formation">Target: Patterns detected and hypotheses formed automatically</metric>
+    <metric name="collaboration_success">Target: Multi-agent responses show clear synthesis</metric>
+    <metric name="biometric_context">Target: All agent responses include relevant biometric context</metric>
+  </success_metrics>
+</module>

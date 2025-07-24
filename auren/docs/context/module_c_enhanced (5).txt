@@ -1,0 +1,2991 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module>
+    <metadata>
+        <title>Module C: Enhanced Real-time Systems &amp; Dashboard Implementation Guide</title>
+        <implements>WebSocket layer, Event streaming, Dashboard backend, Agent instrumentation</implements>
+        <dependencies>Master Control Document</dependencies>
+        <load_manifest>
+            <always_load>Master Control Document</always_load>
+            <primary_module>This document (Module C)</primary_module>
+            <optional_modules>Module A (for event integration), Module B (for intelligence metrics)</optional_modules>
+            <token_budget>Master (30k) + This (35k) + Optional (35k) = 100k used</token_budget>
+        </load_manifest>
+    </metadata>
+
+    <section id="quick_context">
+        <title>1. Quick Context</title>
+        <content>
+            This module enables real-time visibility into AUREN's multi-agent system through comprehensive event capture, streaming architecture, and dashboard backends. The implementation provides live monitoring of agent collaborations, hypothesis validations, biometric processing, and system health metrics.
+
+            The key innovation is the complete end-to-end event pipeline that captures events directly from CrewAI agents, enriches them with performance telemetry, and streams them to multiple consumers (dashboards, analytics, alerts) without impacting core performance. This creates full observability into the compound intelligence system.
+
+            The module includes both Redis Streams and Kafka streaming options, comprehensive agent instrumentation, WebSocket real-time updates, REST APIs, GraphQL queries, and detailed performance monitoring - providing maximum flexibility for different deployment scenarios.
+        </content>
+    </section>
+
+    <section id="implementation_checklist">
+        <title>2. Implementation Checklist</title>
+        <checklist>
+            <item>CrewAI event bus integration and agent instrumentation</item>
+            <item>Event streaming infrastructure with Redis Streams and Kafka options</item>
+            <item>WebSocket server for real-time client connections</item>
+            <item>Dashboard backend API with REST and GraphQL endpoints</item>
+            <item>Agent performance telemetry and collaboration analytics</item>
+            <item>Real-time agent collaboration visualization data</item>
+            <item>Biometric processing pipeline monitoring</item>
+            <item>Hypothesis validation tracking and analytics</item>
+            <item>System health and performance metrics collection</item>
+            <item>Authentication and authorization for dashboard access</item>
+            <item>Rate limiting and connection management</item>
+            <item>Comprehensive testing for streaming reliability and performance</item>
+        </checklist>
+    </section>
+
+    <section id="detailed_implementation">
+        <title>3. Detailed Implementation</title>
+
+        <subsection id="crewai_instrumentation">
+            <title>3.1 CrewAI Agent Instrumentation and Event Generation</title>
+            <code_block language="python">
+"""
+Complete CrewAI instrumentation for event generation
+This is the source of all events that get streamed to dashboards
+"""
+
+import asyncio
+import json
+import logging
+from datetime import datetime, timezone
+from typing import Dict, List, Any, Optional, Callable
+from dataclasses import dataclass, asdict
+from enum import Enum
+import uuid
+
+# CrewAI imports
+from crewai import Agent, Task, Crew, Process
+from crewai.agents.events import (
+    AgentExecutionStartedEvent,
+    AgentExecutionCompletedEvent,
+    TaskStartedEvent,
+    TaskCompletedEvent,
+    LLMCallStartedEvent,
+    LLMCallCompletedEvent,
+    ToolUsageStartedEvent,
+    ToolUsageCompletedEvent
+)
+from crewai.events import EventBus
+
+logger = logging.getLogger(__name__)
+
+@dataclass
+class AURENPerformanceMetrics:
+    """Enhanced performance metrics for AUREN agent operations"""
+    latency_ms: float
+    token_cost: float
+    memory_usage_mb: float
+    cpu_percentage: float
+    success: bool
+    error_type: Optional[str] = None
+    agent_id: Optional[str] = None
+    task_id: Optional[str] = None
+    collaboration_depth: int = 0
+    knowledge_items_accessed: int = 0
+    hypotheses_formed: int = 0
+    confidence_score: float = 0.0
+
+class AURENEventType(Enum):
+    """Extended event types for AUREN monitoring"""
+    AGENT_EXECUTION_STARTED = "agent_execution_started"
+    AGENT_EXECUTION_COMPLETED = "agent_execution_completed"
+    AGENT_COLLABORATION = "agent_collaboration"
+    AGENT_DECISION = "agent_decision"
+    TOOL_USAGE = "tool_usage"
+    LLM_CALL = "llm_call"
+    HYPOTHESIS_FORMATION = "hypothesis_formation"
+    KNOWLEDGE_ACCESS = "knowledge_access"
+    BIOMETRIC_ANALYSIS = "biometric_analysis"
+    CONVERSATION_EVENT = "conversation_event"
+    SYSTEM_HEALTH = "system_health"
+    PERFORMANCE_METRIC = "performance_metric"
+
+@dataclass
+class AURENStreamEvent:
+    """Standardized event for AUREN streaming"""
+    event_id: str
+    trace_id: Optional[str]
+    session_id: Optional[str]
+    timestamp: datetime
+    event_type: AURENEventType
+    source_agent: Optional[Dict[str, Any]]
+    target_agent: Optional[Dict[str, Any]]
+    payload: Dict[str, Any]
+    metadata: Dict[str, Any]
+    performance_metrics: Optional[AURENPerformanceMetrics] = None
+    user_id: Optional[str] = None
+
+class CrewAIEventInstrumentation:
+    """
+    Complete instrumentation system for CrewAI agents
+    Captures all agent activities and generates standardized events
+    """
+    
+    def __init__(self, event_streamer=None):
+        self.event_streamer = event_streamer
+        self.event_bus = EventBus()
+        self.active_sessions = {}
+        self.agent_registry = {}
+        self.performance_tracker = {}
+        
+        # Setup event listeners
+        self._setup_event_listeners()
+    
+    def _setup_event_listeners(self):
+        """Register comprehensive event listeners"""
+        
+        # Agent lifecycle events
+        self.event_bus.on(AgentExecutionStartedEvent, self._on_agent_execution_started)
+        self.event_bus.on(AgentExecutionCompletedEvent, self._on_agent_execution_completed)
+        
+        # Task lifecycle events
+        self.event_bus.on(TaskStartedEvent, self._on_task_started)
+        self.event_bus.on(TaskCompletedEvent, self._on_task_completed)
+        
+        # LLM usage events (critical for cost tracking)
+        self.event_bus.on(LLMCallStartedEvent, self._on_llm_call_started)
+        self.event_bus.on(LLMCallCompletedEvent, self._on_llm_call_completed)
+        
+        # Tool usage events
+        self.event_bus.on(ToolUsageStartedEvent, self._on_tool_usage_started)
+        self.event_bus.on(ToolUsageCompletedEvent, self._on_tool_usage_completed)
+    
+    async def _on_agent_execution_started(self, event: AgentExecutionStartedEvent):
+        """Capture agent execution start with enhanced telemetry"""
+        
+        session_id = f"{event.agent.role}_{datetime.now().timestamp()}"
+        trace_id = str(uuid.uuid4())
+        
+        # Initialize performance tracking
+        self.performance_tracker[session_id] = {
+            "start_time": datetime.now(timezone.utc),
+            "agent_id": event.agent.role,
+            "trace_id": trace_id,
+            "llm_calls": 0,
+            "tool_uses": 0,
+            "tokens_used": 0,
+            "cost_accumulated": 0.0
+        }
+        
+        # Create enhanced event
+        stream_event = AURENStreamEvent(
+            event_id=str(uuid.uuid4()),
+            trace_id=trace_id,
+            session_id=session_id,
+            timestamp=datetime.now(timezone.utc),
+            event_type=AURENEventType.AGENT_EXECUTION_STARTED,
+            source_agent={
+                "id": event.agent.role,
+                "role": event.agent.role,
+                "goal": event.agent.goal,
+                "backstory": event.agent.backstory[:200] + "..." if len(event.agent.backstory) > 200 else event.agent.backstory
+            },
+            target_agent=None,
+            payload={
+                "execution_mode": "autonomous" if event.agent.allow_delegation else "directed",
+                "tools_available": len(event.agent.tools) if event.agent.tools else 0,
+                "memory_enabled": hasattr(event.agent, 'memory') and event.agent.memory is not None
+            },
+            metadata={
+                "platform": "crewai",
+                "agent_version": getattr(event.agent, 'version', '1.0'),
+                "execution_context": "production"
+            }
+        )
+        
+        await self._emit_event(stream_event)
+    
+    async def _on_agent_execution_completed(self, event: AgentExecutionCompletedEvent):
+        """Capture agent execution completion with performance metrics"""
+        
+        session_id = f"{event.agent.role}_{datetime.now().timestamp()}"
+        tracker = self.performance_tracker.get(session_id, {})
+        
+        # Calculate performance metrics
+        start_time = tracker.get("start_time", datetime.now(timezone.utc))
+        execution_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
+        
+        performance_metrics = AURENPerformanceMetrics(
+            latency_ms=execution_time,
+            token_cost=tracker.get("cost_accumulated", 0.0),
+            memory_usage_mb=self._get_memory_usage(),
+            cpu_percentage=self._get_cpu_usage(),
+            success=not hasattr(event, 'error') or event.error is None,
+            error_type=type(event.error).__name__ if hasattr(event, 'error') and event.error else None,
+            agent_id=event.agent.role,
+            collaboration_depth=tracker.get("collaboration_events", 0),
+            knowledge_items_accessed=tracker.get("knowledge_accesses", 0),
+            hypotheses_formed=tracker.get("hypotheses_formed", 0),
+            confidence_score=getattr(event, 'confidence', 0.0)
+        )
+        
+        stream_event = AURENStreamEvent(
+            event_id=str(uuid.uuid4()),
+            trace_id=tracker.get("trace_id"),
+            session_id=session_id,
+            timestamp=datetime.now(timezone.utc),
+            event_type=AURENEventType.AGENT_EXECUTION_COMPLETED,
+            source_agent={
+                "id": event.agent.role,
+                "role": event.agent.role
+            },
+            target_agent=None,
+            payload={
+                "execution_result": "success" if performance_metrics.success else "error",
+                "output_length": len(str(getattr(event, 'output', ''))) if hasattr(event, 'output') else 0,
+                "llm_calls_made": tracker.get("llm_calls", 0),
+                "tools_used": tracker.get("tool_uses", 0)
+            },
+            metadata={
+                "session_duration_ms": execution_time,
+                "resource_efficiency": self._calculate_efficiency_score(performance_metrics)
+            },
+            performance_metrics=performance_metrics
+        )
+        
+        await self._emit_event(stream_event)
+        
+        # Cleanup tracker
+        if session_id in self.performance_tracker:
+            del self.performance_tracker[session_id]
+    
+    async def _on_llm_call_started(self, event: LLMCallStartedEvent):
+        """Track LLM call initiation"""
+        
+        stream_event = AURENStreamEvent(
+            event_id=str(uuid.uuid4()),
+            trace_id=getattr(event, 'trace_id', None),
+            session_id=getattr(event, 'session_id', None),
+            timestamp=datetime.now(timezone.utc),
+            event_type=AURENEventType.LLM_CALL,
+            source_agent={
+                "id": event.agent.role if hasattr(event, 'agent') else "unknown",
+                "role": event.agent.role if hasattr(event, 'agent') else "unknown"
+            },
+            target_agent=None,
+            payload={
+                "model": getattr(event, 'model', 'unknown'),
+                "prompt_length": len(str(getattr(event, 'prompt', ''))),
+                "max_tokens": getattr(event, 'max_tokens', 0),
+                "temperature": getattr(event, 'temperature', 0.7),
+                "call_purpose": getattr(event, 'purpose', 'generation')
+            },
+            metadata={
+                "provider": getattr(event, 'provider', 'unknown'),
+                "call_type": "async" if getattr(event, 'async_call', False) else "sync"
+            }
+        )
+        
+        await self._emit_event(stream_event)
+    
+    async def _on_llm_call_completed(self, event: LLMCallCompletedEvent):
+        """Track LLM call completion with cost analysis"""
+        
+        # Update performance tracker
+        session_id = getattr(event, 'session_id', 'unknown')
+        if session_id in self.performance_tracker:
+            self.performance_tracker[session_id]['llm_calls'] += 1
+            self.performance_tracker[session_id]['tokens_used'] += getattr(event, 'tokens_used', 0)
+            self.performance_tracker[session_id]['cost_accumulated'] += getattr(event, 'cost', 0.0)
+        
+        stream_event = AURENStreamEvent(
+            event_id=str(uuid.uuid4()),
+            trace_id=getattr(event, 'trace_id', None),
+            session_id=session_id,
+            timestamp=datetime.now(timezone.utc),
+            event_type=AURENEventType.LLM_CALL,
+            source_agent={
+                "id": event.agent.role if hasattr(event, 'agent') else "unknown",
+                "role": event.agent.role if hasattr(event, 'agent') else "unknown"
+            },
+            target_agent=None,
+            payload={
+                "tokens_used": getattr(event, 'tokens_used', 0),
+                "cost": getattr(event, 'cost', 0.0),
+                "response_length": len(str(getattr(event, 'response', ''))),
+                "success": not hasattr(event, 'error') or event.error is None,
+                "latency_ms": getattr(event, 'latency_ms', 0)
+            },
+            metadata={
+                "model_efficiency": self._calculate_token_efficiency(event),
+                "response_quality": getattr(event, 'quality_score', 0.0)
+            }
+        )
+        
+        await self._emit_event(stream_event)
+    
+    async def _on_tool_usage_started(self, event: ToolUsageStartedEvent):
+        """Track tool usage initiation"""
+        
+        stream_event = AURENStreamEvent(
+            event_id=str(uuid.uuid4()),
+            trace_id=getattr(event, 'trace_id', None),
+            session_id=getattr(event, 'session_id', None),
+            timestamp=datetime.now(timezone.utc),
+            event_type=AURENEventType.TOOL_USAGE,
+            source_agent={
+                "id": event.agent.role if hasattr(event, 'agent') else "unknown",
+                "role": event.agent.role if hasattr(event, 'agent') else "unknown"
+            },
+            target_agent=None,
+            payload={
+                "tool_name": getattr(event, 'tool_name', 'unknown'),
+                "tool_input": str(getattr(event, 'tool_input', ''))[:500],  # Truncate long inputs
+                "tool_type": getattr(event, 'tool_type', 'unknown'),
+                "expected_output_type": getattr(event, 'expected_output', 'string')
+            },
+            metadata={
+                "tool_category": self._categorize_tool(getattr(event, 'tool_name', '')),
+                "input_complexity": self._assess_input_complexity(getattr(event, 'tool_input', ''))
+            }
+        )
+        
+        await self._emit_event(stream_event)
+    
+    async def _on_tool_usage_completed(self, event: ToolUsageCompletedEvent):
+        """Track tool usage completion"""
+        
+        # Update performance tracker
+        session_id = getattr(event, 'session_id', 'unknown')
+        if session_id in self.performance_tracker:
+            self.performance_tracker[session_id]['tool_uses'] += 1
+        
+        stream_event = AURENStreamEvent(
+            event_id=str(uuid.uuid4()),
+            trace_id=getattr(event, 'trace_id', None),
+            session_id=session_id,
+            timestamp=datetime.now(timezone.utc),
+            event_type=AURENEventType.TOOL_USAGE,
+            source_agent={
+                "id": event.agent.role if hasattr(event, 'agent') else "unknown",
+                "role": event.agent.role if hasattr(event, 'agent') else "unknown"
+            },
+            target_agent=None,
+            payload={
+                "tool_name": getattr(event, 'tool_name', 'unknown'),
+                "success": not hasattr(event, 'error') or event.error is None,
+                "output_length": len(str(getattr(event, 'output', ''))),
+                "execution_time_ms": getattr(event, 'execution_time', 0),
+                "output_type": type(getattr(event, 'output', '')).__name__
+            },
+            metadata={
+                "tool_efficiency": self._calculate_tool_efficiency(event),
+                "output_quality": getattr(event, 'quality_score', 0.0)
+            }
+        )
+        
+        await self._emit_event(stream_event)
+    
+    async def capture_agent_collaboration(self,
+                                        primary_agent: str,
+                                        collaborating_agents: List[str],
+                                        collaboration_type: str,
+                                        result: Dict[str, Any],
+                                        trace_id: str = None):
+        """Capture agent collaboration events"""
+        
+        stream_event = AURENStreamEvent(
+            event_id=str(uuid.uuid4()),
+            trace_id=trace_id or str(uuid.uuid4()),
+            session_id=f"collab_{datetime.now().timestamp()}",
+            timestamp=datetime.now(timezone.utc),
+            event_type=AURENEventType.AGENT_COLLABORATION,
+            source_agent={"id": primary_agent, "role": primary_agent},
+            target_agent=None,
+            payload={
+                "primary_agent": primary_agent,
+                "collaborating_agents": collaborating_agents,
+                "collaboration_type": collaboration_type,
+                "consensus_reached": result.get("consensus", False),
+                "confidence_scores": result.get("confidence_scores", {}),
+                "resolution_time_ms": result.get("resolution_time", 0),
+                "knowledge_shared": result.get("knowledge_items", 0)
+            },
+            metadata={
+                "domains_involved": [self._get_agent_domain(a) for a in collaborating_agents],
+                "collaboration_complexity": len(collaborating_agents),
+                "outcome_quality": result.get("quality_score", 0.0)
+            }
+        )
+        
+        await self._emit_event(stream_event)
+    
+    async def capture_agent_decision(self,
+                                   agent_id: str,
+                                   user_id: str,
+                                   decision: Dict[str, Any],
+                                   context: Dict[str, Any],
+                                   confidence: float,
+                                   trace_id: str = None):
+        """Capture agent decision events with rich context"""
+        
+        stream_event = AURENStreamEvent(
+            event_id=str(uuid.uuid4()),
+            trace_id=trace_id or str(uuid.uuid4()),
+            session_id=f"decision_{datetime.now().timestamp()}",
+            timestamp=datetime.now(timezone.utc),
+            event_type=AURENEventType.AGENT_DECISION,
+            source_agent={"id": agent_id, "role": agent_id},
+            target_agent=None,
+            payload={
+                "decision": decision,
+                "confidence": confidence,
+                "reasoning_chain": context.get("reasoning", []),
+                "data_sources": context.get("data_sources", []),
+                "alternatives_considered": context.get("alternatives", []),
+                "decision_impact": context.get("impact_assessment", "unknown")
+            },
+            metadata={
+                "decision_category": decision.get("category", "general"),
+                "urgency": context.get("urgency", "normal"),
+                "user_context": context.get("user_state", {})
+            },
+            user_id=user_id
+        )
+        
+        await self._emit_event(stream_event)
+    
+    async def _emit_event(self, event: AURENStreamEvent):
+        """Emit event to the streaming system"""
+        
+        if self.event_streamer:
+            try:
+                await self.event_streamer.stream_event(event)
+            except Exception as e:
+                logger.error(f"Failed to emit event {event.event_id}: {e}")
+        else:
+            logger.debug(f"Event {event.event_id} captured but no streamer configured")
+    
+    def _get_memory_usage(self) -> float:
+        """Get current memory usage in MB"""
+        import psutil
+        import os
+        process = psutil.Process(os.getpid())
+        return process.memory_info().rss / 1024 / 1024
+    
+    def _get_cpu_usage(self) -> float:
+        """Get current CPU usage percentage"""
+        import psutil
+        return psutil.cpu_percent(interval=0.1)
+    
+    def _calculate_efficiency_score(self, metrics: AURENPerformanceMetrics) -> float:
+        """Calculate resource efficiency score"""
+        if metrics.latency_ms == 0:
+            return 1.0
+        
+        # Simple efficiency calculation based on latency and success
+        base_score = 1.0 if metrics.success else 0.5
+        latency_factor = max(0.1, 1.0 - (metrics.latency_ms / 10000))  # Penalize >10s latency
+        return base_score * latency_factor
+    
+    def _calculate_token_efficiency(self, event) -> float:
+        """Calculate token efficiency for LLM calls"""
+        tokens = getattr(event, 'tokens_used', 0)
+        response_length = len(str(getattr(event, 'response', '')))
+        if tokens == 0:
+            return 0.0
+        return min(1.0, response_length / tokens)  # Characters per token
+    
+    def _calculate_tool_efficiency(self, event) -> float:
+        """Calculate tool execution efficiency"""
+        execution_time = getattr(event, 'execution_time', 0)
+        success = not hasattr(event, 'error') or event.error is None
+        if execution_time == 0:
+            return 1.0 if success else 0.0
+        
+        # Efficiency based on speed and success
+        speed_factor = max(0.1, 1.0 - (execution_time / 30000))  # Penalize >30s execution
+        return (1.0 if success else 0.5) * speed_factor
+    
+    def _categorize_tool(self, tool_name: str) -> str:
+        """Categorize tool by name"""
+        tool_categories = {
+            "search": ["search", "google", "web"],
+            "analysis": ["analyze", "calculate", "process"],
+            "communication": ["email", "slack", "message"],
+            "data": ["database", "query", "fetch"],
+            "ai": ["llm", "gpt", "claude", "model"]
+        }
+        
+        tool_name_lower = tool_name.lower()
+        for category, keywords in tool_categories.items():
+            if any(keyword in tool_name_lower for keyword in keywords):
+                return category
+        return "unknown"
+    
+    def _assess_input_complexity(self, tool_input) -> str:
+        """Assess complexity of tool input"""
+        input_str = str(tool_input)
+        if len(input_str) < 50:
+            return "simple"
+        elif len(input_str) < 200:
+            return "medium"
+        else:
+            return "complex"
+    
+    def _get_agent_domain(self, agent_id: str) -> str:
+        """Get agent domain from agent ID"""
+        domain_map = {
+            "neuroscientist": "neuroscience",
+            "nutritionist": "nutrition",
+            "training_agent": "training",
+            "recovery_agent": "recovery",
+            "sleep_agent": "sleep",
+            "mental_health_agent": "mental_health"
+        }
+        return domain_map.get(agent_id, "unknown")
+            </code_block>
+        </subsection>
+
+        <subsection id="event_streaming">
+            <title>3.2 Multi-Protocol Event Streaming Infrastructure</title>
+            <code_block language="python">
+"""
+Flexible event streaming supporting both Redis Streams and Kafka
+Provides multiple streaming options for different deployment scenarios
+"""
+
+import asyncio
+import json
+import logging
+from abc import ABC, abstractmethod
+from typing import Dict, List, Optional, Any
+from datetime import datetime, timezone
+import redis.asyncio as redis
+from kafka import KafkaProducer, KafkaConsumer
+from kafka.errors import KafkaError
+import socket
+
+logger = logging.getLogger(__name__)
+
+class EventStreamer(ABC):
+    """Abstract base class for event streaming implementations"""
+    
+    @abstractmethod
+    async def stream_event(self, event: AURENStreamEvent) -> bool:
+        """Stream an event to the messaging system"""
+        pass
+    
+    @abstractmethod
+    async def subscribe_to_events(self, consumer_id: str, event_types: List[str] = None) -> AsyncIterator:
+        """Subscribe to event stream"""
+        pass
+    
+    @abstractmethod
+    async def get_recent_events(self, limit: int = 100, event_types: List[str] = None) -> List[Dict]:
+        """Get recent events for replay"""
+        pass
+
+class RedisStreamEventStreamer(EventStreamer):
+    """Redis Streams implementation for high-performance, low-latency streaming"""
+    
+    def __init__(self, redis_url: str, stream_name: str = "auren:events"):
+        self.redis_url = redis_url
+        self.stream_name = stream_name
+        self.redis_client = None
+        self.events_sent = 0
+        
+    async def initialize(self):
+        """Initialize Redis connection"""
+        self.redis_client = redis.from_url(self.redis_url)
+        await self.redis_client.ping()
+        logger.info(f"Redis event streamer initialized on {self.redis_url}")
+    
+    async def stream_event(self, event: AURENStreamEvent) -> bool:
+        """Stream event to Redis Stream"""
+        try:
+            event_data = {
+                "event_id": event.event_id,
+                "trace_id": event.trace_id or "",
+                "session_id": event.session_id or "",
+                "timestamp": event.timestamp.isoformat(),
+                "event_type": event.event_type.value,
+                "source_agent": json.dumps(event.source_agent or {}),
+                "target_agent": json.dumps(event.target_agent or {}),
+                "payload": json.dumps(event.payload),
+                "metadata": json.dumps(event.metadata),
+                "user_id": event.user_id or ""
+            }
+            
+            # Add performance metrics if available
+            if event.performance_metrics:
+                event_data["performance_metrics"] = json.dumps(asdict(event.performance_metrics))
+            
+            # Add to Redis Stream
+            await self.redis_client.xadd(
+                self.stream_name,
+                event_data,
+                maxlen=50000  # Keep last 50k events
+            )
+            
+            # Also add to time-series for analytics
+            await self.redis_client.zadd(
+                f"events:by_type:{event.event_type.value}",
+                {event.event_id: event.timestamp.timestamp()},
+                nx=True
+            )
+            
+            self.events_sent += 1
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to stream event to Redis: {e}")
+            return False
+    
+    async def subscribe_to_events(self, consumer_id: str, event_types: List[str] = None):
+        """Subscribe to Redis Stream"""
+        try:
+            consumer_group = f"dashboard_consumers"
+            
+            # Create consumer group if it doesn't exist
+            try:
+                await self.redis_client.xgroup_create(
+                    self.stream_name, consumer_group, id="0", mkstream=True
+                )
+            except redis.RedisError:
+                pass  # Group already exists
+            
+            while True:
+                try:
+                    # Read from stream
+                    messages = await self.redis_client.xreadgroup(
+                        consumer_group,
+                        consumer_id,
+                        {self.stream_name: ">"},
+                        count=10,
+                        block=1000
+                    )
+                    
+                    for stream, stream_messages in messages:
+                        for message_id, fields in stream_messages:
+                            try:
+                                # Parse event
+                                event_data = self._parse_redis_event(fields)
+                                
+                                # Filter by event types if specified
+                                if event_types and event_data.get("event_type") not in event_types:
+                                    continue
+                                
+                                yield event_data
+                                
+                                # Acknowledge message
+                                await self.redis_client.xack(self.stream_name, consumer_group, message_id)
+                                
+                            except Exception as e:
+                                logger.error(f"Error processing Redis message: {e}")
+                                
+                except redis.RedisError as e:
+                    logger.error(f"Redis stream read error: {e}")
+                    await asyncio.sleep(1)
+                    
+        except Exception as e:
+            logger.error(f"Redis subscription error: {e}")
+    
+    async def get_recent_events(self, limit: int = 100, event_types: List[str] = None) -> List[Dict]:
+        """Get recent events from Redis Stream"""
+        try:
+            # Read recent events from stream
+            messages = await self.redis_client.xrevrange(
+                self.stream_name,
+                count=limit
+            )
+            
+            events = []
+            for message_id, fields in messages:
+                try:
+                    event_data = self._parse_redis_event(fields)
+                    
+                    # Filter by event types if specified
+                    if event_types and event_data.get("event_type") not in event_types:
+                        continue
+                    
+                    events.append(event_data)
+                    
+                except Exception as e:
+                    logger.error(f"Error parsing Redis event: {e}")
+            
+            return events
+            
+        except Exception as e:
+            logger.error(f"Error getting recent events from Redis: {e}")
+            return []
+    
+    def _parse_redis_event(self, fields: Dict) -> Dict:
+        """Parse Redis event fields into event dictionary"""
+        try:
+            return {
+                "event_id": fields.get(b"event_id", b"").decode(),
+                "trace_id": fields.get(b"trace_id", b"").decode() or None,
+                "session_id": fields.get(b"session_id", b"").decode() or None,
+                "timestamp": fields.get(b"timestamp", b"").decode(),
+                "event_type": fields.get(b"event_type", b"").decode(),
+                "source_agent": json.loads(fields.get(b"source_agent", b"{}").decode()),
+                "target_agent": json.loads(fields.get(b"target_agent", b"{}").decode()),
+                "payload": json.loads(fields.get(b"payload", b"{}").decode()),
+                "metadata": json.loads(fields.get(b"metadata", b"{}").decode()),
+                "performance_metrics": json.loads(fields.get(b"performance_metrics", b"{}").decode()) if b"performance_metrics" in fields else None,
+                "user_id": fields.get(b"user_id", b"").decode() or None
+            }
+        except Exception as e:
+            logger.error(f"Error parsing Redis event fields: {e}")
+            return {}
+
+class KafkaEventStreamer(EventStreamer):
+    """Kafka implementation for distributed, high-throughput streaming"""
+    
+    def __init__(self, bootstrap_servers: str, topic: str = "auren-events"):
+        self.bootstrap_servers = bootstrap_servers
+        self.topic = topic
+        self.producer = None
+        self.events_sent = 0
+        
+    async def initialize(self):
+        """Initialize Kafka producer"""
+        try:
+            self.producer = KafkaProducer(
+                bootstrap_servers=self.bootstrap_servers,
+                client_id=socket.gethostname(),
+                acks='all',  # Ensure message durability
+                retries=3,
+                value_serializer=lambda v: json.dumps(v).encode('utf-8'),
+                key_serializer=lambda k: k.encode('utf-8') if k else None
+            )
+            logger.info(f"Kafka event streamer initialized on {self.bootstrap_servers}")
+        except Exception as e:
+            logger.error(f"Failed to initialize Kafka producer: {e}")
+            raise
+    
+    async def stream_event(self, event: AURENStreamEvent) -> bool:
+        """Stream event to Kafka topic"""
+        try:
+            event_data = {
+                "event_id": event.event_id,
+                "trace_id": event.trace_id,
+                "session_id": event.session_id,
+                "timestamp": event.timestamp.isoformat(),
+                "event_type": event.event_type.value,
+                "source_agent": event.source_agent,
+                "target_agent": event.target_agent,
+                "payload": event.payload,
+                "metadata": event.metadata,
+                "user_id": event.user_id
+            }
+            
+            # Add performance metrics if available
+            if event.performance_metrics:
+                event_data["performance_metrics"] = asdict(event.performance_metrics)
+            
+            # Send to Kafka
+            future = self.producer.send(
+                self.topic,
+                key=event.trace_id,  # Partition by trace_id
+                value=event_data
+            )
+            
+            # Wait for send to complete (with timeout)
+            record_metadata = future.get(timeout=10)
+            
+            self.events_sent += 1
+            logger.debug(f"Event sent to Kafka topic {record_metadata.topic} partition {record_metadata.partition}")
+            return True
+            
+        except KafkaError as e:
+            logger.error(f"Kafka error streaming event: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"Failed to stream event to Kafka: {e}")
+            return False
+    
+    async def subscribe_to_events(self, consumer_id: str, event_types: List[str] = None):
+        """Subscribe to Kafka topic"""
+        try:
+            consumer = KafkaConsumer(
+                self.topic,
+                bootstrap_servers=self.bootstrap_servers,
+                group_id=f"dashboard_consumers",
+                client_id=consumer_id,
+                auto_offset_reset='latest',
+                value_deserializer=lambda m: json.loads(m.decode('utf-8')),
+                consumer_timeout_ms=1000
+            )
+            
+            for message in consumer:
+                try:
+                    event_data = message.value
+                    
+                    # Filter by event types if specified
+                    if event_types and event_data.get("event_type") not in event_types:
+                        continue
+                    
+                    yield event_data
+                    
+                except Exception as e:
+                    logger.error(f"Error processing Kafka message: {e}")
+                    
+        except Exception as e:
+            logger.error(f"Kafka subscription error: {e}")
+    
+    async def get_recent_events(self, limit: int = 100, event_types: List[str] = None) -> List[Dict]:
+        """Get recent events from Kafka (limited functionality)"""
+        # Note: Kafka doesn't easily support recent event queries
+        # This would typically be implemented with a separate event store
+        logger.warning("Recent events query not fully supported with Kafka - use Redis Streams for this feature")
+        return []
+
+class HybridEventStreamer(EventStreamer):
+    """Hybrid implementation supporting both Redis and Kafka"""
+    
+    def __init__(self, redis_url: str, kafka_servers: str):
+        self.redis_streamer = RedisStreamEventStreamer(redis_url)
+        self.kafka_streamer = KafkaEventStreamer(kafka_servers)
+        
+    async def initialize(self):
+        """Initialize both streamers"""
+        await self.redis_streamer.initialize()
+        await self.kafka_streamer.initialize()
+        logger.info("Hybrid event streamer initialized")
+    
+    async def stream_event(self, event: AURENStreamEvent) -> bool:
+        """Stream to both Redis and Kafka"""
+        redis_success = await self.redis_streamer.stream_event(event)
+        kafka_success = await self.kafka_streamer.stream_event(event)
+        
+        # Consider success if at least one succeeds
+        return redis_success or kafka_success
+    
+    async def subscribe_to_events(self, consumer_id: str, event_types: List[str] = None):
+        """Subscribe to Redis (prefer Redis for real-time)"""
+        async for event in self.redis_streamer.subscribe_to_events(consumer_id, event_types):
+            yield event
+    
+    async def get_recent_events(self, limit: int = 100, event_types: List[str] = None) -> List[Dict]:
+        """Get recent events from Redis"""
+        return await self.redis_streamer.get_recent_events(limit, event_types)
+            </code_block>
+        </subsection>
+
+        <subsection id="websocket_server">
+            <title>3.3 Enhanced WebSocket Event Streaming Server</title>
+            <code_block language="python">
+"""
+Production WebSocket server with enhanced agent monitoring capabilities
+Combines the best of real-time streaming with agent-specific telemetry
+"""
+
+import asyncio
+import json
+import logging
+from datetime import datetime, timezone
+from typing import Dict, List, Optional, Any, Set
+from dataclasses import dataclass, asdict
+from enum import Enum
+import websockets
+from websockets.server import WebSocketServerProtocol
+from websockets.exceptions import ConnectionClosed
+import jwt
+from collections import defaultdict, deque
+import uuid
+
+logger = logging.getLogger(__name__)
+
+class ClientSubscription(Enum):
+    """Enhanced client subscription types"""
+    ALL_EVENTS = "all_events"
+    AGENT_ACTIVITY = "agent_activity"
+    AGENT_COLLABORATION = "agent_collaboration"
+    AGENT_PERFORMANCE = "agent_performance"
+    BIOMETRIC_STREAM = "biometric_stream"
+    INTELLIGENCE_EVENTS = "intelligence_events"
+    SYSTEM_MONITORING = "system_monitoring"
+    USER_SPECIFIC = "user_specific"
+    LLM_USAGE = "llm_usage"
+    TOOL_USAGE = "tool_usage"
+
+@dataclass
+class EnhancedClientConnection:
+    """Enhanced WebSocket client connection with agent monitoring features"""
+    connection_id: str
+    websocket: WebSocketServerProtocol
+    user_id: str
+    subscriptions: Set[ClientSubscription]
+    connected_at: datetime
+    last_ping: datetime
+    is_authenticated: bool = False
+    rate_limit_tokens: int = 100
+    agent_filter: Set[str] = None  # Filter by specific agents
+    performance_threshold: float = 0.0  # Only show events above threshold
+    
+    def __post_init__(self):
+        if not hasattr(self, 'subscriptions'):
+            self.subscriptions = set()
+        if self.agent_filter is None:
+            self.agent_filter = set()
+
+class EnhancedWebSocketEventStreamer:
+    """
+    Enhanced WebSocket server with agent-specific monitoring and performance analytics
+    
+    Features:
+    - Agent-specific filtering and subscriptions
+    - Performance threshold filtering
+    - Enhanced collaboration event tracking
+    - Real-time agent performance metrics
+    - Advanced rate limiting and connection management
+    """
+    
+    def __init__(self,
+                 host: str = "localhost",
+                 port: int = 8765,
+                 event_streamer: EventStreamer = None,
+                 jwt_secret: str = "auren_secret",
+                 max_connections: int = 1000,
+                 rate_limit_per_minute: int = 1000):
+        self.host = host
+        self.port = port
+        self.event_streamer = event_streamer
+        self.jwt_secret = jwt_secret
+        self.max_connections = max_connections
+        self.rate_limit_per_minute = rate_limit_per_minute
+        
+        # Enhanced connection management
+        self.active_connections: Dict[str, EnhancedClientConnection] = {}
+        self.subscription_map: Dict[ClientSubscription, Set[str]] = defaultdict(set)
+        self.user_connections: Dict[str, Set[str]] = defaultdict(set)
+        self.agent_connections: Dict[str, Set[str]] = defaultdict(set)  # Connections interested in specific agents
+        
+        # Enhanced event buffering with categories
+        self.event_buffers = {
+            "agent_activity": deque(maxlen=500),
+            "collaboration": deque(maxlen=200),
+            "performance": deque(maxlen=300),
+            "system": deque(maxlen=200)
+        }
+        
+        # Real-time performance tracking
+        self.connection_count = 0
+        self.events_sent = 0
+        self.agent_performance_cache = {}
+        self.collaboration_metrics = {}
+        self.last_activity = datetime.now(timezone.utc)
+    
+    async def start_server(self) -> None:
+        """Start the enhanced WebSocket server"""
+        
+        logger.info(f"Starting enhanced WebSocket server on {self.host}:{self.port}")
+        
+        # Start background tasks
+        asyncio.create_task(self._connection_health_monitor())
+        asyncio.create_task(self._rate_limit_refresh())
+        asyncio.create_task(self._performance_metrics_collector())
+        
+        if self.event_streamer:
+            asyncio.create_task(self._event_stream_listener())
+        
+        # Start WebSocket server
+        async with websockets.serve(
+            self._handle_connection,
+            self.host,
+            self.port,
+            max_size=2**20,  # 1MB max message size
+            compression="deflate"
+        ):
+            logger.info("Enhanced WebSocket server started successfully")
+            await asyncio.Future()  # Run forever
+    
+    async def _handle_connection(self, websocket: WebSocketServerProtocol, path: str) -> None:
+        """Handle new WebSocket connection with enhanced authentication"""
+        
+        connection_id = str(uuid.uuid4())
+        
+        if len(self.active_connections) >= self.max_connections:
+            await websocket.close(1013, "Server at capacity")
+            return
+        
+        try:
+            # Wait for authentication
+            auth_message = await asyncio.wait_for(websocket.recv(), timeout=10.0)
+            auth_data = json.loads(auth_message)
+            
+            # Enhanced authentication
+            user_id, permissions = await self._authenticate_connection(auth_data)
+            if not user_id:
+                await websocket.close(1008, "Authentication failed")
+                return
+            
+            # Create enhanced connection record
+            connection = EnhancedClientConnection(
+                connection_id=connection_id,
+                websocket=websocket,
+                user_id=user_id,
+                subscriptions=set(),
+                connected_at=datetime.now(timezone.utc),
+                last_ping=datetime.now(timezone.utc),
+                is_authenticated=True,
+                agent_filter=set(auth_data.get("agent_filter", [])),
+                performance_threshold=auth_data.get("performance_threshold", 0.0)
+            )
+            
+            self.active_connections[connection_id] = connection
+            self.user_connections[user_id].add(connection_id)
+            self.connection_count += 1
+            
+            # Register agent-specific connections
+            for agent_id in connection.agent_filter:
+                self.agent_connections[agent_id].add(connection_id)
+            
+            # Send enhanced connection confirmation
+            await self._send_to_connection(connection, {
+                "type": "connection_established",
+                "connection_id": connection_id,
+                "server_time": datetime.now(timezone.utc).isoformat(),
+                "available_subscriptions": [sub.value for sub in ClientSubscription],
+                "agent_filter": list(connection.agent_filter),
+                "performance_threshold": connection.performance_threshold
+            })
+            
+            # Handle connection messages
+            await self._handle_connection_messages(connection)
+            
+        except asyncio.TimeoutError:
+            await websocket.close(1008, "Authentication timeout")
+        except ConnectionClosed:
+            pass
+        except Exception as e:
+            logger.error(f"Connection error: {e}")
+            await websocket.close(1011, "Internal server error")
+        finally:
+            await self._cleanup_connection(connection_id)
+    
+    async def _authenticate_connection(self, auth_data: Dict[str, Any]) -> tuple[Optional[str], Dict[str, Any]]:
+        """Enhanced authentication with permissions"""
+        
+        try:
+            token = auth_data.get("token")
+            if not token:
+                return None, {}
+            
+            # Decode JWT token
+            payload = jwt.decode(token, self.jwt_secret, algorithms=["HS256"])
+            user_id = payload.get("user_id")
+            permissions = payload.get("permissions", {})
+            
+            # Additional validation could be added here
+            return user_id, permissions
+            
+        except jwt.InvalidTokenError:
+            logger.warning("Invalid JWT token provided")
+            return None, {}
+        except Exception as e:
+            logger.error(f"Authentication error: {e}")
+            return None, {}
+    
+    async def broadcast_event(self, event: AURENStreamEvent) -> None:
+        """Enhanced event broadcasting with agent-specific filtering"""
+        
+        # Add to appropriate event buffer
+        buffer_key = self._determine_event_buffer(event)
+        if buffer_key in self.event_buffers:
+            self.event_buffers[buffer_key].append(event)
+        
+        # Update performance cache if it's a performance event
+        if event.performance_metrics:
+            self._update_performance_cache(event)
+        
+        # Update collaboration metrics if it's a collaboration event
+        if event.event_type == AURENEventType.AGENT_COLLABORATION:
+            self._update_collaboration_metrics(event)
+        
+        # Determine target connections with enhanced filtering
+        target_connections = await self._determine_target_connections(event)
+        
+        # Send to target connections
+        event_data = {
+            "type": "stream_event",
+            "event": self._serialize_event_for_client(event)
+        }
+        
+        sent_count = 0
+        for connection_id in target_connections:
+            connection = self.active_connections.get(connection_id)
+            if connection and await self._send_to_connection(connection, event_data):
+                sent_count += 1
+        
+        self.events_sent += sent_count
+        self.last_activity = datetime.now(timezone.utc)
+        
+        logger.debug(f"Broadcast event {event.event_id} to {sent_count} connections")
+    
+    async def _determine_target_connections(self, event: AURENStreamEvent) -> Set[str]:
+        """Enhanced connection targeting with agent filtering"""
+        
+        target_connections = set()
+        
+        # Add connections subscribed to all events
+        target_connections.update(self.subscription_map[ClientSubscription.ALL_EVENTS])
+        
+        # Add connections subscribed to specific event types
+        if event.event_type in [AURENEventType.AGENT_EXECUTION_STARTED, AURENEventType.AGENT_EXECUTION_COMPLETED, AURENEventType.AGENT_DECISION]:
+            target_connections.update(self.subscription_map[ClientSubscription.AGENT_ACTIVITY])
+        
+        if event.event_type == AURENEventType.AGENT_COLLABORATION:
+            target_connections.update(self.subscription_map[ClientSubscription.AGENT_COLLABORATION])
+        
+        if event.performance_metrics:
+            target_connections.update(self.subscription_map[ClientSubscription.AGENT_PERFORMANCE])
+        
+        if event.event_type == AURENEventType.LLM_CALL:
+            target_connections.update(self.subscription_map[ClientSubscription.LLM_USAGE])
+        
+        if event.event_type == AURENEventType.TOOL_USAGE:
+            target_connections.update(self.subscription_map[ClientSubscription.TOOL_USAGE])
+        
+        # Add agent-specific connections
+        if event.source_agent and event.source_agent.get("id"):
+            agent_id = event.source_agent["id"]
+            target_connections.update(self.agent_connections.get(agent_id, set()))
+        
+        # Add user-specific connections if event has user_id
+        if event.user_id:
+            target_connections.update(self.user_connections.get(event.user_id, set()))
+        
+        # Filter by performance threshold and agent filters
+        filtered_connections = set()
+        for connection_id in target_connections:
+            connection = self.active_connections.get(connection_id)
+            if not connection:
+                continue
+            
+            # Check performance threshold
+            if (connection.performance_threshold > 0.0 and 
+                event.performance_metrics and 
+                event.performance_metrics.confidence_score < connection.performance_threshold):
+                continue
+            
+            # Check agent filter
+            if (connection.agent_filter and 
+                event.source_agent and 
+                event.source_agent.get("id") not in connection.agent_filter):
+                continue
+            
+            filtered_connections.add(connection_id)
+        
+        return filtered_connections
+    
+    def _determine_event_buffer(self, event: AURENStreamEvent) -> str:
+        """Determine which buffer to use for the event"""
+        
+        if event.event_type == AURENEventType.AGENT_COLLABORATION:
+            return "collaboration"
+        elif event.performance_metrics:
+            return "performance"
+        elif event.event_type in [AURENEventType.AGENT_EXECUTION_STARTED, AURENEventType.AGENT_EXECUTION_COMPLETED, AURENEventType.AGENT_DECISION]:
+            return "agent_activity"
+        else:
+            return "system"
+    
+    def _update_performance_cache(self, event: AURENStreamEvent):
+        """Update real-time performance cache"""
+        
+        if not event.performance_metrics or not event.source_agent:
+            return
+        
+        agent_id = event.source_agent.get("id")
+        if not agent_id:
+            return
+        
+        if agent_id not in self.agent_performance_cache:
+            self.agent_performance_cache[agent_id] = {
+                "recent_latencies": deque(maxlen=20),
+                "recent_successes": deque(maxlen=20),
+                "total_operations": 0,
+                "total_success": 0,
+                "last_update": datetime.now(timezone.utc)
+            }
+        
+        cache = self.agent_performance_cache[agent_id]
+        cache["recent_latencies"].append(event.performance_metrics.latency_ms)
+        cache["recent_successes"].append(event.performance_metrics.success)
+        cache["total_operations"] += 1
+        if event.performance_metrics.success:
+            cache["total_success"] += 1
+        cache["last_update"] = datetime.now(timezone.utc)
+    
+    def _update_collaboration_metrics(self, event: AURENStreamEvent):
+        """Update collaboration metrics"""
+        
+        if event.event_type != AURENEventType.AGENT_COLLABORATION:
+            return
+        
+        payload = event.payload
+        primary_agent = payload.get("primary_agent")
+        collaborating_agents = payload.get("collaborating_agents", [])
+        
+        for agent in [primary_agent] + collaborating_agents:
+            if agent not in self.collaboration_metrics:
+                self.collaboration_metrics[agent] = {
+                    "total_collaborations": 0,
+                    "successful_collaborations": 0,
+                    "partners": set(),
+                    "last_collaboration": datetime.now(timezone.utc)
+                }
+            
+            metrics = self.collaboration_metrics[agent]
+            metrics["total_collaborations"] += 1
+            if payload.get("consensus_reached", False):
+                metrics["successful_collaborations"] += 1
+            metrics["partners"].update(collaborating_agents)
+            metrics["last_collaboration"] = datetime.now(timezone.utc)
+    
+    def _serialize_event_for_client(self, event: AURENStreamEvent) -> Dict[str, Any]:
+        """Serialize event for client with performance data"""
+        
+        serialized = {
+            "event_id": event.event_id,
+            "trace_id": event.trace_id,
+            "session_id": event.session_id,
+            "timestamp": event.timestamp.isoformat(),
+            "event_type": event.event_type.value,
+            "source_agent": event.source_agent,
+            "target_agent": event.target_agent,
+            "payload": event.payload,
+            "metadata": event.metadata,
+            "user_id": event.user_id
+        }
+        
+        if event.performance_metrics:
+            serialized["performance_metrics"] = asdict(event.performance_metrics)
+        
+        return serialized
+    
+    async def _performance_metrics_collector(self):
+        """Background task to collect and broadcast performance metrics"""
+        
+        while True:
+            try:
+                await asyncio.sleep(30)  # Collect every 30 seconds
+                
+                # Generate performance summary
+                performance_summary = self._generate_performance_summary()
+                
+                # Broadcast to performance subscribers
+                target_connections = self.subscription_map[ClientSubscription.AGENT_PERFORMANCE]
+                
+                performance_event = {
+                    "type": "performance_summary",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "data": performance_summary
+                }
+                
+                for connection_id in target_connections:
+                    connection = self.active_connections.get(connection_id)
+                    if connection:
+                        await self._send_to_connection(connection, performance_event)
+                
+            except Exception as e:
+                logger.error(f"Performance metrics collector error: {e}")
+    
+    def _generate_performance_summary(self) -> Dict[str, Any]:
+        """Generate real-time performance summary"""
+        
+        summary = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "agents": {},
+            "system": {
+                "active_connections": len(self.active_connections),
+                "events_sent": self.events_sent,
+                "uptime_seconds": (datetime.now(timezone.utc) - self.last_activity).total_seconds()
+            }
+        }
+        
+        # Agent performance summaries
+        for agent_id, cache in self.agent_performance_cache.items():
+            if cache["recent_latencies"]:
+                avg_latency = sum(cache["recent_latencies"]) / len(cache["recent_latencies"])
+                success_rate = sum(cache["recent_successes"]) / len(cache["recent_successes"])
+                
+                summary["agents"][agent_id] = {
+                    "average_latency_ms": avg_latency,
+                    "success_rate": success_rate,
+                    "total_operations": cache["total_operations"],
+                    "last_update": cache["last_update"].isoformat()
+                }
+        
+        # Collaboration summaries
+        summary["collaboration"] = {}
+        for agent_id, metrics in self.collaboration_metrics.items():
+            if metrics["total_collaborations"] > 0:
+                success_rate = metrics["successful_collaborations"] / metrics["total_collaborations"]
+                summary["collaboration"][agent_id] = {
+                    "total_collaborations": metrics["total_collaborations"],
+                    "success_rate": success_rate,
+                    "unique_partners": len(metrics["partners"]),
+                    "last_collaboration": metrics["last_collaboration"].isoformat()
+                }
+        
+        return summary
+    
+    async def _event_stream_listener(self):
+        """Listen for events from the event streamer"""
+        
+        if not self.event_streamer:
+            return
+        
+        try:
+            consumer_id = f"websocket_server_{datetime.now().timestamp()}"
+            
+            async for event_data in self.event_streamer.subscribe_to_events(consumer_id):
+                try:
+                    # Convert event data back to AURENStreamEvent
+                    event = self._deserialize_event(event_data)
+                    if event:
+                        await self.broadcast_event(event)
+                        
+                except Exception as e:
+                    logger.error(f"Error processing streamed event: {e}")
+                    
+        except Exception as e:
+            logger.error(f"Event stream listener error: {e}")
+    
+    def _deserialize_event(self, event_data: Dict) -> Optional[AURENStreamEvent]:
+        """Deserialize event data from stream"""
+        
+        try:
+            # Parse performance metrics if present
+            performance_metrics = None
+            if "performance_metrics" in event_data and event_data["performance_metrics"]:
+                performance_metrics = AURENPerformanceMetrics(**event_data["performance_metrics"])
+            
+            return AURENStreamEvent(
+                event_id=event_data["event_id"],
+                trace_id=event_data.get("trace_id"),
+                session_id=event_data.get("session_id"),
+                timestamp=datetime.fromisoformat(event_data["timestamp"]),
+                event_type=AURENEventType(event_data["event_type"]),
+                source_agent=event_data.get("source_agent"),
+                target_agent=event_data.get("target_agent"),
+                payload=event_data["payload"],
+                metadata=event_data["metadata"],
+                performance_metrics=performance_metrics,
+                user_id=event_data.get("user_id")
+            )
+            
+        except Exception as e:
+            logger.error(f"Error deserializing event: {e}")
+            return None
+
+    # ... Additional methods would continue with enhanced functionality ...
+    # (connection management, cleanup, health monitoring, etc.)
+            </code_block>
+        </subsection>
+
+        <subsection id="dashboard_api">
+            <title>3.4 Enhanced Dashboard Backend API</title>
+            <code_block language="python">
+"""
+Comprehensive Dashboard Backend API with agent intelligence analytics
+Combines REST, GraphQL, and WebSocket endpoints for complete observability
+"""
+
+from fastapi import FastAPI, HTTPException, Depends, WebSocket, WebSocketDisconnect, Query
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.middleware.cors import CORSMiddleware
+import strawberry
+from strawberry.fastapi import GraphQLRouter
+from datetime import datetime, timezone, timedelta
+from typing import Dict, List, Optional, Any, Union
+import asyncio
+import json
+
+app = FastAPI(
+    title="AUREN Enhanced Dashboard API",
+    description="Comprehensive monitoring and analytics for AUREN platform with agent intelligence",
+    version="2.0.0"
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Configure properly for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+security = HTTPBearer()
+
+class EnhancedDashboardAPI:
+    """
+    Enhanced Dashboard API with comprehensive agent monitoring and analytics
+    
+    Features:
+    - Real-time agent performance tracking
+    - Collaboration pattern analysis
+    - Intelligence system effectiveness metrics
+    - Advanced filtering and aggregation
+    - Predictive analytics for agent behavior
+    """
+    
+    def __init__(self, 
+                 memory_backend,
+                 event_store, 
+                 hypothesis_validator,
+                 knowledge_manager,
+                 websocket_streamer,
+                 crewai_instrumentation):
+        self.memory_backend = memory_backend
+        self.event_store = event_store
+        self.hypothesis_validator = hypothesis_validator
+        self.knowledge_manager = knowledge_manager
+        self.websocket_streamer = websocket_streamer
+        self.crewai_instrumentation = crewai_instrumentation
+    
+    async def authenticate_request(self, credentials: HTTPAuthorizationCredentials) -> str:
+        """Enhanced authentication for API requests"""
+        
+        try:
+            token = credentials.credentials
+            # Enhanced JWT validation with permissions
+            payload = jwt.decode(token, "dashboard_secret", algorithms=["HS256"])
+            user_id = payload.get("user_id")
+            permissions = payload.get("permissions", [])
+            
+            if not user_id:
+                raise HTTPException(status_code=401, detail="Invalid token")
+            
+            return user_id
+        except Exception:
+            raise HTTPException(status_code=401, detail="Authentication failed")
+
+# Enhanced GraphQL Schema
+@strawberry.type
+class AgentPerformanceType:
+    agent_id: str
+    domain: str
+    total_operations: int
+    success_rate: float
+    average_latency_ms: float
+    average_confidence: float
+    last_activity: str
+    efficiency_score: float
+    collaboration_count: int
+    knowledge_items_created: int
+    hypotheses_formed: int
+
+@strawberry.type
+class CollaborationPatternType:
+    agents: List[str]
+    interaction_count: int
+    success_rate: float
+    average_resolution_time_ms: float
+    common_topics: List[str]
+    knowledge_shared: int
+    consensus_rate: float
+
+@strawberry.type
+class IntelligenceMetricType:
+    metric_name: str
+    current_value: float
+    trend_direction: str
+    confidence_interval: List[float]
+    last_updated: str
+    contributing_agents: List[str]
+
+@strawberry.type
+class EnhancedQuery:
+    @strawberry.field
+    async def agent_performance(self, 
+                               agent_id: Optional[str] = None,
+                               time_window_hours: int = 24) -> List[AgentPerformanceType]:
+        """Get comprehensive agent performance metrics"""
+        
+        # Mock implementation - would query real performance data
+        performances = [
+            AgentPerformanceType(
+                agent_id="neuroscientist",
+                domain="neuroscience",
+                total_operations=250,
+                success_rate=0.92,
+                average_latency_ms=1200,
+                average_confidence=0.85,
+                last_activity=datetime.now().isoformat(),
+                efficiency_score=0.88,
+                collaboration_count=45,
+                knowledge_items_created=12,
+                hypotheses_formed=8
+            ),
+            AgentPerformanceType(
+                agent_id="nutritionist",
+                domain="nutrition",
+                total_operations=180,
+                success_rate=0.87,
+                average_latency_ms=950,
+                average_confidence=0.81,
+                last_activity=datetime.now().isoformat(),
+                efficiency_score=0.84,
+                collaboration_count=32,
+                knowledge_items_created=9,
+                hypotheses_formed=6
+            )
+        ]
+        
+        if agent_id:
+            performances = [p for p in performances if p.agent_id == agent_id]
+        
+        return performances
+    
+    @strawberry.field
+    async def collaboration_patterns(self, 
+                                   min_interactions: int = 5) -> List[CollaborationPatternType]:
+        """Get agent collaboration patterns and effectiveness"""
+        
+        return [
+            CollaborationPatternType(
+                agents=["neuroscientist", "sleep_specialist"],
+                interaction_count=89,
+                success_rate=0.94,
+                average_resolution_time_ms=15000,
+                common_topics=["sleep_quality", "recovery_patterns", "hrv_correlation"],
+                knowledge_shared=23,
+                consensus_rate=0.91
+            ),
+            CollaborationPatternType(
+                agents=["training_coach", "recovery_specialist"],
+                interaction_count=76,
+                success_rate=0.88,
+                average_resolution_time_ms=12000,
+                common_topics=["training_load", "recovery_metrics", "adaptation"],
+                knowledge_shared=18,
+                consensus_rate=0.85
+            )
+        ]
+    
+    @strawberry.field
+    async def intelligence_metrics(self) -> List[IntelligenceMetricType]:
+        """Get system intelligence effectiveness metrics"""
+        
+        return [
+            IntelligenceMetricType(
+                metric_name="hypothesis_validation_rate",
+                current_value=0.87,
+                trend_direction="stable",
+                confidence_interval=[0.84, 0.90],
+                last_updated=datetime.now().isoformat(),
+                contributing_agents=["neuroscientist", "training_coach", "nutritionist"]
+            ),
+            IntelligenceMetricType(
+                metric_name="knowledge_application_effectiveness",
+                current_value=0.82,
+                trend_direction="improving",
+                confidence_interval=[0.78, 0.86],
+                last_updated=datetime.now().isoformat(),
+                contributing_agents=["all_agents"]
+            )
+        ]
+
+schema = strawberry.Schema(query=EnhancedQuery)
+
+# Initialize enhanced dashboard API
+dashboard_api = None  # Will be initialized with dependencies
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize enhanced dashboard API on startup"""
+    global dashboard_api
+    # Initialize with actual dependencies
+    # dashboard_api = EnhancedDashboardAPI(...)
+
+# Authentication dependency
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str:
+    if dashboard_api:
+        return await dashboard_api.authenticate_request(credentials)
+    return "test_user"
+
+# Enhanced REST API Endpoints
+
+@app.get("/api/v2/overview")
+async def get_enhanced_overview(user: str = Depends(get_current_user)) -> Dict[str, Any]:
+    """Get enhanced system overview with intelligence metrics"""
+    
+    return {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "system_status": "healthy",
+        "active_users": 245,
+        "active_agents": 6,
+        "events_processed_today": 18750,
+        "uptime_hours": 192.3,
+        "performance_score": 0.94,
+        "intelligence_metrics": {
+            "average_agent_confidence": 0.83,
+            "collaboration_success_rate": 0.89,
+            "knowledge_creation_rate": 4.2,  # items per day
+            "hypothesis_validation_rate": 0.87,
+            "user_outcome_improvement": 0.72
+        },
+        "resource_utilization": {
+            "cpu_percent": 42,
+            "memory_percent": 68,
+            "llm_token_usage_today": 2450000,
+            "cost_today_usd": 125.75
+        }
+    }
+
+@app.get("/api/v2/agents/performance")
+async def get_enhanced_agent_performance(
+    agent_id: Optional[str] = None,
+    time_window: int = 24,
+    include_predictions: bool = False,
+    user: str = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Get enhanced agent performance with predictive analytics"""
+    
+    # Enhanced mock data with predictions
+    agents = [
+        {
+            "agent_id": "neuroscientist",
+            "domain": "neuroscience",
+            "current_performance": {
+                "operations_count": 156,
+                "success_rate": 0.92,
+                "average_latency_ms": 1250,
+                "confidence_score": 0.85,
+                "efficiency_score": 0.88
+            },
+            "collaboration_metrics": {
+                "total_collaborations": 67,
+                "success_rate": 0.94,
+                "unique_partners": 4,
+                "avg_resolution_time_ms": 15000
+            },
+            "intelligence_contribution": {
+                "hypotheses_formed": 23,
+                "hypotheses_validated": 19,
+                "knowledge_items_created": 8,
+                "knowledge_items_shared": 12
+            },
+            "trends": {
+                "performance_trend": "stable",
+                "workload_trend": "increasing",
+                "collaboration_trend": "improving"
+            },
+            "predictions": {
+                "next_hour_load": 12,
+                "performance_forecast": 0.91,
+                "collaboration_opportunities": ["sleep_specialist", "recovery_coach"]
+            } if include_predictions else None
+        },
+        {
+            "agent_id": "training_coach",
+            "domain": "training",
+            "current_performance": {
+                "operations_count": 134,
+                "success_rate": 0.89,
+                "average_latency_ms": 1450,
+                "confidence_score": 0.82,
+                "efficiency_score": 0.85
+            },
+            "collaboration_metrics": {
+                "total_collaborations": 54,
+                "success_rate": 0.87,
+                "unique_partners": 3,
+                "avg_resolution_time_ms": 18000
+            },
+            "intelligence_contribution": {
+                "hypotheses_formed": 18,
+                "hypotheses_validated": 15,
+                "knowledge_items_created": 6,
+                "knowledge_items_shared": 9
+            },
+            "trends": {
+                "performance_trend": "improving",
+                "workload_trend": "stable",
+                "collaboration_trend": "stable"
+            },
+            "predictions": {
+                "next_hour_load": 8,
+                "performance_forecast": 0.91,
+                "collaboration_opportunities": ["recovery_specialist", "nutritionist"]
+            } if include_predictions else None
+        }
+    ]
+    
+    if agent_id:
+        agents = [a for a in agents if a["agent_id"] == agent_id]
+        if not agents:
+            raise HTTPException(status_code=404, detail="Agent not found")
+    
+    return {
+        "time_window_hours": time_window,
+        "agents": agents,
+        "system_averages": {
+            "success_rate": 0.905,
+            "latency_ms": 1350,
+            "confidence_score": 0.835,
+            "collaboration_rate": 0.905
+        },
+        "performance_insights": [
+            "Neuroscientist showing excellent collaboration patterns",
+            "Training coach performance trending upward",
+            "System-wide efficiency at 87% - above target"
+        ]
+    }
+
+@app.get("/api/v2/intelligence/collaboration")
+async def get_collaboration_analytics(
+    time_window: int = 168,
+    min_interactions: int = 5,
+    include_network_analysis: bool = False,
+    user: str = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Get comprehensive collaboration analytics"""
+    
+    collaboration_data = {
+        "time_window_hours": time_window,
+        "collaboration_patterns": [
+            {
+                "participants": ["neuroscientist", "sleep_specialist"],
+                "interaction_count": 89,
+                "success_rate": 0.94,
+                "avg_resolution_time_ms": 15000,
+                "knowledge_items_shared": 23,
+                "consensus_rate": 0.91,
+                "common_topics": ["sleep_quality", "recovery_patterns", "stress_correlation"],
+                "efficiency_score": 0.92
+            },
+            {
+                "participants": ["training_coach", "recovery_specialist"],
+                "interaction_count": 76,
+                "success_rate": 0.88,
+                "avg_resolution_time_ms": 12000,
+                "knowledge_items_shared": 18,
+                "consensus_rate": 0.85,
+                "common_topics": ["training_load", "recovery_metrics", "adaptation"],
+                "efficiency_score": 0.87
+            },
+            {
+                "participants": ["nutritionist", "training_coach", "recovery_specialist"],
+                "interaction_count": 45,
+                "success_rate": 0.82,
+                "avg_resolution_time_ms": 22000,
+                "knowledge_items_shared": 12,
+                "consensus_rate": 0.78,
+                "common_topics": ["nutrition_timing", "performance_optimization"],
+                "efficiency_score": 0.79
+            }
+        ],
+        "collaboration_effectiveness": {
+            "overall_success_rate": 0.88,
+            "avg_resolution_time_ms": 16333,
+            "knowledge_velocity": 2.1,  # items shared per collaboration
+            "consensus_reliability": 0.85
+        },
+        "optimization_opportunities": [
+            {
+                "type": "underutilized_pairing",
+                "agents": ["nutritionist", "sleep_specialist"],
+                "potential_benefit": "circadian_nutrition_optimization",
+                "estimated_impact": 0.15
+            },
+            {
+                "type": "efficiency_improvement",
+                "agents": ["training_coach", "recovery_specialist"],
+                "recommendation": "establish_shared_metrics_framework",
+                "estimated_time_savings": 3000
+            }
+        ]
+    }
+    
+    if include_network_analysis:
+        collaboration_data["network_analysis"] = {
+            "centrality_scores": {
+                "neuroscientist": 0.85,
+                "training_coach": 0.72,
+                "recovery_specialist": 0.68,
+                "nutritionist": 0.58,
+                "sleep_specialist": 0.52,
+                "mental_health_coach": 0.43
+            },
+            "clustering_coefficient": 0.67,
+            "network_density": 0.73,
+            "information_flow_efficiency": 0.81
+        }
+    
+    return collaboration_data
+
+@app.get("/api/v2/intelligence/learning")
+async def get_learning_analytics(
+    time_window: int = 168,
+    include_predictions: bool = False,
+    user: str = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Get intelligence system learning analytics"""
+    
+    learning_data = {
+        "time_window_hours": time_window,
+        "hypothesis_management": {
+            "total_hypotheses": 145,
+            "validated": 126,
+            "invalidated": 12,
+            "pending": 7,
+            "validation_rate": 0.87,
+            "avg_validation_time_hours": 28,
+            "confidence_distribution": {
+                "high": 89,
+                "medium": 37,
+                "low": 19
+            }
+        },
+        "knowledge_evolution": {
+            "total_knowledge_items": 567,
+            "new_items_created": 34,
+            "items_updated": 78,
+            "items_deprecated": 9,
+            "knowledge_half_life_days": 45,
+            "application_success_rate": 0.84
+        },
+        "learning_patterns": [
+            {
+                "domain": "sleep_optimization",
+                "learning_velocity": 0.12,  # new insights per day
+                "validation_accuracy": 0.91,
+                "application_success": 0.87,
+                "contributing_agents": ["neuroscientist", "sleep_specialist"]
+            },
+            {
+                "domain": "training_adaptation",
+                "learning_velocity": 0.09,
+                "validation_accuracy": 0.88,
+                "application_success": 0.83,
+                "contributing_agents": ["training_coach", "recovery_specialist"]
+            }
+        ],
+        "meta_learning": {
+            "learning_rate_improvement": 0.23,  # How much faster agents learn now vs. baseline
+            "knowledge_transfer_efficiency": 0.76,
+            "cross_domain_insight_rate": 0.31
+        }
+    }
+    
+    if include_predictions:
+        learning_data["predictions"] = {
+            "next_breakthrough_domains": ["circadian_optimization", "stress_recovery_correlation"],
+            "learning_velocity_forecast": 0.15,
+            "knowledge_base_growth_rate": 1.8,  # items per week
+            "validation_accuracy_trend": "improving"
+        }
+    
+    return learning_data
+
+@app.get("/api/v2/users/outcomes")
+async def get_enhanced_user_outcomes(
+    time_window: int = 168,
+    include_agent_attribution: bool = False,
+    user: str = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Get enhanced user outcome analytics with agent attribution"""
+    
+    outcomes_data = {
+        "time_window_hours": time_window,
+        "outcome_metrics": {
+            "total_users_tracked": 189,
+            "users_with_improvements": 134,
+            "improvement_rate": 0.71,
+            "average_improvement_magnitude": 0.24,
+            "user_satisfaction_score": 4.2  # out of 5
+        },
+        "improvement_categories": [
+            {
+                "category": "sleep_quality",
+                "users_improved": 89,
+                "average_improvement": 0.28,
+                "improvement_velocity": 0.12,  # improvement per week
+                "most_effective_intervention": "personalized_sleep_schedule",
+                "agent_contributions": {
+                    "neuroscientist": 0.45,
+                    "sleep_specialist": 0.35,
+                    "recovery_specialist": 0.20
+                } if include_agent_attribution else None
+            },
+            {
+                "category": "stress_management",
+                "users_improved": 76,
+                "average_improvement": 0.22,
+                "improvement_velocity": 0.08,
+                "most_effective_intervention": "hrv_guided_breathing",
+                "agent_contributions": {
+                    "neuroscientist": 0.50,
+                    "mental_health_coach": 0.30,
+                    "recovery_specialist": 0.20
+                } if include_agent_attribution else None
+            },
+            {
+                "category": "fitness_performance",
+                "users_improved": 67,
+                "average_improvement": 0.19,
+                "improvement_velocity": 0.06,
+                "most_effective_intervention": "adaptive_training_load",
+                "agent_contributions": {
+                    "training_coach": 0.60,
+                    "recovery_specialist": 0.25,
+                    "nutritionist": 0.15
+                } if include_agent_attribution else None
+            }
+        ],
+        "intervention_effectiveness": {
+            "top_interventions": [
+                {
+                    "intervention": "personalized_circadian_lighting",
+                    "success_rate": 0.89,
+                    "user_satisfaction": 4.6,
+                    "agent_driven": True,
+                    "primary_agent": "neuroscientist"
+                },
+                {
+                    "intervention": "dynamic_nutrition_timing",
+                    "success_rate": 0.85,
+                    "user_satisfaction": 4.3,
+                    "agent_driven": True,
+                    "primary_agent": "nutritionist"
+                }
+            ]
+        },
+        "outcome_attribution": {
+            "agent_effectiveness_scores": {
+                "neuroscientist": 0.87,
+                "training_coach": 0.84,
+                "recovery_specialist": 0.82,
+                "nutritionist": 0.79,
+                "sleep_specialist": 0.76,
+                "mental_health_coach": 0.73
+            },
+            "collaboration_impact": 0.23  # Additional improvement from agent collaboration
+        } if include_agent_attribution else None
+    }
+    
+    return outcomes_data
+
+# Enhanced GraphQL endpoint
+graphql_app = GraphQLRouter(schema=schema)
+app.mount("/graphql", graphql_app)
+
+# Enhanced WebSocket endpoint with agent filtering
+@app.websocket("/ws/dashboard")
+async def enhanced_websocket_endpoint(websocket: WebSocket):
+    """Enhanced WebSocket endpoint with agent-specific filtering"""
+    
+    await websocket.accept()
+    
+    try:
+        # Enhanced authentication and filtering setup
+        auth_data = await websocket.receive_json()
+        
+        client_id = f"dashboard_{datetime.now().timestamp()}"
+        agent_filter = auth_data.get("agent_filter", [])
+        performance_threshold = auth_data.get("performance_threshold", 0.0)
+        subscription_types = auth_data.get("subscriptions", ["all_events"])
+        
+        # Send enhanced connection confirmation
+        await websocket.send_json({
+            "type": "connection_established",
+            "client_id": client_id,
+            "agent_filter": agent_filter,
+            "performance_threshold": performance_threshold,
+            "subscriptions": subscription_types
+        })
+        
+        # Enhanced real-time metrics loop
+        while True:
+            # Send comprehensive real-time metrics every 5 seconds
+            metrics = {
+                "type": "enhanced_metrics_update",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "data": {
+                    "system": {
+                        "active_agents": 6,
+                        "events_per_minute": 67,
+                        "system_health": "healthy",
+                        "current_users": 34
+                    },
+                    "agent_performance": {
+                        "neuroscientist": {
+                            "current_load": 8,
+                            "success_rate": 0.92,
+                            "avg_latency_ms": 1250
+                        },
+                        "training_coach": {
+                            "current_load": 6,
+                            "success_rate": 0.89,
+                            "avg_latency_ms": 1450
+                        }
+                    },
+                    "collaboration": {
+                        "active_sessions": 3,
+                        "consensus_rate": 0.87,
+                        "avg_resolution_time_ms": 15000
+                    },
+                    "intelligence": {
+                        "hypotheses_pending": 7,
+                        "knowledge_items_created_today": 12,
+                        "learning_velocity": 0.11
+                    }
+                }
+            }
+            
+            await websocket.send_json(metrics)
+            await asyncio.sleep(5)
+            
+    except WebSocketDisconnect:
+        logger.info(f"Enhanced dashboard WebSocket {client_id} disconnected")
+    except Exception as e:
+        logger.error(f"Enhanced WebSocket error: {e}")
+            </code_block>
+        </subsection>
+
+        <subsection id="testing_suite">
+            <title>3.5 Comprehensive Testing Suite</title>
+            <code_block language="python">
+"""
+Comprehensive testing for the enhanced real-time systems
+"""
+
+import pytest
+import asyncio
+import json
+from datetime import datetime, timezone
+from unittest.mock import AsyncMock, MagicMock, patch
+import websockets
+from websockets.exceptions import ConnectionClosed
+
+from auren.realtime.crewai_instrumentation import (
+    CrewAIEventInstrumentation, AURENStreamEvent, AURENEventType, AURENPerformanceMetrics
+)
+from auren.realtime.enhanced_websocket_streamer import (
+    EnhancedWebSocketEventStreamer, ClientSubscription
+)
+from auren.realtime.multi_protocol_streaming import (
+    RedisStreamEventStreamer, KafkaEventStreamer, HybridEventStreamer
+)
+
+@pytest.fixture
+async def crewai_instrumentation():
+    """Create test CrewAI instrumentation"""
+    
+    event_streamer_mock = AsyncMock()
+    
+    instrumentation = CrewAIEventInstrumentation(
+        event_streamer=event_streamer_mock
+    )
+    
+    return instrumentation
+
+@pytest.fixture
+async def enhanced_websocket_streamer():
+    """Create test enhanced WebSocket streamer"""
+    
+    event_streamer_mock = AsyncMock()
+    
+    streamer = EnhancedWebSocketEventStreamer(
+        host="localhost",
+        port=8765,
+        event_streamer=event_streamer_mock,
+        max_connections=10
+    )
+    
+    return streamer
+
+@pytest.fixture
+async def redis_event_streamer():
+    """Create test Redis event streamer"""
+    
+    redis_mock = AsyncMock()
+    
+    streamer = RedisStreamEventStreamer(
+        redis_url="redis://localhost:6379",
+        stream_name="test_stream"
+    )
+    streamer.redis_client = redis_mock
+    
+    return streamer
+
+class TestCrewAIInstrumentation:
+    
+    async def test_agent_execution_event_capture(self, crewai_instrumentation):
+        """Test capturing agent execution events"""
+        
+        # Create mock agent execution event
+        mock_event = MagicMock()
+        mock_event.agent.role = "neuroscientist"
+        mock_event.agent.goal = "Analyze biometric patterns"
+        mock_event.agent.backstory = "Expert in neuroscience and biometric analysis"
+        mock_event.agent.allow_delegation = True
+        mock_event.agent.tools = ["hrv_analyzer", "sleep_analyzer"]
+        
+        await crewai_instrumentation._on_agent_execution_started(mock_event)
+        
+        # Verify event was emitted
+        assert crewai_instrumentation.event_streamer.stream_event.called
+        
+        # Get the emitted event
+        call_args = crewai_instrumentation.event_streamer.stream_event.call_args
+        event = call_args[0][0]
+        
+        assert event.event_type == AURENEventType.AGENT_EXECUTION_STARTED
+        assert event.source_agent["id"] == "neuroscientist"
+        assert event.payload["tools_available"] == 2
+        assert event.payload["memory_enabled"] == False
+    
+    async def test_llm_call_tracking(self, crewai_instrumentation):
+        """Test LLM call tracking with cost analysis"""
+        
+        # Create mock LLM call event
+        mock_event = MagicMock()
+        mock_event.agent.role = "training_coach"
+        mock_event.model = "gpt-4"
+        mock_event.prompt = "Analyze this training data..."
+        mock_event.max_tokens = 1000
+        mock_event.temperature = 0.7
+        mock_event.tokens_used = 850
+        mock_event.cost = 0.025
+        mock_event.response = "Based on the training data..."
+        mock_event.latency_ms = 1200
+        
+        await crewai_instrumentation._on_llm_call_completed(mock_event)
+        
+        # Verify event was emitted
+        assert crewai_instrumentation.event_streamer.stream_event.called
+        
+        call_args = crewai_instrumentation.event_streamer.stream_event.call_args
+        event = call_args[0][0]
+        
+        assert event.event_type == AURENEventType.LLM_CALL
+        assert event.payload["tokens_used"] == 850
+        assert event.payload["cost"] == 0.025
+        assert event.payload["success"] == True
+    
+    async def test_collaboration_event_capture(self, crewai_instrumentation):
+        """Test agent collaboration event capture"""
+        
+        collaboration_result = {
+            "consensus": True,
+            "confidence_scores": {
+                "neuroscientist": 0.85,
+                "sleep_specialist": 0.78
+            },
+            "final_recommendation": "optimize_sleep_schedule",
+            "resolution_time": 15000,
+            "knowledge_items": 3,
+            "quality_score": 0.89
+        }
+        
+        await crewai_instrumentation.capture_agent_collaboration(
+            primary_agent="neuroscientist",
+            collaborating_agents=["sleep_specialist", "recovery_coach"],
+            collaboration_type="sleep_analysis",
+            result=collaboration_result,
+            trace_id="test_trace_123"
+        )
+        
+        assert crewai_instrumentation.event_streamer.stream_event.called
+        
+        call_args = crewai_instrumentation.event_streamer.stream_event.call_args
+        event = call_args[0][0]
+        
+        assert event.event_type == AURENEventType.AGENT_COLLABORATION
+        assert event.trace_id == "test_trace_123"
+        assert event.payload["consensus_reached"] == True
+        assert event.payload["knowledge_shared"] == 3
+        assert len(event.payload["collaborating_agents"]) == 2
+    
+    async def test_performance_metrics_tracking(self, crewai_instrumentation):
+        """Test performance metrics collection and calculation"""
+        
+        # Create session tracking
+        session_id = "test_session_123"
+        crewai_instrumentation.performance_tracker[session_id] = {
+            "start_time": datetime.now(timezone.utc),
+            "agent_id": "nutritionist",
+            "trace_id": "test_trace",
+            "llm_calls": 3,
+            "tool_uses": 2,
+            "tokens_used": 1200,
+            "cost_accumulated": 0.045,
+            "collaboration_events": 1,
+            "knowledge_accesses": 5,
+            "hypotheses_formed": 2
+        }
+        
+        # Mock completion event
+        mock_event = MagicMock()
+        mock_event.agent.role = "nutritionist"
+        mock_event.output = "Recommendation: Increase protein intake..."
+        
+        await crewai_instrumentation._on_agent_execution_completed(mock_event)
+        
+        assert crewai_instrumentation.event_streamer.stream_event.called
+        
+        call_args = crewai_instrumentation.event_streamer.stream_event.call_args
+        event = call_args[0][0]
+        
+        assert event.event_type == AURENEventType.AGENT_EXECUTION_COMPLETED
+        assert event.performance_metrics is not None
+        assert event.performance_metrics.success == True
+        assert event.performance_metrics.collaboration_depth == 1
+        assert event.performance_metrics.hypotheses_formed == 2
+
+class TestEnhancedWebSocketStreamer:
+    
+    async def test_enhanced_event_filtering(self, enhanced_websocket_streamer):
+        """Test enhanced event filtering with agent and performance filters"""
+        
+        # Create mock connection with filters
+        connection = MagicMock()
+        connection.connection_id = "test_conn"
+        connection.subscriptions = {ClientSubscription.AGENT_ACTIVITY}
+        connection.agent_filter = {"neuroscientist", "training_coach"}
+        connection.performance_threshold = 0.8
+        connection.websocket.send = AsyncMock()
+        
+        enhanced_websocket_streamer.active_connections["test_conn"] = connection
+        enhanced_websocket_streamer.subscription_map[ClientSubscription.AGENT_ACTIVITY].add("test_conn")
+        
+        # Create test event that should pass filters
+        passing_event = AURENStreamEvent(
+            event_id="test_event_1",
+            trace_id="trace_1",
+            session_id="session_1",
+            timestamp=datetime.now(timezone.utc),
+            event_type=AURENEventType.AGENT_EXECUTION_STARTED,
+            source_agent={"id": "neuroscientist", "role": "neuroscientist"},
+            target_agent=None,
+            payload={"action": "analysis"},
+            metadata={},
+            performance_metrics=AURENPerformanceMetrics(
+                latency_ms=1000,
+                token_cost=0.02,
+                memory_usage_mb=50,
+                cpu_percentage=30,
+                success=True,
+                confidence_score=0.85  # Above threshold
+            )
+        )
+        
+        # Create test event that should be filtered out
+        filtered_event = AURENStreamEvent(
+            event_id="test_event_2",
+            trace_id="trace_2",
+            session_id="session_2",
+            timestamp=datetime.now(timezone.utc),
+            event_type=AURENEventType.AGENT_EXECUTION_STARTED,
+            source_agent={"id": "unknown_agent", "role": "unknown_agent"},  # Not in filter
+            target_agent=None,
+            payload={"action": "analysis"},
+            metadata={},
+            performance_metrics=AURENPerformanceMetrics(
+                latency_ms=1000,
+                token_cost=0.02,
+                memory_usage_mb=50,
+                cpu_percentage=30,
+                success=True,
+                confidence_score=0.75  # Below threshold
+            )
+        )
+        
+        # Broadcast events
+        await enhanced_websocket_streamer.broadcast_event(passing_event)
+        await enhanced_websocket_streamer.broadcast_event(filtered_event)
+        
+        # Verify only the passing event was sent
+        assert connection.websocket.send.call_count == 1
+        
+        # Verify the correct event was sent
+        call_args = connection.websocket.send.call_args
+        sent_data = json.loads(call_args[0][0])
+        assert sent_data["event"]["event_id"] == "test_event_1"
+    
+    async def test_performance_cache_updates(self, enhanced_websocket_streamer):
+        """Test real-time performance cache updates"""
+        
+        # Create event with performance metrics
+        event = AURENStreamEvent(
+            event_id="perf_test",
+            trace_id="trace_1",
+            session_id="session_1",
+            timestamp=datetime.now(timezone.utc),
+            event_type=AURENEventType.AGENT_EXECUTION_COMPLETED,
+            source_agent={"id": "test_agent", "role": "test_agent"},
+            target_agent=None,
+            payload={},
+            metadata={},
+            performance_metrics=AURENPerformanceMetrics(
+                latency_ms=1500,
+                token_cost=0.03,
+                memory_usage_mb=75,
+                cpu_percentage=45,
+                success=True,
+                confidence_score=0.82
+            )
+        )
+        
+        # Update performance cache
+        enhanced_websocket_streamer._update_performance_cache(event)
+        
+        # Verify cache was updated
+        assert "test_agent" in enhanced_websocket_streamer.agent_performance_cache
+        cache = enhanced_websocket_streamer.agent_performance_cache["test_agent"]
+        
+        assert len(cache["recent_latencies"]) == 1
+        assert cache["recent_latencies"][0] == 1500
+        assert len(cache["recent_successes"]) == 1
+        assert cache["recent_successes"][0] == True
+        assert cache["total_operations"] == 1
+        assert cache["total_success"] == 1
+    
+    async def test_collaboration_metrics_tracking(self, enhanced_websocket_streamer):
+        """Test collaboration metrics tracking"""
+        
+        # Create collaboration event
+        collaboration_event = AURENStreamEvent(
+            event_id="collab_test",
+            trace_id="trace_1",
+            session_id="session_1",
+            timestamp=datetime.now(timezone.utc),
+            event_type=AURENEventType.AGENT_COLLABORATION,
+            source_agent={"id": "neuroscientist", "role": "neuroscientist"},
+            target_agent=None,
+            payload={
+                "primary_agent": "neuroscientist",
+                "collaborating_agents": ["sleep_specialist", "recovery_coach"],
+                "consensus_reached": True
+            },
+            metadata={}
+        )
+        
+        # Update collaboration metrics
+        enhanced_websocket_streamer._update_collaboration_metrics(collaboration_event)
+        
+        # Verify metrics were updated
+        assert "neuroscientist" in enhanced_websocket_streamer.collaboration_metrics
+        metrics = enhanced_websocket_streamer.collaboration_metrics["neuroscientist"]
+        
+        assert metrics["total_collaborations"] == 1
+        assert metrics["successful_collaborations"] == 1
+        assert "sleep_specialist" in metrics["partners"]
+        assert "recovery_coach" in metrics["partners"]
+
+class TestMultiProtocolStreaming:
+    
+    async def test_redis_stream_event_streaming(self, redis_event_streamer):
+        """Test Redis Streams event streaming"""
+        
+        # Create test event
+        event = AURENStreamEvent(
+            event_id="redis_test",
+            trace_id="trace_1",
+            session_id="session_1",
+            timestamp=datetime.now(timezone.utc),
+            event_type=AURENEventType.AGENT_DECISION,
+            source_agent={"id": "test_agent", "role": "test_agent"},
+            target_agent=None,
+            payload={"decision": "test_decision"},
+            metadata={"test": True}
+        )
+        
+        # Stream event
+        success = await redis_event_streamer.stream_event(event)
+        
+        # Verify streaming success
+        assert success == True
+        
+        # Verify Redis calls were made
+        assert redis_event_streamer.redis_client.xadd.called
+        assert redis_event_streamer.redis_client.zadd.called
+        
+        # Verify stream data
+        xadd_call = redis_event_streamer.redis_client.xadd.call_args
+        stream_name = xadd_call[0][0]
+        event_data = xadd_call[0][1]
+        
+        assert stream_name == "test_stream"
+        assert event_data["event_id"] == "redis_test"
+        assert event_data["event_type"] == "agent_decision"
+    
+    async def test_hybrid_streaming_fallback(self):
+        """Test hybrid streaming with fallback capabilities"""
+        
+        redis_mock = AsyncMock()
+        kafka_mock = AsyncMock()
+        
+        # Create hybrid streamer
+        hybrid_streamer = HybridEventStreamer(
+            redis_url="redis://localhost:6379",
+            kafka_servers="localhost:9092"
+        )
+        
+        # Mock the individual streamers
+        hybrid_streamer.redis_streamer = AsyncMock()
+        hybrid_streamer.kafka_streamer = AsyncMock()
+        
+        # Test successful streaming to both
+        hybrid_streamer.redis_streamer.stream_event.return_value = True
+        hybrid_streamer.kafka_streamer.stream_event.return_value = True
+        
+        event = AURENStreamEvent(
+            event_id="hybrid_test",
+            trace_id="trace_1",
+            session_id="session_1",
+            timestamp=datetime.now(timezone.utc),
+            event_type=AURENEventType.SYSTEM_HEALTH,
+            source_agent=None,
+            target_agent=None,
+            payload={"status": "healthy"},
+            metadata={}
+        )
+        
+        success = await hybrid_streamer.stream_event(event)
+        assert success == True
+        
+        # Test fallback when Redis fails
+        hybrid_streamer.redis_streamer.stream_event.return_value = False
+        hybrid_streamer.kafka_streamer.stream_event.return_value = True
+        
+        success = await hybrid_streamer.stream_event(event)
+        assert success == True  # Should still succeed via Kafka
+        
+        # Test failure when both fail
+        hybrid_streamer.redis_streamer.stream_event.return_value = False
+        hybrid_streamer.kafka_streamer.stream_event.return_value = False
+        
+        success = await hybrid_streamer.stream_event(event)
+        assert success == False
+
+@pytest.mark.integration
+class TestIntegrationScenarios:
+    
+    async def test_complete_agent_workflow_tracking(self):
+        """Test complete agent workflow from execution to collaboration"""
+        
+        # This would be a comprehensive integration test
+        # involving the full pipeline from CrewAI events to dashboard display
+        
+        # Setup: Create all components
+        instrumentation = CrewAIEventInstrumentation()
+        redis_streamer = RedisStreamEventStreamer("redis://localhost:6379")
+        websocket_streamer = EnhancedWebSocketEventStreamer(event_streamer=redis_streamer)
+        
+        # Mock all components for testing
+        instrumentation.event_streamer = AsyncMock()
+        
+        # Simulate agent workflow
+        # 1. Agent execution starts
+        mock_start_event = MagicMock()
+        mock_start_event.agent.role = "neuroscientist"
+        await instrumentation._on_agent_execution_started(mock_start_event)
+        
+        # 2. Agent makes LLM calls
+        mock_llm_event = MagicMock()
+        mock_llm_event.agent.role = "neuroscientist"
+        mock_llm_event.tokens_used = 500
+        mock_llm_event.cost = 0.015
+        await instrumentation._on_llm_call_completed(mock_llm_event)
+        
+        # 3. Agent collaborates with another agent
+        await instrumentation.capture_agent_collaboration(
+            primary_agent="neuroscientist",
+            collaborating_agents=["sleep_specialist"],
+            collaboration_type="sleep_analysis",
+            result={"consensus": True, "confidence_scores": {"neuroscientist": 0.85}}
+        )
+        
+        # 4. Agent execution completes
+        mock_complete_event = MagicMock()
+        mock_complete_event.agent.role = "neuroscientist"
+        await instrumentation._on_agent_execution_completed(mock_complete_event)
+        
+        # Verify all events were captured
+        assert instrumentation.event_streamer.stream_event.call_count == 4
+
+if __name__ == "__main__":
+    pytest.main(["-v", __file__])
+            </code_block>
+        </subsection>
+
+        <subsection id="performance_optimization">
+            <title>3.6 Performance Optimization and Monitoring</title>
+            <code_block language="python">
+"""
+Performance optimization and monitoring for the enhanced real-time systems
+"""
+
+import asyncio
+import time
+import logging
+from typing import Dict, List, Any, Optional
+from dataclasses import dataclass
+from datetime import datetime, timezone, timedelta
+import psutil
+import numpy as np
+from collections import deque, defaultdict
+
+logger = logging.getLogger(__name__)
+
+@dataclass
+class SystemPerformanceMetrics:
+    """Comprehensive system performance metrics"""
+    timestamp: datetime
+    cpu_usage_percent: float
+    memory_usage_percent: float
+    memory_usage_mb: float
+    disk_io_read_mbps: float
+    disk_io_write_mbps: float
+    network_io_recv_mbps: float
+    network_io_sent_mbps: float
+    active_connections: int
+    events_per_second: float
+    average_latency_ms: float
+    error_rate: float
+
+@dataclass
+class ComponentPerformanceMetrics:
+    """Performance metrics for individual components"""
+    component_name: str
+    operations_per_second: float
+    average_latency_ms: float
+    error_rate: float
+    queue_size: int
+    active_workers: int
+    resource_utilization: float
+    last_update: datetime
+
+class EnhancedPerformanceMonitor:
+    """
+    Comprehensive performance monitoring for all real-time system components
+    
+    Features:
+    - System resource monitoring
+    - Component-specific performance tracking
+    - Predictive performance analytics
+    - Automatic performance optimization recommendations
+    - Real-time alerting for performance issues
+    """
+    
+    def __init__(self, 
+                 websocket_streamer: EnhancedWebSocketEventStreamer,
+                 event_streamers: List[EventStreamer],
+                 crewai_instrumentation: CrewAIEventInstrumentation):
+        self.websocket_streamer = websocket_streamer
+        self.event_streamers = event_streamers
+        self.crewai_instrumentation = crewai_instrumentation
+        
+        # Performance data storage
+        self.system_metrics_history = deque(maxlen=1440)  # 24 hours at 1-minute intervals
+        self.component_metrics = {}
+        self.performance_alerts = deque(maxlen=100)
+        
+        # Performance tracking
+        self.last_system_check = datetime.now(timezone.utc)
+        self.baseline_metrics = None
+        self.performance_trends = defaultdict(deque)
+        
+        # Alert thresholds
+        self.alert_thresholds = {
+            "cpu_usage_percent": 80.0,
+            "memory_usage_percent": 85.0,
+            "average_latency_ms": 5000.0,
+            "error_rate": 0.05,
+            "events_per_second_drop": 0.5  # 50% drop from baseline
+        }
+    
+    async def start_monitoring(self):
+        """Start continuous performance monitoring"""
+        
+        logger.info("Starting enhanced performance monitoring")
+        
+        # Start monitoring tasks
+        asyncio.create_task(self._system_metrics_collector())
+        asyncio.create_task(self._component_metrics_collector())
+        asyncio.create_task(self._performance_analyzer())
+        asyncio.create_task(self._alert_processor())
+        
+        # Initialize baseline metrics
+        await self._establish_baseline_metrics()
+    
+    async def _system_metrics_collector(self):
+        """Collect system-wide performance metrics"""
+        
+        while True:
+            try:
+                # Collect system metrics
+                cpu_percent = psutil.cpu_percent(interval=1)
+                memory = psutil.virtual_memory()
+                disk_io = psutil.disk_io_counters()
+                network_io = psutil.net_io_counters()
+                
+                # Calculate rates
+                current_time = time.time()
+                if hasattr(self, '_last_disk_io'):
+                    time_delta = current_time - self._last_disk_check
+                    disk_read_rate = (disk_io.read_bytes - self._last_disk_io.read_bytes) / time_delta / 1024 / 1024
+                    disk_write_rate = (disk_io.write_bytes - self._last_disk_io.write_bytes) / time_delta / 1024 / 1024
+                    network_recv_rate = (network_io.bytes_recv - self._last_network_io.bytes_recv) / time_delta / 1024 / 1024
+                    network_sent_rate = (network_io.bytes_sent - self._last_network_io.bytes_sent) / time_delta / 1024 / 1024
+                else:
+                    disk_read_rate = disk_write_rate = network_recv_rate = network_sent_rate = 0.0
+                
+                self._last_disk_io = disk_io
+                self._last_network_io = network_io
+                self._last_disk_check = current_time
+                
+                # Get application-specific metrics
+                active_connections = len(self.websocket_streamer.active_connections)
+                events_per_second = self._calculate_events_per_second()
+                average_latency = self._calculate_average_latency()
+                error_rate = self._calculate_error_rate()
+                
+                # Create metrics record
+                metrics = SystemPerformanceMetrics(
+                    timestamp=datetime.now(timezone.utc),
+                    cpu_usage_percent=cpu_percent,
+                    memory_usage_percent=memory.percent,
+                    memory_usage_mb=memory.used / 1024 / 1024,
+                    disk_io_read_mbps=disk_read_rate,
+                    disk_io_write_mbps=disk_write_rate,
+                    network_io_recv_mbps=network_recv_rate,
+                    network_io_sent_mbps=network_sent_rate,
+                    active_connections=active_connections,
+                    events_per_second=events_per_second,
+                    average_latency_ms=average_latency,
+                    error_rate=error_rate
+                )
+                
+                # Store metrics
+                self.system_metrics_history.append(metrics)
+                
+                # Check for alerts
+                await self._check_system_alerts(metrics)
+                
+                await asyncio.sleep(60)  # Collect every minute
+                
+            except Exception as e:
+                logger.error(f"System metrics collection error: {e}")
+                await asyncio.sleep(60)
+    
+    async def _component_metrics_collector(self):
+        """Collect component-specific performance metrics"""
+        
+        while True:
+            try:
+                current_time = datetime.now(timezone.utc)
+                
+                # WebSocket streamer metrics
+                websocket_metrics = ComponentPerformanceMetrics(
+                    component_name="websocket_streamer",
+                    operations_per_second=self._calculate_websocket_ops_per_second(),
+                    average_latency_ms=self._calculate_websocket_latency(),
+                    error_rate=self._calculate_websocket_error_rate(),
+                    queue_size=len(self.websocket_streamer.event_buffers.get("agent_activity", [])),
+                    active_workers=len(self.websocket_streamer.active_connections),
+                    resource_utilization=self._calculate_websocket_utilization(),
+                    last_update=current_time
+                )
+                
+                self.component_metrics["websocket_streamer"] = websocket_metrics
+                
+                # Event streamer metrics
+                for i, streamer in enumerate(self.event_streamers):
+                    streamer_metrics = ComponentPerformanceMetrics(
+                        component_name=f"event_streamer_{i}",
+                        operations_per_second=getattr(streamer, 'events_sent', 0) / 60,  # Per minute to per second
+                        average_latency_ms=self._estimate_streamer_latency(streamer),
+                        error_rate=self._estimate_streamer_error_rate(streamer),
+                        queue_size=self._estimate_streamer_queue_size(streamer),
+                        active_workers=1,  # Single worker per streamer
+                        resource_utilization=self._estimate_streamer_utilization(streamer),
+                        last_update=current_time
+                    )
+                    
+                    self.component_metrics[f"event_streamer_{i}"] = streamer_metrics
+                
+                # CrewAI instrumentation metrics
+                instrumentation_metrics = ComponentPerformanceMetrics(
+                    component_name="crewai_instrumentation",
+                    operations_per_second=self._calculate_instrumentation_ops_per_second(),
+                    average_latency_ms=self._calculate_instrumentation_latency(),
+                    error_rate=0.0,  # Instrumentation rarely fails
+                    queue_size=0,  # Direct processing
+                    active_workers=1,
+                    resource_utilization=self._calculate_instrumentation_utilization(),
+                    last_update=current_time
+                )
+                
+                self.component_metrics["crewai_instrumentation"] = instrumentation_metrics
+                
+                await asyncio.sleep(30)  # Collect every 30 seconds
+                
+            except Exception as e:
+                logger.error(f"Component metrics collection error: {e}")
+                await asyncio.sleep(30)
+    
+    async def _performance_analyzer(self):
+        """Analyze performance trends and generate optimization recommendations"""
+        
+        while True:
+            try:
+                if len(self.system_metrics_history) < 10:
+                    await asyncio.sleep(300)  # Wait for more data
+                    continue
+                
+                # Analyze trends
+                trends = self._analyze_performance_trends()
+                
+                # Generate recommendations
+                recommendations = self._generate_optimization_recommendations(trends)
+                
+                # Check for performance degradation
+                degradation_alerts = self._detect_performance_degradation(trends)
+                
+                # Log insights
+                if recommendations:
+                    logger.info(f"Performance recommendations: {recommendations}")
+                
+                if degradation_alerts:
+                    logger.warning(f"Performance degradation detected: {degradation_alerts}")
+                
+                await asyncio.sleep(300)  # Analyze every 5 minutes
+                
+            except Exception as e:
+                logger.error(f"Performance analysis error: {e}")
+                await asyncio.sleep(300)
+    
+    def _analyze_performance_trends(self) -> Dict[str, Any]:
+        """Analyze performance trends over time"""
+        
+        if len(self.system_metrics_history) < 5:
+            return {}
+        
+        recent_metrics = list(self.system_metrics_history)[-60:]  # Last hour
+        
+        trends = {}
+        
+        # CPU trend
+        cpu_values = [m.cpu_usage_percent for m in recent_metrics]
+        trends["cpu_trend"] = self._calculate_trend(cpu_values)
+        
+        # Memory trend
+        memory_values = [m.memory_usage_percent for m in recent_metrics]
+        trends["memory_trend"] = self._calculate_trend(memory_values)
+        
+        # Latency trend
+        latency_values = [m.average_latency_ms for m in recent_metrics]
+        trends["latency_trend"] = self._calculate_trend(latency_values)
+        
+        # Events per second trend
+        events_values = [m.events_per_second for m in recent_metrics]
+        trends["events_trend"] = self._calculate_trend(events_values)
+        
+        # Error rate trend
+        error_values = [m.error_rate for m in recent_metrics]
+        trends["error_trend"] = self._calculate_trend(error_values)
+        
+        return trends
+    
+    def _calculate_trend(self, values: List[float]) -> str:
+        """Calculate trend direction from values"""
+        
+        if len(values) < 3:
+            return "stable"
+        
+        # Simple linear regression
+        x = np.arange(len(values))
+        slope = np.polyfit(x, values, 1)[0]
+        
+        if abs(slope) < 0.1:
+            return "stable"
+        elif slope > 0.1:
+            return "increasing"
+        else:
+            return "decreasing"
+    
+    def _generate_optimization_recommendations(self, trends: Dict[str, Any]) -> List[str]:
+        """Generate optimization recommendations based on trends"""
+        
+        recommendations = []
+        
+        # CPU optimization
+        if trends.get("cpu_trend") == "increasing":
+            recommendations.append("Consider scaling WebSocket connections across multiple processes")
+            recommendations.append("Optimize event processing algorithms for lower CPU usage")
+        
+        # Memory optimization
+        if trends.get("memory_trend") == "increasing":
+            recommendations.append("Review event buffer sizes and implement more aggressive cleanup")
+            recommendations.append("Consider implementing event compression for large payloads")
+        
+        # Latency optimization
+        if trends.get("latency_trend") == "increasing":
+            recommendations.append("Optimize database query performance")
+            recommendations.append("Consider implementing connection pooling or caching")
+        
+        # Throughput optimization
+        if trends.get("events_trend") == "decreasing":
+            recommendations.append("Check for bottlenecks in event streaming pipeline")
+            recommendations.append("Consider increasing worker processes or threads")
+        
+        # Error rate optimization
+        if trends.get("error_trend") == "increasing":
+            recommendations.append("Investigate error logs for common failure patterns")
+            recommendations.append("Implement circuit breakers for external service calls")
+        
+        return recommendations
+    
+    def _detect_performance_degradation(self, trends: Dict[str, Any]) -> List[str]:
+        """Detect significant performance degradation"""
+        
+        alerts = []
+        
+        if not self.system_metrics_history:
+            return alerts
+        
+        current_metrics = self.system_metrics_history[-1]
+        
+        # Check against thresholds
+        if current_metrics.cpu_usage_percent > self.alert_thresholds["cpu_usage_percent"]:
+            alerts.append(f"High CPU usage: {current_metrics.cpu_usage_percent:.1f}%")
+        
+        if current_metrics.memory_usage_percent > self.alert_thresholds["memory_usage_percent"]:
+            alerts.append(f"High memory usage: {current_metrics.memory_usage_percent:.1f}%")
+        
+        if current_metrics.average_latency_ms > self.alert_thresholds["average_latency_ms"]:
+            alerts.append(f"High latency: {current_metrics.average_latency_ms:.1f}ms")
+        
+        if current_metrics.error_rate > self.alert_thresholds["error_rate"]:
+            alerts.append(f"High error rate: {current_metrics.error_rate:.3f}")
+        
+        # Check trends
+        if trends.get("events_trend") == "decreasing" and self.baseline_metrics:
+            current_eps = current_metrics.events_per_second
+            baseline_eps = self.baseline_metrics.get("events_per_second", current_eps)
+            if current_eps < baseline_eps * (1 - self.alert_thresholds["events_per_second_drop"]):
+                alerts.append(f"Significant drop in event throughput: {current_eps:.1f} vs baseline {baseline_eps:.1f}")
+        
+        return alerts
+    
+    async def _establish_baseline_metrics(self):
+        """Establish baseline performance metrics"""
+        
+        # Wait for some data to accumulate
+        await asyncio.sleep(300)  # 5 minutes
+        
+        if len(self.system_metrics_history) < 5:
+            return
+        
+        recent_metrics = list(self.system_metrics_history)[-5:]
+        
+        self.baseline_metrics = {
+            "cpu_usage_percent": np.mean([m.cpu_usage_percent for m in recent_metrics]),
+            "memory_usage_percent": np.mean([m.memory_usage_percent for m in recent_metrics]),
+            "average_latency_ms": np.mean([m.average_latency_ms for m in recent_metrics]),
+            "events_per_second": np.mean([m.events_per_second for m in recent_metrics]),
+            "error_rate": np.mean([m.error_rate for m in recent_metrics])
+        }
+        
+        logger.info(f"Baseline metrics established: {self.baseline_metrics}")
+    
+    def get_performance_summary(self) -> Dict[str, Any]:
+        """Get comprehensive performance summary"""
+        
+        if not self.system_metrics_history:
+            return {"status": "no_data"}
+        
+        current_metrics = self.system_metrics_history[-1]
+        trends = self._analyze_performance_trends()
+        
+        return {
+            "timestamp": current_metrics.timestamp.isoformat(),
+            "system_metrics": {
+                "cpu_usage_percent": current_metrics.cpu_usage_percent,
+                "memory_usage_percent": current_metrics.memory_usage_percent,
+                "memory_usage_mb": current_metrics.memory_usage_mb,
+                "active_connections": current_metrics.active_connections,
+                "events_per_second": current_metrics.events_per_second,
+                "average_latency_ms": current_metrics.average_latency_ms,
+                "error_rate": current_metrics.error_rate
+            },
+            "component_metrics": {
+                name: {
+                    "operations_per_second": metrics.operations_per_second,
+                    "average_latency_ms": metrics.average_latency_ms,
+                    "error_rate": metrics.error_rate,
+                    "resource_utilization": metrics.resource_utilization
+                }
+                for name, metrics in self.component_metrics.items()
+            },
+            "trends": trends,
+            "baseline_comparison": self._compare_to_baseline(current_metrics) if self.baseline_metrics else None,
+            "optimization_recommendations": self._generate_optimization_recommendations(trends),
+            "performance_score": self._calculate_overall_performance_score(current_metrics)
+        }
+    
+    def _compare_to_baseline(self, current_metrics: SystemPerformanceMetrics) -> Dict[str, float]:
+        """Compare current metrics to baseline"""
+        
+        if not self.baseline_metrics:
+            return {}
+        
+        return {
+            "cpu_change_percent": (current_metrics.cpu_usage_percent - self.baseline_metrics["cpu_usage_percent"]) / self.baseline_metrics["cpu_usage_percent"] * 100,
+            "memory_change_percent": (current_metrics.memory_usage_percent - self.baseline_metrics["memory_usage_percent"]) / self.baseline_metrics["memory_usage_percent"] * 100,
+            "latency_change_percent": (current_metrics.average_latency_ms - self.baseline_metrics["average_latency_ms"]) / self.baseline_metrics["average_latency_ms"] * 100,
+            "events_change_percent": (current_metrics.events_per_second - self.baseline_metrics["events_per_second"]) / self.baseline_metrics["events_per_second"] * 100
+        }
+    
+    def _calculate_overall_performance_score(self, metrics: SystemPerformanceMetrics) -> float:
+        """Calculate overall performance score (0-1)"""
+        
+        # Start with perfect score
+        score = 1.0
+        
+        # Penalize high resource usage
+        if metrics.cpu_usage_percent > 50:
+            score -= (metrics.cpu_usage_percent - 50) / 100  # Up to -0.5
+        
+        if metrics.memory_usage_percent > 60:
+            score -= (metrics.memory_usage_percent - 60) / 100  # Up to -0.4
+        
+        # Penalize high latency
+        if metrics.average_latency_ms > 1000:
+            score -= min(0.3, (metrics.average_latency_ms - 1000) / 10000)  # Up to -0.3
+        
+        # Penalize errors
+        score -= min(0.2, metrics.error_rate * 4)  # Up to -0.2
+        
+        return max(0.0, score)
+    
+    # Helper methods for calculating component-specific metrics
+    def _calculate_events_per_second(self) -> float:
+        """Calculate current events per second"""
+        if hasattr(self.websocket_streamer, 'events_sent'):
+            return self.websocket_streamer.events_sent / 60  # Rough estimate
+        return 0.0
+    
+    def _calculate_average_latency(self) -> float:
+        """Calculate average system latency"""
+        # This would aggregate latencies from various components
+        return 1200.0  # Placeholder
+    
+    def _calculate_error_rate(self) -> float:
+        """Calculate system error rate"""
+        # This would aggregate errors from various components
+        return 0.002  # Placeholder
+    
+    # Additional helper methods would be implemented similarly...
+            </code_block>
+        </subsection>
+    </section>
+</module>

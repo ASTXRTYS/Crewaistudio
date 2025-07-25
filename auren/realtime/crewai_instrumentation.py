@@ -14,17 +14,19 @@ import uuid
 
 # CrewAI imports
 from crewai import Agent, Task, Crew, Process
-from crewai.agents.events import (
-    AgentExecutionStartedEvent,
-    AgentExecutionCompletedEvent,
-    TaskStartedEvent,
-    TaskCompletedEvent,
-    LLMCallStartedEvent,
-    LLMCallCompletedEvent,
-    ToolUsageStartedEvent,
-    ToolUsageCompletedEvent
-)
-from crewai.events import EventBus
+
+# Note: CrewAI event system has changed - using custom event capturing instead
+# from crewai.agents.events import (
+#     AgentExecutionStartedEvent,
+#     AgentExecutionCompletedEvent,
+#     TaskStartedEvent,
+#     TaskCompletedEvent,
+#     LLMCallStartedEvent,
+#     LLMCallCompletedEvent,
+#     ToolUsageStartedEvent,
+#     ToolUsageCompletedEvent
+# )
+# from crewai.events import EventBus
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +60,7 @@ class AURENEventType(Enum):
     CONVERSATION_EVENT = "conversation_event"
     SYSTEM_HEALTH = "system_health"
     PERFORMANCE_METRIC = "performance_metric"
+    MEMORY_TIER_ACCESS = "memory_tier_access"  # Added for memory tier tracking
 
 @dataclass
 class AURENStreamEvent:
@@ -82,43 +85,32 @@ class CrewAIEventInstrumentation:
     
     def __init__(self, event_streamer=None):
         self.event_streamer = event_streamer
-        self.event_bus = EventBus()
+        # Since EventBus is not available, we'll track manually
         self.active_sessions = {}
         self.agent_registry = {}
         self.performance_tracker = {}
         
-        # Setup event listeners
+        # Setup event listeners (using custom approach)
         self._setup_event_listeners()
     
     def _setup_event_listeners(self):
         """Register comprehensive event listeners"""
-        
-        # Agent lifecycle events
-        self.event_bus.on(AgentExecutionStartedEvent, self._on_agent_execution_started)
-        self.event_bus.on(AgentExecutionCompletedEvent, self._on_agent_execution_completed)
-        
-        # Task lifecycle events
-        self.event_bus.on(TaskStartedEvent, self._on_task_started)
-        self.event_bus.on(TaskCompletedEvent, self._on_task_completed)
-        
-        # LLM usage events (critical for cost tracking)
-        self.event_bus.on(LLMCallStartedEvent, self._on_llm_call_started)
-        self.event_bus.on(LLMCallCompletedEvent, self._on_llm_call_completed)
-        
-        # Tool usage events
-        self.event_bus.on(ToolUsageStartedEvent, self._on_tool_usage_started)
-        self.event_bus.on(ToolUsageCompletedEvent, self._on_tool_usage_completed)
+        # Since CrewAI doesn't expose events directly in current version,
+        # we'll need to instrument agents manually when they're created
+        logger.info("Event instrumentation initialized - manual tracking mode")
     
-    async def _on_agent_execution_started(self, event: AgentExecutionStartedEvent):
-        """Capture agent execution start with enhanced telemetry"""
+    async def track_agent_start(self, agent: Agent, session_id: str = None, trace_id: str = None):
+        """Manually track agent execution start"""
         
-        session_id = f"{event.agent.role}_{datetime.now().timestamp()}"
-        trace_id = str(uuid.uuid4())
+        if not session_id:
+            session_id = f"{agent.role}_{datetime.now().timestamp()}"
+        if not trace_id:
+            trace_id = str(uuid.uuid4())
         
         # Initialize performance tracking
         self.performance_tracker[session_id] = {
             "start_time": datetime.now(timezone.utc),
-            "agent_id": event.agent.role,
+            "agent_id": agent.role,
             "trace_id": trace_id,
             "llm_calls": 0,
             "tool_uses": 0,
@@ -134,30 +126,30 @@ class CrewAIEventInstrumentation:
             timestamp=datetime.now(timezone.utc),
             event_type=AURENEventType.AGENT_EXECUTION_STARTED,
             source_agent={
-                "id": event.agent.role,
-                "role": event.agent.role,
-                "goal": event.agent.goal,
-                "backstory": event.agent.backstory[:200] + "..." if len(event.agent.backstory) > 200 else event.agent.backstory
+                "id": agent.role,
+                "role": agent.role,
+                "goal": agent.goal,
+                "backstory": agent.backstory[:200] + "..." if len(agent.backstory) > 200 else agent.backstory
             },
             target_agent=None,
             payload={
-                "execution_mode": "autonomous" if event.agent.allow_delegation else "directed",
-                "tools_available": len(event.agent.tools) if event.agent.tools else 0,
-                "memory_enabled": hasattr(event.agent, 'memory') and event.agent.memory is not None
+                "execution_mode": "autonomous" if agent.allow_delegation else "directed",
+                "tools_available": len(agent.tools) if agent.tools else 0,
+                "memory_enabled": hasattr(agent, 'memory') and agent.memory is not None
             },
             metadata={
                 "platform": "crewai",
-                "agent_version": getattr(event.agent, 'version', '1.0'),
+                "agent_version": getattr(agent, 'version', '1.0'),
                 "execution_context": "production"
             }
         )
         
         await self._emit_event(stream_event)
+        return session_id, trace_id
     
-    async def _on_agent_execution_completed(self, event: AgentExecutionCompletedEvent):
-        """Capture agent execution completion with performance metrics"""
+    async def track_agent_complete(self, agent: Agent, session_id: str, success: bool = True, error: Exception = None):
+        """Manually track agent execution completion"""
         
-        session_id = f"{event.agent.role}_{datetime.now().timestamp()}"
         tracker = self.performance_tracker.get(session_id, {})
         
         # Calculate performance metrics
@@ -169,13 +161,13 @@ class CrewAIEventInstrumentation:
             token_cost=tracker.get("cost_accumulated", 0.0),
             memory_usage_mb=self._get_memory_usage(),
             cpu_percentage=self._get_cpu_usage(),
-            success=not hasattr(event, 'error') or event.error is None,
-            error_type=type(event.error).__name__ if hasattr(event, 'error') and event.error else None,
-            agent_id=event.agent.role,
+            success=success,
+            error_type=type(error).__name__ if error else None,
+            agent_id=agent.role,
             collaboration_depth=tracker.get("collaboration_events", 0),
             knowledge_items_accessed=tracker.get("knowledge_accesses", 0),
             hypotheses_formed=tracker.get("hypotheses_formed", 0),
-            confidence_score=getattr(event, 'confidence', 0.0)
+            confidence_score=0.85  # Default confidence
         )
         
         stream_event = AURENStreamEvent(
@@ -185,13 +177,13 @@ class CrewAIEventInstrumentation:
             timestamp=datetime.now(timezone.utc),
             event_type=AURENEventType.AGENT_EXECUTION_COMPLETED,
             source_agent={
-                "id": event.agent.role,
-                "role": event.agent.role
+                "id": agent.role,
+                "role": agent.role
             },
             target_agent=None,
             payload={
-                "execution_result": "success" if performance_metrics.success else "error",
-                "output_length": len(str(getattr(event, 'output', ''))) if hasattr(event, 'output') else 0,
+                "execution_result": "success" if success else "error",
+                "output_length": 0,  # Would need actual output
                 "llm_calls_made": tracker.get("llm_calls", 0),
                 "tools_used": tracker.get("tool_uses", 0)
             },
@@ -208,178 +200,30 @@ class CrewAIEventInstrumentation:
         if session_id in self.performance_tracker:
             del self.performance_tracker[session_id]
     
-    async def _on_llm_call_started(self, event: LLMCallStartedEvent):
-        """Track LLM call initiation"""
+    async def track_llm_call(self, agent_id: str, model: str, tokens_used: int, cost: float, success: bool = True):
+        """Track LLM usage"""
         
         stream_event = AURENStreamEvent(
             event_id=str(uuid.uuid4()),
-            trace_id=getattr(event, 'trace_id', None),
-            session_id=getattr(event, 'session_id', None),
+            trace_id=None,
+            session_id=None,
             timestamp=datetime.now(timezone.utc),
             event_type=AURENEventType.LLM_CALL,
             source_agent={
-                "id": event.agent.role if hasattr(event, 'agent') else "unknown",
-                "role": event.agent.role if hasattr(event, 'agent') else "unknown"
+                "id": agent_id,
+                "role": agent_id
             },
             target_agent=None,
             payload={
-                "model": getattr(event, 'model', 'unknown'),
-                "prompt_length": len(str(getattr(event, 'prompt', ''))),
-                "max_tokens": getattr(event, 'max_tokens', 0),
-                "temperature": getattr(event, 'temperature', 0.7),
-                "call_purpose": getattr(event, 'purpose', 'generation')
+                "model": model,
+                "tokens_used": tokens_used,
+                "cost": cost,
+                "success": success,
+                "latency_ms": 0  # Would need actual latency
             },
             metadata={
-                "provider": getattr(event, 'provider', 'unknown'),
-                "call_type": "async" if getattr(event, 'async_call', False) else "sync"
-            }
-        )
-        
-        await self._emit_event(stream_event)
-    
-    async def _on_llm_call_completed(self, event: LLMCallCompletedEvent):
-        """Track LLM call completion with cost analysis"""
-        
-        # Update performance tracker
-        session_id = getattr(event, 'session_id', 'unknown')
-        if session_id in self.performance_tracker:
-            self.performance_tracker[session_id]['llm_calls'] += 1
-            self.performance_tracker[session_id]['tokens_used'] += getattr(event, 'tokens_used', 0)
-            self.performance_tracker[session_id]['cost_accumulated'] += getattr(event, 'cost', 0.0)
-        
-        stream_event = AURENStreamEvent(
-            event_id=str(uuid.uuid4()),
-            trace_id=getattr(event, 'trace_id', None),
-            session_id=session_id,
-            timestamp=datetime.now(timezone.utc),
-            event_type=AURENEventType.LLM_CALL,
-            source_agent={
-                "id": event.agent.role if hasattr(event, 'agent') else "unknown",
-                "role": event.agent.role if hasattr(event, 'agent') else "unknown"
-            },
-            target_agent=None,
-            payload={
-                "tokens_used": getattr(event, 'tokens_used', 0),
-                "cost": getattr(event, 'cost', 0.0),
-                "response_length": len(str(getattr(event, 'response', ''))),
-                "success": not hasattr(event, 'error') or event.error is None,
-                "latency_ms": getattr(event, 'latency_ms', 0)
-            },
-            metadata={
-                "model_efficiency": self._calculate_token_efficiency(event),
-                "response_quality": getattr(event, 'quality_score', 0.0)
-            }
-        )
-        
-        await self._emit_event(stream_event)
-    
-    async def _on_tool_usage_started(self, event: ToolUsageStartedEvent):
-        """Track tool usage initiation"""
-        
-        stream_event = AURENStreamEvent(
-            event_id=str(uuid.uuid4()),
-            trace_id=getattr(event, 'trace_id', None),
-            session_id=getattr(event, 'session_id', None),
-            timestamp=datetime.now(timezone.utc),
-            event_type=AURENEventType.TOOL_USAGE,
-            source_agent={
-                "id": event.agent.role if hasattr(event, 'agent') else "unknown",
-                "role": event.agent.role if hasattr(event, 'agent') else "unknown"
-            },
-            target_agent=None,
-            payload={
-                "tool_name": getattr(event, 'tool_name', 'unknown'),
-                "tool_input": str(getattr(event, 'tool_input', ''))[:500],  # Truncate long inputs
-                "tool_type": getattr(event, 'tool_type', 'unknown'),
-                "expected_output_type": getattr(event, 'expected_output', 'string')
-            },
-            metadata={
-                "tool_category": self._categorize_tool(getattr(event, 'tool_name', '')),
-                "input_complexity": self._assess_input_complexity(getattr(event, 'tool_input', ''))
-            }
-        )
-        
-        await self._emit_event(stream_event)
-    
-    async def _on_tool_usage_completed(self, event: ToolUsageCompletedEvent):
-        """Track tool usage completion"""
-        
-        # Update performance tracker
-        session_id = getattr(event, 'session_id', 'unknown')
-        if session_id in self.performance_tracker:
-            self.performance_tracker[session_id]['tool_uses'] += 1
-        
-        stream_event = AURENStreamEvent(
-            event_id=str(uuid.uuid4()),
-            trace_id=getattr(event, 'trace_id', None),
-            session_id=session_id,
-            timestamp=datetime.now(timezone.utc),
-            event_type=AURENEventType.TOOL_USAGE,
-            source_agent={
-                "id": event.agent.role if hasattr(event, 'agent') else "unknown",
-                "role": event.agent.role if hasattr(event, 'agent') else "unknown"
-            },
-            target_agent=None,
-            payload={
-                "tool_name": getattr(event, 'tool_name', 'unknown'),
-                "success": not hasattr(event, 'error') or event.error is None,
-                "output_length": len(str(getattr(event, 'output', ''))),
-                "execution_time_ms": getattr(event, 'execution_time', 0),
-                "output_type": type(getattr(event, 'output', '')).__name__
-            },
-            metadata={
-                "tool_efficiency": self._calculate_tool_efficiency(event),
-                "output_quality": getattr(event, 'quality_score', 0.0)
-            }
-        )
-        
-        await self._emit_event(stream_event)
-    
-    async def _on_task_started(self, event: TaskStartedEvent):
-        """Track task initiation"""
-        
-        stream_event = AURENStreamEvent(
-            event_id=str(uuid.uuid4()),
-            trace_id=getattr(event, 'trace_id', None),
-            session_id=getattr(event, 'session_id', None),
-            timestamp=datetime.now(timezone.utc),
-            event_type=AURENEventType.AGENT_EXECUTION_STARTED,
-            source_agent={
-                "id": event.agent.role if hasattr(event, 'agent') else "unknown",
-                "role": event.agent.role if hasattr(event, 'agent') else "unknown"
-            },
-            target_agent=None,
-            payload={
-                "task_description": str(getattr(event, 'description', ''))[:500],
-                "expected_output": str(getattr(event, 'expected_output', ''))[:200]
-            },
-            metadata={
-                "task_complexity": self._assess_task_complexity(event)
-            }
-        )
-        
-        await self._emit_event(stream_event)
-    
-    async def _on_task_completed(self, event: TaskCompletedEvent):
-        """Track task completion"""
-        
-        stream_event = AURENStreamEvent(
-            event_id=str(uuid.uuid4()),
-            trace_id=getattr(event, 'trace_id', None),
-            session_id=getattr(event, 'session_id', None),
-            timestamp=datetime.now(timezone.utc),
-            event_type=AURENEventType.AGENT_EXECUTION_COMPLETED,
-            source_agent={
-                "id": event.agent.role if hasattr(event, 'agent') else "unknown",
-                "role": event.agent.role if hasattr(event, 'agent') else "unknown"
-            },
-            target_agent=None,
-            payload={
-                "task_result": "success" if not hasattr(event, 'error') or event.error is None else "error",
-                "output_length": len(str(getattr(event, 'output', ''))) if hasattr(event, 'output') else 0
-            },
-            metadata={
-                "task_duration_ms": getattr(event, 'duration_ms', 0)
+                "provider": "openai",  # Default provider
+                "model_efficiency": tokens_used / 1000 if tokens_used > 0 else 0
             }
         )
         
@@ -467,15 +311,21 @@ class CrewAIEventInstrumentation:
     
     def _get_memory_usage(self) -> float:
         """Get current memory usage in MB"""
-        import psutil
-        import os
-        process = psutil.Process(os.getpid())
-        return process.memory_info().rss / 1024 / 1024
+        try:
+            import psutil
+            import os
+            process = psutil.Process(os.getpid())
+            return process.memory_info().rss / 1024 / 1024
+        except:
+            return 0.0
     
     def _get_cpu_usage(self) -> float:
         """Get current CPU usage percentage"""
-        import psutil
-        return psutil.cpu_percent(interval=0.1)
+        try:
+            import psutil
+            return psutil.cpu_percent(interval=0.1)
+        except:
+            return 0.0
     
     def _calculate_efficiency_score(self, metrics: AURENPerformanceMetrics) -> float:
         """Calculate resource efficiency score"""
@@ -486,61 +336,6 @@ class CrewAIEventInstrumentation:
         base_score = 1.0 if metrics.success else 0.5
         latency_factor = max(0.1, 1.0 - (metrics.latency_ms / 10000))  # Penalize >10s latency
         return base_score * latency_factor
-    
-    def _calculate_token_efficiency(self, event) -> float:
-        """Calculate token efficiency for LLM calls"""
-        tokens = getattr(event, 'tokens_used', 0)
-        response_length = len(str(getattr(event, 'response', '')))
-        if tokens == 0:
-            return 0.0
-        return min(1.0, response_length / tokens)  # Characters per token
-    
-    def _calculate_tool_efficiency(self, event) -> float:
-        """Calculate tool execution efficiency"""
-        execution_time = getattr(event, 'execution_time', 0)
-        success = not hasattr(event, 'error') or event.error is None
-        if execution_time == 0:
-            return 1.0 if success else 0.0
-        
-        # Efficiency based on speed and success
-        speed_factor = max(0.1, 1.0 - (execution_time / 30000))  # Penalize >30s execution
-        return (1.0 if success else 0.5) * speed_factor
-    
-    def _categorize_tool(self, tool_name: str) -> str:
-        """Categorize tool by name"""
-        tool_categories = {
-            "search": ["search", "google", "web"],
-            "analysis": ["analyze", "calculate", "process"],
-            "communication": ["email", "slack", "message"],
-            "data": ["database", "query", "fetch"],
-            "ai": ["llm", "gpt", "claude", "model"]
-        }
-        
-        tool_name_lower = tool_name.lower()
-        for category, keywords in tool_categories.items():
-            if any(keyword in tool_name_lower for keyword in keywords):
-                return category
-        return "unknown"
-    
-    def _assess_input_complexity(self, tool_input) -> str:
-        """Assess complexity of tool input"""
-        input_str = str(tool_input)
-        if len(input_str) < 50:
-            return "simple"
-        elif len(input_str) < 200:
-            return "medium"
-        else:
-            return "complex"
-    
-    def _assess_task_complexity(self, event) -> str:
-        """Assess task complexity based on description"""
-        description = str(getattr(event, 'description', ''))
-        if len(description) < 100:
-            return "simple"
-        elif len(description) < 300:
-            return "medium"
-        else:
-            return "complex"
     
     def _get_agent_domain(self, agent_id: str) -> str:
         """Get agent domain from agent ID"""

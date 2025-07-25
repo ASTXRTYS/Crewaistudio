@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AUREN WebSocket Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .events {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            background-color: #f9f9f9;
+        }
+        .event {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        .event-type {
+            font-weight: bold;
+            color: #007bff;
+        }
+        .timestamp {
+            color: #666;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AUREN WebSocket Test</h1>
+        
+        <div id="status" class="status disconnected">
+            Status: Disconnected
+        </div>
+        
+        <div class="controls">
+            <button id="connectBtn" onclick="connect()">Connect</button>
+            <button id="disconnectBtn" onclick="disconnect()" disabled>Disconnect</button>
+            <button id="clearBtn" onclick="clearEvents()">Clear Events</button>
+            <button id="testAuthBtn" onclick="testAuth()">Test Auth</button>
+            <button id="subscribeBtn" onclick="subscribeToAll()" disabled>Subscribe to All Events</button>
+        </div>
+        
+        <h2>Events</h2>
+        <div id="events" class="events"></div>
+    </div>
+
+    <script>
+        let ws = null;
+        let eventCount = 0;
+        
+        function updateStatus(connected) {
+            const status = document.getElementById('status');
+            const connectBtn = document.getElementById('connectBtn');
+            const disconnectBtn = document.getElementById('disconnectBtn');
+            const subscribeBtn = document.getElementById('subscribeBtn');
+            
+            if (connected) {
+                status.className = 'status connected';
+                status.textContent = 'Status: Connected';
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+                subscribeBtn.disabled = false;
+            } else {
+                status.className = 'status disconnected';
+                status.textContent = 'Status: Disconnected';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+                subscribeBtn.disabled = true;
+            }
+        }
+        
+        function addEvent(event) {
+            const eventsDiv = document.getElementById('events');
+            const eventDiv = document.createElement('div');
+            eventDiv.className = 'event';
+            
+            const timestamp = new Date().toLocaleTimeString();
+            eventCount++;
+            
+            let eventHtml = `
+                <div class="timestamp">[${timestamp}] Event #${eventCount}</div>
+                <div class="event-type">Type: ${event.type || 'unknown'}</div>
+            `;
+            
+            if (event.type === 'stream_event' && event.event) {
+                eventHtml += `
+                    <div>Event Type: ${event.event.event_type}</div>
+                    <div>Event ID: ${event.event.event_id}</div>
+                `;
+                if (event.event.source_agent) {
+                    eventHtml += `<div>Agent: ${event.event.source_agent.id}</div>`;
+                }
+                if (event.event.performance_metrics) {
+                    eventHtml += `<div>Latency: ${event.event.performance_metrics.latency_ms}ms</div>`;
+                }
+            }
+            
+            eventHtml += `<details><summary>Full Data</summary><pre>${JSON.stringify(event, null, 2)}</pre></details>`;
+            
+            eventDiv.innerHTML = eventHtml;
+            eventsDiv.insertBefore(eventDiv, eventsDiv.firstChild);
+            
+            // Keep only last 100 events
+            while (eventsDiv.children.length > 100) {
+                eventsDiv.removeChild(eventsDiv.lastChild);
+            }
+        }
+        
+        function connect() {
+            if (ws) {
+                ws.close();
+            }
+            
+            ws = new WebSocket('ws://localhost:8765');
+            
+            ws.onopen = function() {
+                console.log('WebSocket connected');
+                updateStatus(true);
+                addEvent({ type: 'system', message: 'Connected to WebSocket server' });
+                
+                // Send auth immediately on connect
+                const authMessage = {
+                    token: "test-token-123",
+                    agent_filter: [],
+                    performance_threshold: 0.0,
+                    subscriptions: ['all_events']
+                };
+                ws.send(JSON.stringify(authMessage));
+                addEvent({ type: 'system', message: 'Sent authentication' });
+            };
+            
+            ws.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'connection_established') {
+                        addEvent({ 
+                            type: 'system', 
+                            message: `Connected with ID: ${data.connection_id}`,
+                            data: data
+                        });
+                    } else {
+                        addEvent(data);
+                    }
+                } catch (e) {
+                    console.error('Failed to parse message:', e);
+                    addEvent({ type: 'error', message: event.data });
+                }
+            };
+            
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+                addEvent({ type: 'error', message: 'WebSocket error occurred' });
+            };
+            
+            ws.onclose = function() {
+                console.log('WebSocket disconnected');
+                updateStatus(false);
+                addEvent({ type: 'system', message: 'Disconnected from WebSocket server' });
+            };
+        }
+        
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+        }
+        
+        function clearEvents() {
+            document.getElementById('events').innerHTML = '';
+            eventCount = 0;
+        }
+        
+        function testAuth() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                // Send a simple auth message (no real JWT for testing)
+                const authMessage = {
+                    token: "test_token_123",
+                    agent_filter: ["neuroscientist"],
+                    performance_threshold: 0.0
+                };
+                ws.send(JSON.stringify(authMessage));
+                addEvent({ type: 'system', message: 'Sent auth message' });
+            } else {
+                alert('Please connect first');
+            }
+        }
+        
+        function subscribeToAll() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                const subscribeMessage = {
+                    type: "subscribe",
+                    subscription: "all_events"
+                };
+                ws.send(JSON.stringify(subscribeMessage));
+                addEvent({ type: 'system', message: 'Subscribed to all events' });
+            } else {
+                alert('Please connect first');
+            }
+        }
+        
+        // Auto-connect on load
+        window.onload = function() {
+            // Don't auto-connect to avoid issues
+            addEvent({ type: 'system', message: 'Page loaded. Click Connect to start.' });
+        };
+    </script>
+</body>
+</html> 

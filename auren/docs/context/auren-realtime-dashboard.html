@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AUREN Intelligence Dashboard - Real-Time Health AI Monitoring</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            font-size: 0.875rem;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff4444;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.connected {
+            background: #00ff88;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Main Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Card Styles */
+        .card {
+            background: linear-gradient(135deg, #1a1a1a 0%, #151515 100%);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #00ff88 0%, #00cc66 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .card.active::before {
+            opacity: 1;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .card-badge {
+            padding: 0.25rem 0.75rem;
+            background: rgba(0, 255, 136, 0.1);
+            color: #00ff88;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* Agent Activity Timeline */
+        .timeline {
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        .timeline::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .timeline::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        .timeline::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 2px;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideIn 0.5s forwards;
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .timeline-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.2rem;
+        }
+
+        .timeline-icon.thinking {
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+        }
+
+        .timeline-icon.analyzing {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+
+        .timeline-icon.completed {
+            background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%);
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .timeline-description {
+            font-size: 0.75rem;
+            color: #999;
+            line-height: 1.4;
+        }
+
+        .timeline-time {
+            font-size: 0.65rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+
+        /* Cost Analytics */
+        .cost-display {
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .cost-total {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .cost-label {
+            font-size: 0.875rem;
+            color: #999;
+        }
+
+        .cost-breakdown {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .cost-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .cost-item-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #00ff88;
+        }
+
+        .cost-item-label {
+            font-size: 0.75rem;
+            color: #999;
+            margin-top: 0.25rem;
+        }
+
+        /* Learning Progress */
+        .learning-metrics {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .metric-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1.25rem;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .metric-title {
+            font-size: 0.875rem;
+            color: #ccc;
+        }
+
+        .metric-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #00ff88;
+        }
+
+        .metric-progress {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .metric-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88 0%, #00cc66 100%);
+            border-radius: 2px;
+            transition: width 1s ease;
+        }
+
+        /* Biometric Context Panel */
+        .biometric-panel {
+            grid-column: span 3;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.05) 0%, rgba(0, 204, 102, 0.05) 100%);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        .biometric-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+
+        .biometric-item {
+            text-align: center;
+        }
+
+        .biometric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.25rem;
+        }
+
+        .biometric-label {
+            font-size: 0.75rem;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .biometric-trend {
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .trend-up {
+            color: #00ff88;
+        }
+
+        .trend-down {
+            color: #ff4444;
+        }
+
+        /* Event Stream Log */
+        .event-log {
+            grid-column: span 3;
+            max-height: 300px;
+        }
+
+        .event-list {
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.75rem;
+            line-height: 1.4;
+        }
+
+        .event-entry {
+            padding: 0.5rem;
+            border-bottom: 1px solid #222;
+            display: flex;
+            gap: 1rem;
+            opacity: 0;
+            animation: fadeIn 0.3s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .event-timestamp {
+            color: #666;
+            flex-shrink: 0;
+        }
+
+        .event-type {
+            color: #00ff88;
+            flex-shrink: 0;
+            width: 180px;
+        }
+
+        .event-details {
+            color: #ccc;
+            flex: 1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .biometric-panel,
+            .event-log {
+                grid-column: span 2;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .biometric-panel,
+            .event-log {
+                grid-column: span 1;
+            }
+            
+            .biometric-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">AUREN</div>
+        <div class="connection-status">
+            <div class="status-indicator" id="connectionIndicator"></div>
+            <span id="connectionText">Connecting...</span>
+        </div>
+    </header>
+
+    <main class="dashboard-grid">
+        <!-- Agent Activity Timeline -->
+        <div class="card" id="agentActivityCard">
+            <div class="card-header">
+                <h2 class="card-title">🧠 Agent Activity</h2>
+                <span class="card-badge" id="activeAgentCount">0 Active</span>
+            </div>
+            <div class="timeline" id="agentTimeline">
+                <!-- Timeline items will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- Cost Analytics -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">💰 Cost Analytics</h2>
+                <span class="card-badge">Live</span>
+            </div>
+            <div class="cost-display">
+                <div class="cost-total" id="totalCost">$0.0000</div>
+                <div class="cost-label">Session Cost</div>
+                <div class="cost-breakdown">
+                    <div class="cost-item">
+                        <div class="cost-item-value" id="tokenCount">0</div>
+                        <div class="cost-item-label">Tokens Used</div>
+                    </div>
+                    <div class="cost-item">
+                        <div class="cost-item-value" id="queryCount">0</div>
+                        <div class="cost-item-label">Queries</div>
+                    </div>
+                    <div class="cost-item">
+                        <div class="cost-item-value" id="avgLatency">0ms</div>
+                        <div class="cost-item-label">Avg Latency</div>
+                    </div>
+                    <div class="cost-item">
+                        <div class="cost-item-value" id="successRate">100%</div>
+                        <div class="cost-item-label">Success Rate</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Learning Progress -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">📈 Learning Progress</h2>
+                <span class="card-badge">Evolving</span>
+            </div>
+            <div class="learning-metrics">
+                <div class="metric-item">
+                    <div class="metric-header">
+                        <span class="metric-title">Memories Formed</span>
+                        <span class="metric-value" id="memoryCount">0</span>
+                    </div>
+                    <div class="metric-progress">
+                        <div class="metric-progress-bar" id="memoryProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-header">
+                        <span class="metric-title">Hypotheses Validated</span>
+                        <span class="metric-value" id="hypothesisCount">0</span>
+                    </div>
+                    <div class="metric-progress">
+                        <div class="metric-progress-bar" id="hypothesisProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-header">
+                        <span class="metric-title">Knowledge Base</span>
+                        <span class="metric-value" id="knowledgeCount">0</span>
+                    </div>
+                    <div class="metric-progress">
+                        <div class="metric-progress-bar" id="knowledgeProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Biometric Context Panel -->
+        <div class="card biometric-panel">
+            <div class="card-header">
+                <h2 class="card-title">🫀 Current Biometric State</h2>
+                <span class="card-badge" id="biometricUpdateTime">Updated Now</span>
+            </div>
+            <div class="biometric-grid">
+                <div class="biometric-item">
+                    <div class="biometric-value" id="hrvValue">--</div>
+                    <div class="biometric-label">HRV (ms)</div>
+                    <div class="biometric-trend trend-down" id="hrvTrend">↓ -15%</div>
+                </div>
+                <div class="biometric-item">
+                    <div class="biometric-value" id="sleepValue">--</div>
+                    <div class="biometric-label">Sleep Efficiency</div>
+                    <div class="biometric-trend trend-down" id="sleepTrend">↓ -8%</div>
+                </div>
+                <div class="biometric-item">
+                    <div class="biometric-value" id="stressValue">--</div>
+                    <div class="biometric-label">Stress Level</div>
+                    <div class="biometric-trend trend-up" id="stressTrend">↑ +12%</div>
+                </div>
+                <div class="biometric-item">
+                    <div class="biometric-value" id="recoveryValue">--</div>
+                    <div class="biometric-label">Recovery Score</div>
+                    <div class="biometric-trend trend-down" id="recoveryTrend">↓ -5%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Event Stream Log -->
+        <div class="card event-log">
+            <div class="card-header">
+                <h2 class="card-title">🔄 Event Stream</h2>
+                <span class="card-badge" id="eventRate">0 events/s</span>
+            </div>
+            <div class="event-list" id="eventList">
+                <!-- Event entries will be dynamically inserted here -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // AUREN Real-Time Dashboard JavaScript
+        class AURENDashboard {
+            constructor() {
+                this.ws = null;
+                this.reconnectInterval = null;
+                this.stats = {
+                    totalCost: 0,
+                    tokenCount: 0,
+                    queryCount: 0,
+                    totalLatency: 0,
+                    successCount: 0,
+                    errorCount: 0,
+                    memoryCount: 0,
+                    hypothesisCount: 0,
+                    knowledgeCount: 0,
+                    eventCount: 0,
+                    lastEventTime: Date.now()
+                };
+                this.eventBuffer = [];
+                this.maxTimelineItems = 20;
+                this.maxEventLogItems = 50;
+                
+                this.initializeWebSocket();
+                this.startMetricsUpdater();
+                this.initializeMockBiometrics();
+            }
+
+            initializeWebSocket() {
+                const wsUrl = 'ws://localhost:8765';
+                console.log(`Connecting to WebSocket: ${wsUrl}`);
+                
+                this.ws = new WebSocket(wsUrl);
+                
+                this.ws.onopen = () => {
+                    console.log('WebSocket connected');
+                    this.updateConnectionStatus(true);
+                    clearInterval(this.reconnectInterval);
+                    
+                    // Subscribe to all event types
+                    this.ws.send(JSON.stringify({
+                        action: 'subscribe',
+                        filters: {
+                            event_types: ['all'],
+                            priority: 'all'
+                        }
+                    }));
+                };
+
+                this.ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        this.handleEvent(data);
+                    } catch (e) {
+                        console.error('Failed to parse event:', e);
+                    }
+                };
+
+                this.ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                };
+
+                this.ws.onclose = () => {
+                    console.log('WebSocket disconnected');
+                    this.updateConnectionStatus(false);
+                    this.scheduleReconnect();
+                };
+            }
+
+            scheduleReconnect() {
+                clearInterval(this.reconnectInterval);
+                this.reconnectInterval = setInterval(() => {
+                    console.log('Attempting to reconnect...');
+                    this.initializeWebSocket();
+                }, 5000);
+            }
+
+            updateConnectionStatus(connected) {
+                const indicator = document.getElementById('connectionIndicator');
+                const text = document.getElementById('connectionText');
+                
+                if (connected) {
+                    indicator.classList.add('connected');
+                    text.textContent = 'Connected';
+                } else {
+                    indicator.classList.remove('connected');
+                    text.textContent = 'Disconnected';
+                }
+            }
+
+            handleEvent(event) {
+                // Update event count and rate
+                this.stats.eventCount++;
+                this.updateEventRate();
+                
+                // Process based on event type
+                switch (event.event_type) {
+                    case 'agent_execution_started':
+                        this.handleAgentStart(event);
+                        break;
+                    case 'agent_execution_completed':
+                        this.handleAgentComplete(event);
+                        break;
+                    case 'tool_usage':
+                        this.handleToolUsage(event);
+                        break;
+                    case 'memory_operation':
+                        this.handleMemoryOperation(event);
+                        break;
+                    case 'hypothesis_event':
+                        this.handleHypothesisEvent(event);
+                        break;
+                    case 'knowledge_access':
+                        this.handleKnowledgeAccess(event);
+                        break;
+                    case 'conversation_event':
+                        this.handleConversationEvent(event);
+                        break;
+                    case 'biometric_analysis':
+                        this.handleBiometricAnalysis(event);
+                        break;
+                }
+                
+                // Add to event log
+                this.addToEventLog(event);
+                
+                // Update UI elements
+                this.updateMetrics();
+            }
+
+            handleAgentStart(event) {
+                const icon = '🤔';
+                const title = `${event.source_agent?.role || 'Agent'} Started Thinking`;
+                const description = event.payload?.query ? 
+                    `Analyzing: "${event.payload.query.substring(0, 100)}..."` : 
+                    'Processing request...';
+                
+                this.addTimelineItem(icon, title, description, 'thinking');
+                
+                // Mark agent card as active
+                document.getElementById('agentActivityCard').classList.add('active');
+            }
+
+            handleAgentComplete(event) {
+                const icon = '✅';
+                const title = `${event.source_agent?.role || 'Agent'} Completed Analysis`;
+                const metrics = event.performance_metrics || {};
+                
+                // Update cost and performance metrics
+                if (metrics.token_cost) {
+                    this.stats.totalCost += metrics.token_cost;
+                    this.stats.tokenCount += Math.round(metrics.token_cost / 0.00003 * 1000); // Estimate tokens
+                }
+                
+                if (metrics.latency_ms) {
+                    this.stats.totalLatency += metrics.latency_ms;
+                    this.stats.queryCount++;
+                }
+                
+                if (metrics.success) {
+                    this.stats.successCount++;
+                } else {
+                    this.stats.errorCount++;
+                }
+                
+                const description = `Completed in ${metrics.latency_ms?.toFixed(0) || '?'}ms with ${
+                    metrics.confidence_score ? (metrics.confidence_score * 100).toFixed(0) + '% confidence' : 'high confidence'
+                }`;
+                
+                this.addTimelineItem(icon, title, description, 'completed');
+                
+                // Remove active state after a moment
+                setTimeout(() => {
+                    document.getElementById('agentActivityCard').classList.remove('active');
+                }, 1000);
+            }
+
+            handleToolUsage(event) {
+                const icon = '🔧';
+                const toolName = event.payload?.tool_name || 'Tool';
+                const title = `${toolName} Activated`;
+                const cost = event.payload?.estimated_cost || 0;
+                
+                if (cost > 0) {
+                    this.stats.totalCost += cost;
+                }
+                
+                const description = `Processing with ${toolName}${cost > 0 ? ` ($${cost.toFixed(4)})` : ''}`;
+                this.addTimelineItem(icon, title, description, 'analyzing');
+            }
+
+            handleMemoryOperation(event) {
+                if (event.payload?.operation === 'store') {
+                    this.stats.memoryCount++;
+                }
+            }
+
+            handleHypothesisEvent(event) {
+                if (event.payload?.status === 'formed' || event.payload?.status === 'validated') {
+                    this.stats.hypothesisCount++;
+                }
+            }
+
+            handleKnowledgeAccess(event) {
+                this.stats.knowledgeCount++;
+            }
+
+            handleConversationEvent(event) {
+                if (event.payload?.direction === 'user_to_system') {
+                    const icon = '💬';
+                    const title = 'User Query Received';
+                    const description = event.payload.message ? 
+                        `"${event.payload.message.substring(0, 80)}..."` : 
+                        'Processing user input...';
+                    
+                    this.addTimelineItem(icon, title, description, 'thinking');
+                }
+            }
+
+            handleBiometricAnalysis(event) {
+                // Update biometric display if we have data
+                const metrics = event.payload?.metrics_available || [];
+                if (metrics.includes('hrv')) {
+                    this.updateBiometricValue('hrv', Math.floor(Math.random() * 20 + 30));
+                }
+                if (metrics.includes('sleep_efficiency')) {
+                    this.updateBiometricValue('sleep', (Math.random() * 0.2 + 0.7).toFixed(2));
+                }
+            }
+
+            addTimelineItem(icon, title, description, type) {
+                const timeline = document.getElementById('agentTimeline');
+                const item = document.createElement('div');
+                item.className = 'timeline-item';
+                
+                const time = new Date().toLocaleTimeString();
+                
+                item.innerHTML = `
+                    <div class="timeline-icon ${type}">${icon}</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">${title}</div>
+                        <div class="timeline-description">${description}</div>
+                        <div class="timeline-time">${time}</div>
+                    </div>
+                `;
+                
+                // Add to timeline (newest first)
+                timeline.insertBefore(item, timeline.firstChild);
+                
+                // Remove old items
+                while (timeline.children.length > this.maxTimelineItems) {
+                    timeline.removeChild(timeline.lastChild);
+                }
+                
+                // Update active agent count
+                const activeCount = document.querySelectorAll('.timeline-icon.thinking').length;
+                document.getElementById('activeAgentCount').textContent = `${activeCount} Active`;
+            }
+
+            addToEventLog(event) {
+                const eventList = document.getElementById('eventList');
+                const entry = document.createElement('div');
+                entry.className = 'event-entry';
+                
+                const time = new Date(event.timestamp).toLocaleTimeString();
+                const details = event.payload ? 
+                    JSON.stringify(event.payload).substring(0, 100) : 
+                    'No details';
+                
+                entry.innerHTML = `
+                    <span class="event-timestamp">${time}</span>
+                    <span class="event-type">${event.event_type}</span>
+                    <span class="event-details">${details}</span>
+                `;
+                
+                eventList.insertBefore(entry, eventList.firstChild);
+                
+                // Remove old entries
+                while (eventList.children.length > this.maxEventLogItems) {
+                    eventList.removeChild(eventList.lastChild);
+                }
+            }
+
+            updateMetrics() {
+                // Update cost display
+                document.getElementById('totalCost').textContent = `$${this.stats.totalCost.toFixed(4)}`;
+                document.getElementById('tokenCount').textContent = this.formatNumber(this.stats.tokenCount);
+                document.getElementById('queryCount').textContent = this.stats.queryCount;
+                
+                // Calculate average latency
+                const avgLatency = this.stats.queryCount > 0 ? 
+                    Math.round(this.stats.totalLatency / this.stats.queryCount) : 0;
+                document.getElementById('avgLatency').textContent = `${avgLatency}ms`;
+                
+                // Calculate success rate
+                const totalOps = this.stats.successCount + this.stats.errorCount;
+                const successRate = totalOps > 0 ? 
+                    Math.round((this.stats.successCount / totalOps) * 100) : 100;
+                document.getElementById('successRate').textContent = `${successRate}%`;
+                
+                // Update learning metrics
+                document.getElementById('memoryCount').textContent = this.stats.memoryCount;
+                document.getElementById('hypothesisCount').textContent = this.stats.hypothesisCount;
+                document.getElementById('knowledgeCount').textContent = this.stats.knowledgeCount;
+                
+                // Update progress bars (arbitrary progression for demo)
+                this.updateProgressBar('memoryProgress', Math.min(this.stats.memoryCount * 5, 100));
+                this.updateProgressBar('hypothesisProgress', Math.min(this.stats.hypothesisCount * 10, 100));
+                this.updateProgressBar('knowledgeProgress', Math.min(this.stats.knowledgeCount * 2, 100));
+            }
+
+            updateProgressBar(id, percentage) {
+                const bar = document.getElementById(id);
+                if (bar) {
+                    bar.style.width = `${percentage}%`;
+                }
+            }
+
+            updateEventRate() {
+                const now = Date.now();
+                const timeDiff = (now - this.stats.lastEventTime) / 1000;
+                
+                if (timeDiff > 0) {
+                    const rate = 1 / timeDiff;
+                    document.getElementById('eventRate').textContent = `${rate.toFixed(1)} events/s`;
+                }
+                
+                this.stats.lastEventTime = now;
+            }
+
+            updateBiometricValue(metric, value) {
+                const element = document.getElementById(`${metric}Value`);
+                if (element) {
+                    element.textContent = value;
+                }
+                
+                // Update the "last updated" time
+                document.getElementById('biometricUpdateTime').textContent = 'Updated Now';
+                
+                // Reset to "Updated X min ago" after a delay
+                setTimeout(() => {
+                    document.getElementById('biometricUpdateTime').textContent = 'Updated 1m ago';
+                }, 60000);
+            }
+
+            formatNumber(num) {
+                if (num >= 1000000) {
+                    return (num / 1000000).toFixed(1) + 'M';
+                } else if (num >= 1000) {
+                    return (num / 1000).toFixed(1) + 'K';
+                }
+                return num.toString();
+            }
+
+            startMetricsUpdater() {
+                // Update metrics every second for smooth animations
+                setInterval(() => {
+                    // Animate cost counter
+                    const costElement = document.getElementById('totalCost');
+                    if (costElement) {
+                        const currentValue = parseFloat(costElement.textContent.replace('$', ''));
+                        const targetValue = this.stats.totalCost;
+                        if (currentValue !== targetValue) {
+                            const newValue = currentValue + (targetValue - currentValue) * 0.1;
+                            costElement.textContent = `$${newValue.toFixed(4)}`;
+                        }
+                    }
+                }, 100);
+            }
+
+            initializeMockBiometrics() {
+                // Initialize with realistic values
+                this.updateBiometricValue('hrv', 42);
+                this.updateBiometricValue('sleep', '78%');
+                this.updateBiometricValue('stress', '7.5');
+                this.updateBiometricValue('recovery', '62%');
+            }
+        }
+
+        // Initialize dashboard when page loads
+        let dashboard;
+        document.addEventListener('DOMContentLoaded', () => {
+            dashboard = new AURENDashboard();
+            console.log('AUREN Dashboard initialized');
+        });
+
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                console.log('Dashboard hidden - reducing update frequency');
+            } else {
+                console.log('Dashboard visible - resuming normal updates');
+            }
+        });
+    </script>
+</body>
+</html>

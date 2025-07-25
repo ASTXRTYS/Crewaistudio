@@ -17,13 +17,13 @@ from datetime import datetime, timedelta
 from typing import Dict, Any
 import time
 
-from src.database.connection import DatabaseConnection, init_db, close_db
-from src.agents.specialists.neuroscientist import Neuroscientist, create_neuroscientist
-from src.cep.hrv_rules import HRVRuleEngine, BiometricEvent, HRVMonitoringService
-from src.auren.ai.gateway import AIGateway
-from src.auren.ai.crewai_gateway_adapter import CrewAIGatewayAdapter
-from src.auren.monitoring.decorators import get_token_tracker
-from src.config.settings import get_settings
+from auren.src.database.connection import DatabaseConnection, init_db, close_db
+from auren.src.agents.specialists.neuroscientist import Neuroscientist, create_neuroscientist
+from auren.src.cep.hrv_rules import HRVRuleEngine, BiometricEvent, HRVMonitoringService
+from auren.ai.gateway import AIGateway
+from auren.ai.crewai_gateway_adapter import CrewAIGatewayAdapter
+from auren.monitoring.decorators import get_token_tracker
+from auren.src.config.settings import get_settings
 
 
 class TestNeuroscientistIntegration:

@@ -11,7 +11,7 @@ from typing import Dict, List, Optional, Any, Set
 from dataclasses import dataclass, asdict
 from enum import Enum
 import websockets
-from websockets.server import WebSocketServerProtocol
+from websockets import WebSocketServerProtocol
 from websockets.exceptions import ConnectionClosed
 import jwt
 from collections import defaultdict, deque

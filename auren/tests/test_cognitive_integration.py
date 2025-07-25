@@ -7,9 +7,9 @@ import pytest
 import asyncio
 import os
 from datetime import datetime
-from src.core.database import db
-from src.services.cognitive_twin_service import CognitiveTwinService
-from src.core.config import validate_environment
+from auren.src.core.database import db
+from auren.src.services.cognitive_twin_service import CognitiveTwinService
+from auren.src.core.config import validate_environment
 
 @pytest.fixture(scope="session")
 async def setup_database():

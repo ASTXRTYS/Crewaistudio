@@ -17,12 +17,12 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from src.infrastructure.schemas.health_events import (
+from auren.src.infrastructure.schemas.health_events import (
     HealthEvent, EventType, EventPriority
 )
-from src.infrastructure.kafka.producer import EventProducer
-from src.infrastructure.kafka.consumer import EventConsumer
-from src.config.topic_config import TopicMapping
+from auren.src.infrastructure.kafka.producer import EventProducer
+from auren.src.infrastructure.kafka.consumer import EventConsumer
+from auren.src.config.topic_config import TopicMapping
 
 
 def create_test_hrv_event(user_id: str = "test_user_001") -> HealthEvent:

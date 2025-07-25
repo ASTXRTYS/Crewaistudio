@@ -1,0 +1,100 @@
+{
+  "timestamp": "2025-07-25T02:25:44.357953",
+  "summary": {
+    "total_checks": 10,
+    "passed": 3,
+    "warnings": 5,
+    "failed": 2
+  },
+  "results": [
+    {
+      "component": "Docker Services",
+      "success": null,
+      "message": "Some services not running",
+      "details": [
+        "Run: docker-compose -f docker-compose.dev.yml up -d"
+      ]
+    },
+    {
+      "component": "Redis Connectivity",
+      "success": true,
+      "message": "Connected (no event streams yet)",
+      "details": []
+    },
+    {
+      "component": "PostgreSQL Connectivity",
+      "success": false,
+      "message": "Cannot connect to PostgreSQL",
+      "details": [
+        "Ensure PostgreSQL is running on port 5432",
+        "Check credentials in docker-compose.dev.yml"
+      ]
+    },
+    {
+      "component": "Event Streams",
+      "success": true,
+      "message": "Event streaming modules available",
+      "details": [
+        "CrewAI instrumentation ready",
+        "Multi-protocol streaming ready"
+      ]
+    },
+    {
+      "component": "Dashboard API",
+      "success": null,
+      "message": "API not running",
+      "details": [
+        "Start with: python auren/api/dashboard_api.py",
+        "Or: uvicorn auren.api.dashboard_api:app --reload"
+      ]
+    },
+    {
+      "component": "WebSocket Server",
+      "success": null,
+      "message": "WebSocket server not running",
+      "details": [
+        "Start with: python auren/realtime/enhanced_websocket_streamer.py"
+      ]
+    },
+    {
+      "component": "S3/LocalStack",
+      "success": null,
+      "message": "boto3 not installed",
+      "details": [
+        "Install with: pip install boto3"
+      ]
+    },
+    {
+      "component": "System Resources",
+      "success": null,
+      "message": "Low resources",
+      "details": [
+        "CPU Usage: 46.1%",
+        "Memory Available: 1.1 GB (86.0% used)",
+        "Disk Free: 65.4 GB (17.4% used)",
+        "Recommended: 4GB+ RAM, 10GB+ free disk"
+      ]
+    },
+    {
+      "component": "Python Dependencies",
+      "success": false,
+      "message": "Missing 2 packages",
+      "details": [
+        "Missing: fastapi, boto3",
+        "Install with: pip install -r auren/requirements.txt"
+      ]
+    },
+    {
+      "component": "Directory Structure",
+      "success": true,
+      "message": "All required directories present",
+      "details": []
+    }
+  ],
+  "system_info": {
+    "platform": "darwin",
+    "python_version": "3.11.13 (main, Jun  3 2025, 18:38:25) [Clang 17.0.0 (clang-1700.0.13.3)]",
+    "cpu_count": 8,
+    "memory_total_gb": 8.0
+  }
+}

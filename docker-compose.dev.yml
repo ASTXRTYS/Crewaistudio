@@ -1,0 +1,143 @@
+version: '3.8'
+
+services:
+  # Redis for event streaming - the nervous system of AUREN
+  redis:
+    image: redis:7-alpine
+    container_name: auren-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1000
+      --save 300 10
+      --save 900 1
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - auren-network
+
+  # PostgreSQL with TimescaleDB for event sourcing
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    container_name: auren-postgres-dev
+    environment:
+      POSTGRES_DB: auren_dev
+      POSTGRES_USER: auren
+      POSTGRES_PASSWORD: auren_dev_password
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./sql/init:/docker-entrypoint-initdb.d
+    command: >
+      postgres
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=4MB
+      -c huge_pages=off
+      -c max_connections=100
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auren -d auren_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - auren-network
+
+  # LocalStack for S3 testing without AWS costs
+  localstack:
+    image: localstack/localstack:2.3
+    container_name: auren-localstack-dev
+    ports:
+      - "4566:4566"  # LocalStack gateway
+    environment:
+      - SERVICES=s3
+      - DEBUG=0
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+      - PERSISTENCE=1
+    volumes:
+      - localstack-data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - auren-network
+
+  # Optional: Grafana for beautiful metrics visualization
+  grafana:
+    image: grafana/grafana:10.0.0
+    container_name: auren-grafana-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=redis-datasource
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - auren-network
+
+  # Create S3 bucket on startup
+  localstack-init:
+    image: localstack/localstack:2.3
+    container_name: auren-localstack-init
+    depends_on:
+      localstack:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        echo 'Creating S3 bucket...';
+        aws --endpoint-url=http://localstack:4566 s3 mb s3://auren-events --region us-east-1;
+        aws --endpoint-url=http://localstack:4566 s3 ls;
+        echo 'S3 bucket created successfully';
+      "
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+    networks:
+      - auren-network
+
+volumes:
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+  localstack-data:
+    driver: local
+  grafana-data:
+    driver: local
+
+networks:
+  auren-network:
+    driver: bridge
+    name: auren-dev-network 

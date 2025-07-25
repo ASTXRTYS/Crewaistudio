@@ -5,8 +5,8 @@ Unit tests for token tracking system
 import pytest
 import asyncio
 from datetime import date
-from src.monitoring.token_tracker import TokenTracker, BudgetExceededException
-from src.monitoring.tokenizer_service import TokenizerService
+from auren.src.monitoring.token_tracker import TokenTracker, BudgetExceededException
+from auren.src.monitoring.tokenizer_service import TokenizerService
 
 
 @pytest.fixture

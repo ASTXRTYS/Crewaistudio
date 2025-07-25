@@ -15,7 +15,7 @@ import os
 from unittest.mock import AsyncMock, patch
 from datetime import datetime
 
-from src.auren.ai import (
+from auren.ai import (
     AIGateway,
     CrewAIGateway,
     GatewayRequest,
@@ -113,7 +113,7 @@ class TestAdaptiveCircuitBreaker:
     @pytest.fixture
     def breaker(self):
         """Create a test circuit breaker."""
-        from src.auren.ai.circuit_breaker import CircuitBreakerConfig
+        from auren.ai.circuit_breaker import CircuitBreakerConfig
         return AdaptiveCircuitBreaker(
             CircuitBreakerConfig(
                 failure_threshold=3,

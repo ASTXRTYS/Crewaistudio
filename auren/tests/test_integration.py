@@ -10,7 +10,7 @@ class TestAurenIntegration:
     def test_protocol_routing(self, setup_test_environment):
         """Test message routing to correct protocol."""
         # Import here to ensure paths are set up
-        from src.app import AUREN2App
+        from auren.src.app import AUREN2App
         
         # Create app instance
         app = AUREN2App()
@@ -33,7 +33,7 @@ class TestAurenIntegration:
     
     def test_biometric_analysis_pipeline(self, mock_facial_landmarks):
         """Test full biometric analysis flow."""
-        from src.biometric.analyzers.facial_analyzer import BiometricAnalyzer
+        from auren.src.biometric.analyzers.facial_analyzer import BiometricAnalyzer
         
         # Create analyzer
         analyzer = BiometricAnalyzer()
@@ -63,7 +63,7 @@ class TestAurenIntegration:
     @pytest.mark.asyncio
     async def test_whatsapp_integration(self, mock_whatsapp_api):
         """Test WhatsApp message flow."""
-        from src.integrations.biometric_whatsapp import BiometricWhatsAppConnector
+        from auren.src.integrations.biometric_whatsapp import BiometricWhatsAppConnector
         
         # Mock environment variables
         with patch.dict('os.environ', {
@@ -83,7 +83,7 @@ class TestAurenIntegration:
     
     def test_alert_system(self):
         """Test alert generation and routing."""
-        from src.biometric.alerts.alert_manager import AlertManager
+        from auren.src.biometric.alerts.alert_manager import AlertManager
         
         manager = AlertManager()
         
@@ -111,7 +111,7 @@ class TestAurenIntegration:
     
     def test_facial_landmarks_analysis(self, mock_facial_landmarks):
         """Test facial landmark analysis functionality."""
-        from src.biometric.analyzers.facial_analyzer import FacialLandmarks
+        from auren.src.biometric.analyzers.facial_analyzer import FacialLandmarks
         
         landmarks = FacialLandmarks()
         landmarks.landmarks = mock_facial_landmarks

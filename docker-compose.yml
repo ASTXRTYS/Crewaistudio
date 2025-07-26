@@ -64,17 +64,16 @@ services:
 
   # ChromaDB - Cold Memory Tier (Tier 3) for Semantic Search
   chromadb:
-    image: chromadb/chroma:latest
+    image: chromadb/chroma:0.4.22
     container_name: auren-chromadb
     ports:
       - "8000:8000"
-    volumes:
-      - chromadb-data:/chroma/chroma
     environment:
-      ANONYMIZED_TELEMETRY: "false"
-      ALLOW_RESET: "false"
-      IS_PERSISTENT: "true"
-      PERSIST_DIRECTORY: "/chroma/chroma"
+      - IS_PERSISTENT=TRUE
+      - PERSIST_DIRECTORY=/chroma/chroma
+      - ANONYMIZED_TELEMETRY=FALSE
+    # volumes:
+    #   - chromadb-data:/chroma/chroma
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
@@ -122,10 +121,44 @@ services:
     ports:
       - "9121:9121"
     environment:
-      REDIS_ADDR: "redis://redis:6379"
-    restart: unless-stopped
+      REDIS_ADDR: redis://redis:6379
     depends_on:
       - redis
+    restart: unless-stopped
+
+  # API Service
+  auren-api:
+    build: 
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: auren-api
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgresql://auren_user:auren_secure_password_change_me@postgres:5432/auren
+      - REDIS_URL=redis://redis:6379
+      - CHROMADB_HOST=chromadb
+      - CHROMADB_PORT=8000
+      - PYTHONPATH=/app
+      - ENABLE_HTM_ANOMALY_DETECTION=true
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - KAFKA_ENABLED=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      chromadb:
+        condition: service_started
+    volumes:
+      - ./auren:/app/auren
+    command: python -m uvicorn auren.api.dashboard_api:app --host 0.0.0.0 --port 8080 --reload
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # PostgreSQL Exporter for Prometheus
   postgres-exporter:
@@ -135,9 +168,51 @@ services:
       - "9187:9187"
     environment:
       DATA_SOURCE_NAME: "postgresql://auren_user:auren_secure_password_change_me@postgres:5432/auren?sslmode=disable"
-    restart: unless-stopped
     depends_on:
       - postgres
+    restart: unless-stopped
+
+  # Kafka Services
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: auren-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    restart: unless-stopped
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: auren-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    restart: unless-stopped
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: auren-kafka-ui
+    depends_on:
+      - kafka
+    ports:
+      - "8081:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: auren
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    restart: unless-stopped
 
 volumes:
   redis-data:
@@ -146,13 +221,9 @@ volumes:
     driver: local
   chromadb-data:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./data/chromadb  # 500GB storage for semantic search
-  prometheus-data:
-    driver: local
   grafana-data:
+    driver: local
+  prometheus-data:
     driver: local
 
 networks:

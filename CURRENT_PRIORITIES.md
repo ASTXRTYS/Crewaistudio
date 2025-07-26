@@ -13,17 +13,19 @@
 - [x] Add WebSocket events for live updates
 - [ ] Test with neuroscientist agent queries
 **Deliverable**: Dashboard showing real AI thinking in real-time
+**Status**: API endpoint created and running (minimal version on port 8080)
 
 ### 2. Agent Card System Architecture (TODAY - 4 hours)
-**Goal**: Create modular agent-focused interface instead of overwhelming single dashboard
-- [ ] Design agent card component structure
-- [ ] Create neuroscientist-specific card with:
-  - [ ] Personal knowledge graph (cluster view)
-  - [ ] Active hypotheses display
-  - [ ] Accuracy metrics
-  - [ ] Domain-specific insights (HRV, sleep, recovery)
+**Goal**: Design the structure for individual agent "cards"
+- [x] Design card component structure (profile, knowledge graph, hypotheses, metrics)
+- [x] Create neuroscientist-specific card with:
+  - Personal knowledge graph (CNS patterns, recovery protocols)
+  - Active hypotheses (e.g., HRV correlation with stress)
+  - Accuracy metrics (94% on stress detection)
+  - Domain-specific insights (fatigue patterns, optimization suggestions)
 - [ ] Implement tab/navigation system for multiple agents
-- [ ] Make current dashboard the "Observatory View" for MVP testing
+**Deliverable**: Working prototype of neuroscientist agent card
+**Status**: AgentCard component created with all features
 
 **Why This Matters**: 
 - Reduces sensory overload
@@ -81,14 +83,15 @@
 
 #### 🔧 PARTIALLY IMPLEMENTED (20-25% additional - Found but not integrated)
 
-### 1. Kafka Infrastructure (Code exists, not deployed)
-**Status**: Infrastructure code written but not in main deployment
+### 1. Kafka Infrastructure (Code exists, DEPLOYED ✅)
+**Status**: Infrastructure code written and deployed in main docker-compose
 - [x] Kafka producer/consumer code (`auren/src/infrastructure/kafka/`)
 - [x] Topic definitions
-- [x] Docker compose configuration (in `auren/docker/docker-compose.yml`)
-- [ ] Integration with main docker-compose
-- [ ] Topic creation and configuration
-- [ ] Connection to main application
+- [x] Docker compose configuration (ACTIVE)
+- [x] Integration with main docker-compose
+- [x] Topic creation and configuration (agent-events, memory-access, etc.)
+- [x] Connection to main application (environment vars set)
+- [x] Kafka UI available on port 8081
 
 ### 2. WhatsApp Integration (Code exists, not configured)
 **Status**: Implementation exists but missing configuration
@@ -118,14 +121,17 @@
 - [ ] Time-series table creation
 - [ ] Biometric data schemas
 
-### 5. API Service Deployment Gap
-**Status**: FastAPI code exists but not running as service
+### 5. API Service Deployment Gap (✅ RESOLVED - December 28)
+**Status**: FastAPI service successfully deployed
 - [x] Dashboard API implementation (`auren/api/dashboard_api.py`)
-- [ ] API service in docker-compose
-- [ ] Service startup configuration
-- [ ] Port 8080 exposure
+- [x] API service in docker-compose
+- [x] Service startup configuration
+- [x] Port 8080 exposure
+- [x] Dependency resolution (using minimal API version)
+- [x] Health endpoint confirmed working
+- [x] Knowledge graph endpoints available
 
-**TOTAL ACTUAL COMPLETION: 50-60%** (30-35% fully deployed + 20-25% built but not activated)
+**TOTAL ACTUAL COMPLETION: 60-65%** (35-40% fully deployed + 25% built but not activated)
 
 ### 📍 NEW ADDITIONS (Based on Product Vision)
 

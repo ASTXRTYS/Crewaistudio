@@ -1,3 +1,374 @@
+/* AUREN Dashboard - Stunning Visual Design System */
+
+/* Neural Color Palette */
+:root {
+  /* Primary Neural Colors */
+  --neural-pink: #ff006e;
+  --neural-blue: #3a86ff;
+  --neural-purple: #8338ec;
+  --neural-green: #06ffa5;
+  --neural-yellow: #ffbe0b;
+  --neural-orange: #fb5607;
+  
+  /* Depth & Atmosphere */
+  --deep-space: #0a0a14;
+  --dark-matter: #12121c;
+  --cosmic-dust: #1a1a24;
+  --stellar-fog: rgba(255, 255, 255, 0.05);
+  
+  /* Glow Effects */
+  --glow-intensity: 0 0 40px;
+  --pulse-glow: 0 0 60px;
+  
+  /* Gradients */
+  --neural-gradient: linear-gradient(135deg, var(--neural-pink), var(--neural-purple));
+  --space-gradient: radial-gradient(circle at 30% 20%, var(--dark-matter), var(--deep-space));
+}
+
+/* Dark Theme Base */
+body {
+  background: var(--space-gradient);
+  color: #e0e0e0;
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Glassmorphism Panels */
+.agent-card,
+.knowledge-panel,
+.metric-card {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.02)
+  );
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.agent-card:hover,
+.knowledge-panel:hover {
+  transform: translateY(-4px);
+  box-shadow: 
+    0 12px 48px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(255, 0, 110, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Thinking Pulse Animation */
+@keyframes thinking-pulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+.thinking-indicator {
+  position: relative;
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  background: var(--neural-green);
+  border-radius: 50%;
+  animation: thinking-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  box-shadow: var(--glow-intensity) var(--neural-green);
+}
+
+.thinking-indicator::before,
+.thinking-indicator::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: inherit;
+  opacity: 0.6;
+}
+
+.thinking-indicator::before {
+  animation: thinking-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation-delay: 0.5s;
+}
+
+.thinking-indicator::after {
+  animation: thinking-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation-delay: 1s;
+}
+
+/* Knowledge Graph Enhancements */
+.knowledge-graph-container {
+  position: relative;
+  background: var(--deep-space);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.knowledge-graph-container canvas {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  /* GPU Acceleration */
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.knowledge-graph-container canvas:active {
+  cursor: grabbing;
+}
+
+/* Memory Tier Stats with Glow */
+.tier-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.tier-stat.hot {
+  background: rgba(255, 0, 110, 0.2);
+  color: var(--neural-pink);
+  border: 1px solid rgba(255, 0, 110, 0.3);
+  text-shadow: 0 0 10px var(--neural-pink);
+}
+
+.tier-stat.warm {
+  background: rgba(58, 134, 255, 0.2);
+  color: var(--neural-blue);
+  border: 1px solid rgba(58, 134, 255, 0.3);
+  text-shadow: 0 0 10px var(--neural-blue);
+}
+
+.tier-stat.cold {
+  background: rgba(131, 56, 236, 0.2);
+  color: var(--neural-purple);
+  border: 1px solid rgba(131, 56, 236, 0.3);
+  text-shadow: 0 0 10px var(--neural-purple);
+}
+
+/* Hypothesis Progress with Shimmer */
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.hypothesis-progress {
+  position: relative;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.hypothesis-progress-bar {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--neural-yellow),
+    var(--neural-orange),
+    var(--neural-yellow)
+  );
+  background-size: 200% 100%;
+  border-radius: 3px;
+  animation: shimmer 3s linear infinite;
+  box-shadow: var(--glow-intensity) var(--neural-yellow);
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Breakthrough Effects */
+@keyframes breakthrough-burst {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.breakthrough-alert {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, 
+    rgba(255, 0, 110, 0.9),
+    rgba(131, 56, 236, 0.9)
+  );
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  color: white;
+  font-weight: 600;
+  animation: slideInRight 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  box-shadow: 
+    0 10px 40px rgba(255, 0, 110, 0.4),
+    var(--pulse-glow) rgba(255, 0, 110, 0.6);
+  z-index: 1000;
+}
+
+.breakthrough-alert::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, 
+    rgba(255, 255, 255, 0.8),
+    transparent
+  );
+  transform: translate(-50%, -50%);
+  animation: breakthrough-burst 1s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* User Context Diamond */
+.user-context {
+  position: relative;
+  display: inline-block;
+  padding: 12px 24px;
+  color: white;
+  font-weight: 600;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+}
+
+.user-context::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  background: white;
+  transform: translate(-50%, -50%) rotate(45deg) scale(0.7);
+  border-radius: 4px;
+  z-index: -1;
+  box-shadow: var(--pulse-glow) white;
+  animation: thinking-pulse 3s ease-in-out infinite;
+}
+
+/* Metric Cards with Depth */
+.metric-card {
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+
+.metric-value {
+  font-size: 48px;
+  font-weight: 800;
+  background: var(--neural-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 30px rgba(255, 0, 110, 0.5);
+}
+
+.metric-label {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.7;
+}
+
+/* Error States with Style */
+.error-indicator {
+  padding: 16px;
+  background: rgba(251, 86, 7, 0.1);
+  border: 1px solid rgba(251, 86, 7, 0.3);
+  border-radius: 12px;
+  color: var(--neural-orange);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--deep-space);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    var(--neural-pink),
+    var(--neural-purple)
+  );
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    var(--neural-purple),
+    var(--neural-pink)
+  );
+}
+
+/* GPU Optimization */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Performance Optimization */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Reset and base styles */
 * {
   margin: 0;

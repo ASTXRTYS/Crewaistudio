@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  # PostgreSQL - Essential
+  postgres:
+    image: postgres:16-alpine
+    container_name: auren-postgres
+    environment:
+      POSTGRES_DB: auren_db
+      POSTGRES_USER: auren_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-auren_secure_password}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auren_user -d auren_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis - Essential  
+  redis:
+    image: redis:7-alpine
+    container_name: auren-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ChromaDB - Essential for vector search
+  chromadb:
+    image: chromadb/chroma:0.4.22
+    container_name: auren-chromadb
+    ports:
+      - "8000:8000"
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+    restart: unless-stopped
+
+  # API Service
+  auren-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: auren-api
+    ports:
+      - "8080:8080"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=auren_db
+      - POSTGRES_USER=auren_user
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-auren_secure_password}
+      - REDIS_URL=redis://redis:6379
+      - CHROMADB_HOST=chromadb
+      - CHROMADB_PORT=8000
+      - PYTHONPATH=/app
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - KAFKA_ENABLED=false  # Disable for now to save resources
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      chromadb:
+        condition: service_started
+    restart: unless-stopped
+
+  # Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: auren-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./auren/dashboard_v2/build:/usr/share/nginx/html:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - auren-api
+    restart: unless-stopped
+
+  # Optional: Monitoring (can be enabled later)
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: auren-prometheus
+  #   ...
+
+volumes:
+  postgres-data:
+
+networks:
+  default:
+    name: auren-network 

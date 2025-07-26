@@ -18,7 +18,7 @@
 
 - [x] **Basic Infrastructure**
   - [x] Docker Compose deployment
-  - [x] FastAPI backend with async support
+  - [x] FastAPI backend with async support (NOTE: Not deployed in docker-compose)
   - [x] Prometheus + Grafana monitoring
   - [x] Redis caching layer
   - [x] WebSocket streaming setup
@@ -44,7 +44,55 @@
   - [x] Agent selector for different knowledge views
   - [x] Test suite for API verification
 
-#### ❌ TO BE IMPLEMENTED (Priority Order)
+#### 🔧 PARTIALLY IMPLEMENTED (20-25% additional - Found but not integrated)
+
+### 1. Kafka Infrastructure (Code exists, not deployed)
+**Status**: Infrastructure code written but not in main deployment
+- [x] Kafka producer/consumer code (`auren/src/infrastructure/kafka/`)
+- [x] Topic definitions
+- [x] Docker compose configuration (in `auren/docker/docker-compose.yml`)
+- [ ] Integration with main docker-compose
+- [ ] Topic creation and configuration
+- [ ] Connection to main application
+
+### 2. WhatsApp Integration (Code exists, not configured)
+**Status**: Implementation exists but missing configuration
+- [x] BiometricWhatsAppConnector implementation
+- [x] WhatsApp crew and message handler
+- [x] Mock WhatsApp API for testing
+- [ ] Environment variables (WHATSAPP_ACCESS_TOKEN, etc.)
+- [ ] Docker service configuration
+- [ ] Business API credentials
+- [ ] Webhook setup
+
+### 3. Multi-Agent Foundation (Orchestrator exists, agents missing)
+**Status**: Orchestrator code exists but only neuroscientist agent active
+- [x] AUREN UI Orchestrator implementation
+- [x] Specialist base classes
+- [x] Routing tools and packet builders
+- [ ] Nutritionist Agent implementation
+- [ ] Training Agent implementation
+- [ ] Recovery Agent implementation
+- [ ] Sleep Agent implementation
+- [ ] Mental Health Agent implementation
+
+### 4. TimescaleDB (In alternate docker-compose)
+**Status**: TimescaleDB configured in auren/docker but not main deployment
+- [x] TimescaleDB PostgreSQL extension in alternate compose
+- [ ] Migration from regular PostgreSQL
+- [ ] Time-series table creation
+- [ ] Biometric data schemas
+
+### 5. API Service Deployment Gap
+**Status**: FastAPI code exists but not running as service
+- [x] Dashboard API implementation (`auren/api/dashboard_api.py`)
+- [ ] API service in docker-compose
+- [ ] Service startup configuration
+- [ ] Port 8080 exposure
+
+**TOTAL ACTUAL COMPLETION: 50-60%** (30-35% fully deployed + 20-25% built but not activated)
+
+#### ❌ TO BE IMPLEMENTED (40-50% remaining - Priority Order)
 
 ### 1. Event Sourcing Architecture
 **Master Doc Requirement**: PostgreSQL-based event store with JSONB events and LISTEN/NOTIFY

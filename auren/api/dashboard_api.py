@@ -431,6 +431,195 @@ async def get_recent_memories(limit: int = 10, agent_id: Optional[str] = None):
         logger.error(f"Error fetching recent memories: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# Knowledge Graph Endpoints
+@app.get("/api/knowledge-graph/data")
+async def get_knowledge_graph_data(
+    agent_id: str,
+    depth: int = 1
+):
+    """
+    Fetch knowledge graph data from all three tiers
+    depth=1: 50 nodes (hot tier only)
+    depth=2: 500 nodes (hot + warm)
+    depth=3: 5000 nodes (all tiers)
+    """
+    if not memory_system:
+        raise HTTPException(status_code=503, detail="Memory system not initialized")
+    
+    # Validate depth parameter
+    if depth < 1 or depth > 3:
+        raise HTTPException(status_code=400, detail="Depth must be between 1 and 3")
+    
+    try:
+        nodes = []
+        
+        # Helper function to format memories as nodes
+        def format_as_nodes(memories, tier):
+            formatted_nodes = []
+            for memory in memories:
+                node = {
+                    "id": memory.get("memory_id", memory.get("id", "")),
+                    "content": memory.get("content", ""),
+                    "tier": tier,
+                    "type": memory.get("memory_type", "KNOWLEDGE"),
+                    "access_count": memory.get("access_count", 0),
+                    "importance": memory.get("importance", 0.5),
+                    "is_user_context": "user_context" in memory.get("tags", []) if memory.get("tags") else False,
+                    "timestamp": memory.get("timestamp", datetime.now(timezone.utc).isoformat()),
+                    "metadata": memory.get("metadata", {})
+                }
+                
+                # Special handling for user context
+                if node["is_user_context"]:
+                    node["shape"] = "diamond"
+                    node["glow"] = True
+                
+                formatted_nodes.append(node)
+            
+            return formatted_nodes
+        
+        # Fetch from appropriate tiers based on depth
+        if depth >= 1:
+            # Hot tier - current context and active knowledge
+            hot_memories = await memory_system.redis_tier.get_recent_memories(
+                agent_id=agent_id,
+                limit=50
+            )
+            nodes.extend(format_as_nodes(hot_memories, tier="hot"))
+        
+        if depth >= 2:
+            # Warm tier - structured user data and patterns
+            warm_memories = await memory_system.postgres_tier.search_memories(
+                agent_id=agent_id,
+                filters={"limit": 450}
+            )
+            nodes.extend(format_as_nodes(warm_memories, tier="warm"))
+        
+        if depth >= 3:
+            # Cold tier - semantic knowledge base
+            cold_results = await memory_system.chromadb_tier.semantic_search(
+                agent_id=agent_id,
+                query="",  # Empty query to get all
+                limit=4500
+            )
+            
+            # Convert cold tier results to node format
+            cold_memories = []
+            for result in cold_results:
+                memory_dict = {
+                    "memory_id": result.metadata.get("memory_id", ""),
+                    "content": result.metadata.get("content", ""),
+                    "memory_type": result.metadata.get("memory_type", "KNOWLEDGE"),
+                    "importance": result.metadata.get("importance", 0.5),
+                    "tags": result.metadata.get("tags", []),
+                    "metadata": result.metadata
+                }
+                cold_memories.append(memory_dict)
+            
+            nodes.extend(format_as_nodes(cold_memories, tier="cold"))
+        
+        # Calculate edges based on semantic similarity
+        edges = calculate_knowledge_connections(nodes)
+        
+        return {
+            "nodes": nodes,
+            "edges": edges,
+            "stats": {
+                "total_knowledge": len(nodes),
+                "hot_tier_count": sum(1 for n in nodes if n["tier"] == "hot"),
+                "warm_tier_count": sum(1 for n in nodes if n["tier"] == "warm"),
+                "cold_tier_count": sum(1 for n in nodes if n["tier"] == "cold"),
+                "user_context_count": sum(1 for n in nodes if n.get("is_user_context", False))
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    
+    except Exception as e:
+        logger.error(f"Error fetching knowledge graph data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+def calculate_knowledge_connections(nodes: List[Dict]) -> List[Dict]:
+    """
+    Calculate edges between nodes based on semantic similarity and relationships.
+    For now, we'll create simple connections based on memory type and tier proximity.
+    In production, this would use embeddings for true semantic similarity.
+    """
+    edges = []
+    
+    # Group nodes by type for more meaningful connections
+    nodes_by_type = {}
+    for node in nodes:
+        node_type = node.get("type", "KNOWLEDGE")
+        if node_type not in nodes_by_type:
+            nodes_by_type[node_type] = []
+        nodes_by_type[node_type].append(node)
+    
+    # Create connections within same type (simplified logic)
+    for node_type, type_nodes in nodes_by_type.items():
+        # Connect nodes that are temporally close or have high importance
+        for i, node1 in enumerate(type_nodes):
+            for node2 in type_nodes[i+1:i+5]:  # Connect to next 4 nodes max
+                # Calculate connection strength based on importance and tier
+                strength = (node1["importance"] + node2["importance"]) / 2
+                
+                # Boost connection if both are user context
+                if node1.get("is_user_context") and node2.get("is_user_context"):
+                    strength *= 1.5
+                
+                # Create edge if strength is significant
+                if strength > 0.3:
+                    edges.append({
+                        "source": node1["id"],
+                        "target": node2["id"],
+                        "strength": min(strength, 1.0),
+                        "type": "semantic"
+                    })
+    
+    # Connect hot tier memories to their warm/cold tier origins
+    hot_nodes = [n for n in nodes if n["tier"] == "hot"]
+    other_nodes = [n for n in nodes if n["tier"] != "hot"]
+    
+    for hot_node in hot_nodes[:20]:  # Limit connections for performance
+        # Find related memories in other tiers (simplified - would use embeddings in production)
+        for other_node in other_nodes:
+            # Check if content overlaps significantly (simplified check)
+            if (hot_node["type"] == other_node["type"] and 
+                hot_node.get("is_user_context") == other_node.get("is_user_context")):
+                edges.append({
+                    "source": hot_node["id"],
+                    "target": other_node["id"],
+                    "strength": 0.5,
+                    "type": "tier_connection"
+                })
+                break
+    
+    return edges
+
+@app.post("/api/knowledge-graph/access")
+async def report_knowledge_access(
+    agent_id: str,
+    memory_id: str,
+    tier: str
+):
+    """Report when an agent accesses knowledge for real-time updates"""
+    event = {
+        "type": "knowledge_access",
+        "agent_id": agent_id,
+        "memory_id": memory_id,
+        "tier": tier,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Broadcast to all connected WebSocket clients
+    for connection in active_connections:
+        try:
+            await connection.send_json(event)
+        except:
+            # Remove dead connections
+            active_connections.remove(connection)
+    
+    return {"status": "success", "event": event}
+
 # Anomaly Detection Endpoints
 @app.post("/api/anomaly/detect")
 async def detect_anomaly(

@@ -5,11 +5,13 @@ export function KnowledgeGraph() {
   let canvasRef;
   let simulation;
   let transform = d3.zoomIdentity;
+  let ws = null;
   const [nodes, setNodes] = createSignal([]);
   const [links, setLinks] = createSignal([]);
   const [zoomLevel, setZoomLevel] = createSignal(1);
   const [loadingState, setLoadingState] = createSignal('initial');
   const [stats, setStats] = createSignal({ nodes: 0, links: 0, fps: 60 });
+  const [agentId, setAgentId] = createSignal('neuroscientist'); // Default agent
   
   // Level of Detail thresholds
   const LOD_THRESHOLDS = {
@@ -26,12 +28,18 @@ export function KnowledgeGraph() {
     SCALE_FACTOR: 2
   };
   
-  // Colors for different node types
-  const NODE_COLORS = {
-    knowledge: '#4ade80',
-    hypothesis: '#60a5fa', 
-    decision: '#f59e0b',
-    memory: '#a78bfa',
+  // Colors for different tiers and types
+  const TIER_COLORS = {
+    hot: 'hsla(0, 70%, 50%, 0.9)',    // Red - active memory
+    warm: 'hsla(120, 70%, 50%, 0.7)', // Green - structured data
+    cold: 'hsla(240, 70%, 50%, 0.5)'  // Blue - semantic knowledge
+  };
+  
+  const TYPE_COLORS = {
+    KNOWLEDGE: '#4ade80',
+    EXPERIENCE: '#60a5fa', 
+    INSIGHT: '#f59e0b',
+    MEMORY: '#a78bfa',
     default: '#64748b'
   };
   
@@ -51,36 +59,51 @@ export function KnowledgeGraph() {
       .force("center", d3.forceCenter(width / 2 / window.devicePixelRatio, height / 2 / window.devicePixelRatio))
       .force("collision", d3.forceCollide().radius(d => getNodeRadius(d, 1) + 2));
     
+    // Setup WebSocket for real-time updates
+    setupWebSocket();
+    
     // FPS monitoring
     let lastTime = performance.now();
     let frameCount = 0;
     
     // Progressive loading function
-    const loadNodesProgressive = async (count) => {
+    const loadNodesProgressive = async (depth) => {
       setLoadingState('loading');
       try {
-        // Simulate API call - replace with actual API
-        const topNodes = await fetchTopNodes(count);
-        const connections = await fetchConnections(topNodes.map(n => n.id));
+        const data = await fetchKnowledgeGraphData(agentId(), depth);
         
-        setNodes(topNodes);
-        setLinks(connections);
+        // Transform nodes for D3
+        const transformedNodes = data.nodes.map(node => ({
+          ...node,
+          label: node.content.substring(0, 50) + (node.content.length > 50 ? '...' : ''),
+          radius: NODE_SIZES.MIN + Math.sqrt(node.access_count || 1) * NODE_SIZES.SCALE_FACTOR,
+          x: node.x || (Math.random() - 0.5) * 800 + 400,
+          y: node.y || (Math.random() - 0.5) * 600 + 300
+        }));
+        
+        setNodes(transformedNodes);
+        setLinks(data.edges);
         
         // Update simulation
-        simulation.nodes(topNodes);
-        simulation.force("link").links(connections);
+        simulation.nodes(transformedNodes);
+        simulation.force("link").links(data.edges);
         simulation.alpha(1).restart();
         
         setLoadingState('loaded');
-        setStats(prev => ({ ...prev, nodes: topNodes.length, links: connections.length }));
+        setStats(prev => ({ 
+          ...prev, 
+          nodes: transformedNodes.length, 
+          links: data.edges.length,
+          ...data.stats 
+        }));
       } catch (error) {
         console.error('Failed to load nodes:', error);
         setLoadingState('error');
       }
     };
     
-    // Initial load - 50 nodes
-    loadNodesProgressive(50);
+    // Initial load - depth 1 (50 nodes from hot tier)
+    loadNodesProgressive(1);
     
     // Render loop
     const render = () => {
@@ -102,7 +125,14 @@ export function KnowledgeGraph() {
         currentLinks.forEach(link => {
           if (link.source && link.target) {
             const opacity = link.strength || 0.2;
-            context.strokeStyle = `rgba(100, 148, 237, ${opacity})`;
+            // Different line styles for different connection types
+            if (link.type === 'tier_connection') {
+              context.setLineDash([5, 5]);
+              context.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.5})`;
+            } else {
+              context.setLineDash([]);
+              context.strokeStyle = `rgba(100, 148, 237, ${opacity})`;
+            }
             context.lineWidth = Math.max(0.5, link.strength * 2);
             context.beginPath();
             context.moveTo(link.source.x, link.source.y);
@@ -110,22 +140,46 @@ export function KnowledgeGraph() {
             context.stroke();
           }
         });
+        context.setLineDash([]);
       }
       
       // Draw nodes
       context.globalAlpha = 1;
       currentNodes.forEach(node => {
         const radius = getNodeRadius(node, currentZoom);
-        const color = NODE_COLORS[node.type] || NODE_COLORS.default;
+        const color = getNodeColor(node);
         
-        // Draw node
-        context.fillStyle = color;
-        context.beginPath();
-        context.arc(node.x, node.y, radius, 0, 2 * Math.PI);
-        context.fill();
+        // Draw special shape for user context
+        if (node.is_user_context) {
+          // Draw diamond shape
+          context.save();
+          context.translate(node.x, node.y);
+          context.rotate(Math.PI / 4);
+          context.fillStyle = color;
+          context.fillRect(-radius, -radius, radius * 2, radius * 2);
+          context.restore();
+          
+          // Add pulsing effect for hot tier user context
+          if (node.tier === 'hot' && node.glow) {
+            const pulseRadius = radius + Math.sin(Date.now() * 0.003) * 5;
+            context.beginPath();
+            context.arc(node.x, node.y, pulseRadius, 0, 2 * Math.PI);
+            context.strokeStyle = color;
+            context.lineWidth = 2;
+            context.globalAlpha = 0.5;
+            context.stroke();
+            context.globalAlpha = 1;
+          }
+        } else {
+          // Regular circle for other nodes
+          context.fillStyle = color;
+          context.beginPath();
+          context.arc(node.x, node.y, radius, 0, 2 * Math.PI);
+          context.fill();
+        }
         
-        // Draw glow for active nodes
-        if (node.active || node.usageCount > 50) {
+        // Draw glow for frequently accessed nodes
+        if (node.access_count > 10 || node.importance > 0.8) {
           context.shadowBlur = 20;
           context.shadowColor = color;
           context.fill();
@@ -138,6 +192,11 @@ export function KnowledgeGraph() {
           context.font = `${Math.max(12, 14 / currentZoom)}px sans-serif`;
           context.textAlign = 'center';
           context.fillText(node.label, node.x, node.y + radius + 15);
+          
+          // Show tier indicator
+          context.font = `${Math.max(10, 12 / currentZoom)}px sans-serif`;
+          context.fillStyle = TIER_COLORS[node.tier];
+          context.fillText(`[${node.tier}]`, node.x, node.y + radius + 30);
         }
       });
       
@@ -167,10 +226,10 @@ export function KnowledgeGraph() {
         
         // Progressive loading based on zoom
         const nodeCount = nodes().length;
-        if (event.transform.k > 1.5 && nodeCount === 50) {
-          loadNodesProgressive(500);
-        } else if (event.transform.k > 3 && nodeCount === 500) {
-          loadNodesProgressive(5000);
+        if (event.transform.k > 1.5 && nodeCount <= 50) {
+          loadNodesProgressive(2); // Load warm tier
+        } else if (event.transform.k > 3 && nodeCount <= 500) {
+          loadNodesProgressive(3); // Load all tiers
         }
       });
     
@@ -194,48 +253,79 @@ export function KnowledgeGraph() {
     onCleanup(() => {
       window.removeEventListener('resize', handleResize);
       if (simulation) simulation.stop();
+      if (ws) ws.close();
     });
   });
   
   // Helper functions
   function getNodeRadius(node, zoom) {
-    const baseRadius = NODE_SIZES.MIN + Math.sqrt(node.connections || 1) * NODE_SIZES.SCALE_FACTOR;
+    const baseRadius = node.radius || NODE_SIZES.MIN;
     // Adjust size based on zoom to maintain visibility
     return Math.min(NODE_SIZES.MAX, Math.max(NODE_SIZES.MIN, baseRadius / Math.sqrt(zoom)));
   }
   
-  // Mock data functions - replace with actual API calls
-  async function fetchTopNodes(count) {
-    await new Promise(resolve => setTimeout(resolve, 100)); // Simulate network delay
-    return Array.from({ length: count }, (_, i) => ({
-      id: `node-${i}`,
-      label: `${['Knowledge', 'Hypothesis', 'Decision', 'Memory'][Math.floor(Math.random() * 4)]}-${i}`,
-      type: ['knowledge', 'hypothesis', 'decision', 'memory'][Math.floor(Math.random() * 4)],
-      usageCount: Math.floor(Math.random() * 100),
-      connections: Math.floor(Math.random() * 20) + 1,
-      active: Math.random() > 0.9,
-      x: (Math.random() - 0.5) * 800 + 400,
-      y: (Math.random() - 0.5) * 600 + 300
-    }));
+  function getNodeColor(node) {
+    // Color based on tier takes precedence
+    if (TIER_COLORS[node.tier]) {
+      return TIER_COLORS[node.tier];
+    }
+    // Otherwise use type color
+    return TYPE_COLORS[node.type] || TYPE_COLORS.default;
   }
   
-  async function fetchConnections(nodeIds) {
-    await new Promise(resolve => setTimeout(resolve, 50)); // Simulate network delay
-    const connections = [];
-    const nodeMap = new Map(nodeIds.map((id, index) => [id, index]));
+  // Real API functions
+  async function fetchKnowledgeGraphData(agentId, depth) {
+    const response = await fetch(
+      `/api/knowledge-graph/data?agent_id=${agentId}&depth=${depth}`
+    );
     
-    for (let i = 0; i < nodeIds.length; i++) {
-      for (let j = i + 1; j < Math.min(i + 5, nodeIds.length); j++) {
-        if (Math.random() > 0.7) {
-          connections.push({
-            source: nodeIds[i],
-            target: nodeIds[j],
-            strength: Math.random()
-          });
-        }
-      }
+    if (!response.ok) {
+      throw new Error(`Failed to fetch knowledge graph: ${response.statusText}`);
     }
-    return connections;
+    
+    return response.json();
+  }
+  
+  // WebSocket setup for real-time updates
+  function setupWebSocket() {
+    const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/dashboard/${agentId()}`;
+    
+    ws = new WebSocket(wsUrl);
+    
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      
+      // Handle knowledge access events
+      if (data.type === 'knowledge_access') {
+        // Highlight the accessed node
+        const accessedNodeId = data.memory_id;
+        setNodes(prev => prev.map(node => {
+          if (node.id === accessedNodeId) {
+            return { ...node, access_count: (node.access_count || 0) + 1, glow: true };
+          }
+          return node;
+        }));
+        
+        // Remove glow after 2 seconds
+        setTimeout(() => {
+          setNodes(prev => prev.map(node => {
+            if (node.id === accessedNodeId) {
+              return { ...node, glow: false };
+            }
+            return node;
+          }));
+        }, 2000);
+      }
+    };
+    
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+    
+    ws.onclose = () => {
+      // Attempt to reconnect after 5 seconds
+      setTimeout(setupWebSocket, 5000);
+    };
   }
   
   return (
@@ -247,15 +337,31 @@ export function KnowledgeGraph() {
           <span>Links: {stats().links}</span>
           <span>Zoom: {zoomLevel().toFixed(2)}x</span>
           <span>FPS: {stats().fps}</span>
+          {stats().hot_tier_count !== undefined && (
+            <>
+              <span class="tier-stat hot">Hot: {stats().hot_tier_count}</span>
+              <span class="tier-stat warm">Warm: {stats().warm_tier_count}</span>
+              <span class="tier-stat cold">Cold: {stats().cold_tier_count}</span>
+              <span class="user-context">Context: {stats().user_context_count}</span>
+            </>
+          )}
         </div>
         {loadingState() === 'loading' && (
           <div class="loading-indicator">Loading knowledge graph...</div>
+        )}
+        {loadingState() === 'error' && (
+          <div class="error-indicator">Failed to load knowledge graph</div>
         )}
       </div>
       <div class="graph-controls">
         <button onClick={() => simulation && simulation.alpha(1).restart()}>
           Reset Layout
         </button>
+        <select onChange={(e) => setAgentId(e.target.value)} value={agentId()}>
+          <option value="neuroscientist">Neuroscientist</option>
+          <option value="nutritionist">Nutritionist</option>
+          <option value="trainer">Trainer</option>
+        </select>
       </div>
     </div>
   );

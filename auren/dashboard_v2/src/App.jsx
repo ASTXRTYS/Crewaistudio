@@ -18,7 +18,7 @@ export default function App() {
   let reconnectTimeout;
   const eventProcessor = new EventProcessor();
   const [connectionStatus, setConnectionStatus] = createSignal('disconnected');
-  const [wsUrl] = createSignal('ws://aupex.ai/ws');
+  const [wsUrl] = createSignal('ws://${window.location.host}/ws');
   
   // Throttle function for 100ms updates
   const throttle = (func, delay) => {

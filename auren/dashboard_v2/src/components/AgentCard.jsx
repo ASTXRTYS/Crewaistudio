@@ -13,7 +13,7 @@ export default function AgentCard({ agentId, onClose }) {
   
   const fetchAgentData = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/api/agent-cards/${agentId}`);
+      const response = await fetch(`/api/agent-cards/${agentId}`);
       const data = await response.json();
       setAgentData(data);
     } catch (error) {

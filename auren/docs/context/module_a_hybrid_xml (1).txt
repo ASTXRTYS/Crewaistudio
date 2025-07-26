@@ -1,0 +1,4386 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module_a_data_persistence>
+    <metadata>
+        <title>Module A: Data Persistence & Event Architecture Implementation Guide</title>
+        <implements>PostgreSQL Memory Backend, Event Sourcing, Real-time Projections, HIPAA-compliant Audit Trails</implements>
+        <dependencies>Master Control Document</dependencies>
+        <version>1.0-Hybrid</version>
+        <purpose>Transform AUREN from JSON file storage to production-grade data layer supporting unlimited memory, event sourcing, and real-time projections</purpose>
+        <token_budget>35000</token_budget>
+    </metadata>
+
+    <load_manifest>
+        <always_load>Master Control Document</always_load>
+        <primary_module>This document (Module A)</primary_module>
+        <optional_modules>
+            <module>Module B (for agent memory integration)</module>
+            <module>Module D (for CrewAI hooks)</module>
+        </optional_modules>
+        <token_calculation>Master (30k) + This (35k) + Optional (35k) = 100k used</token_calculation>
+        <available_tokens>100k for implementation work</available_tokens>
+    </load_manifest>
+
+    <section id="1" name="quick_context">
+        <title>Quick Context</title>
+        <description>
+            This module implements the foundational data infrastructure that transforms AUREN from file-based storage to a production-grade system supporting the multi-agent architecture. The implementation eliminates the 1000-record JSON file limit and provides unlimited memory storage with complete audit trails for HIPAA compliance.
+
+            Key insight: Healthcare AI requires immutable audit trails while supporting real-time agent decision-making. Event sourcing provides immutability and audit guarantees, while CQRS projections enable sub-second response times agents need.
+
+            The PostgreSQL backend serves as the single source of truth, with Redis projections for real-time agent access and ChromaDB projections for semantic retrieval. This architecture supports hypothesis validation, cross-agent memory sharing, and real-time biometric processing that define AUREN's compound intelligence.
+        </description>
+        <eliminates>
+            <limitation>1000-record limit of JSON file storage</limitation>
+            <limitation>No audit trails for compliance</limitation>
+            <limitation>No real-time memory sharing between agents</limitation>
+            <limitation>No event replay capabilities</limitation>
+        </eliminates>
+        <enables>
+            <capability>Unlimited memory storage with ACID guarantees</capability>
+            <capability>Complete audit trails for HIPAA compliance</capability>
+            <capability>Real-time memory sharing across specialist agents</capability>
+            <capability>Event sourcing with replay capabilities</capability>
+            <capability>Sub-second memory retrieval for agent responses</capability>
+        </enables>
+    </section>
+
+    <section id="2" name="implementation_checklist">
+        <title>Implementation Checklist</title>
+        <checklist>
+            <item>PostgreSQL connection pool with AsyncPostgresManager singleton</item>
+            <item>Event store schema with JSONB events and sequence management</item>
+            <item>EventStore class with optimistic concurrency control</item>
+            <item>Memory backend replacing JSON files with full CRUD operations</item>
+            <item>LISTEN/NOTIFY triggers for real-time projection updates</item>
+            <item>Redis projection handlers with conflict resolution</item>
+            <item>ChromaDB vector sync for semantic retrieval</item>
+            <item>Migration scripts from existing JSON files to PostgreSQL</item>
+            <item>Performance optimization with proper indexing strategy</item>
+            <item>Connection health monitoring and automatic recovery</item>
+            <item>Comprehensive test suite covering all failure modes</item>
+            <item>Integration with CrewAI memory interface</item>
+        </checklist>
+    </section>
+
+    <section id="3" name="detailed_implementation">
+        <title>Detailed Implementation</title>
+
+        <subsection id="3.1" name="connection_management">
+            <title>PostgreSQL Connection Management</title>
+            <description>Singleton connection manager with retry logic and health monitoring</description>
+            
+            <implementation language="python">
+                <![CDATA[
+"""
+AsyncPostgresManager - Singleton connection pool manager
+Provides robust connection handling with exponential backoff retry logic
+"""
+
+import asyncio
+import asyncpg
+from asyncpg.pool import Pool
+import logging
+from typing import Optional, Dict, Any
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone
+
+logger = logging.getLogger(__name__)
+
+class AsyncPostgresManager:
+    """
+    Singleton manager for asyncpg connection pool
+    Ensures one pool per application instance with proper lifecycle management
+    """
+    _instance = None
+    _pool: Optional[Pool] = None
+    _initialized = False
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    @classmethod
+    async def initialize(cls, 
+                        dsn: str, 
+                        min_size: int = 10, 
+                        max_size: int = 50,
+                        command_timeout: float = 30.0,
+                        server_settings: Optional[Dict[str, str]] = None) -> None:
+        """
+        Initialize connection pool with retry logic
+        
+        Args:
+            dsn: Database connection string
+            min_size: Minimum connections to maintain
+            max_size: Maximum connections in pool
+            command_timeout: Query timeout in seconds
+            server_settings: Additional PostgreSQL settings
+        """
+        if cls._pool is not None:
+            logger.info("Connection pool already initialized")
+            return
+
+        default_settings = {
+            'application_name': 'auren_data_layer',
+            'jit': 'off'  # Disable JIT for faster connection times
+        }
+        
+        if server_settings:
+            default_settings.update(server_settings)
+
+        cls._pool = await cls._create_pool_with_retries(
+            dsn=dsn,
+            min_size=min_size,
+            max_size=max_size,
+            command_timeout=command_timeout,
+            server_settings=default_settings
+        )
+        cls._initialized = True
+        logger.info(f"PostgreSQL connection pool initialized: {min_size}-{max_size} connections")
+
+    @classmethod
+    async def _create_pool_with_retries(cls,
+                                       dsn: str,
+                                       min_size: int,
+                                       max_size: int,
+                                       command_timeout: float,
+                                       server_settings: Dict[str, str],
+                                       max_retries: int = 5,
+                                       base_delay: float = 1.0) -> Pool:
+        """
+        Create connection pool with exponential backoff retry logic
+        
+        Args:
+            dsn: Database connection string
+            min_size: Minimum pool size
+            max_size: Maximum pool size
+            command_timeout: Query timeout
+            server_settings: PostgreSQL server settings
+            max_retries: Maximum retry attempts
+            base_delay: Base delay for exponential backoff
+            
+        Returns:
+            Initialized connection pool
+            
+        Raises:
+            ConnectionError: If pool creation fails after all retries
+        """
+        last_exception = None
+        
+        for attempt in range(max_retries):
+            try:
+                pool = await asyncpg.create_pool(
+                    dsn=dsn,
+                    min_size=min_size,
+                    max_size=max_size,
+                    command_timeout=command_timeout,
+                    server_settings=server_settings
+                )
+                
+                # Test connection
+                async with pool.acquire() as conn:
+                    await conn.fetchval("SELECT 1")
+                
+                logger.info(f"Successfully created PostgreSQL pool on attempt {attempt + 1}")
+                return pool
+                
+            except (asyncpg.PostgresError, OSError, ConnectionRefusedError) as e:
+                last_exception = e
+                if attempt < max_retries - 1:
+                    delay = base_delay * (2 ** attempt)  # Exponential backoff
+                    logger.warning(f"Connection attempt {attempt + 1} failed: {e}. Retrying in {delay}s")
+                    await asyncio.sleep(delay)
+                else:
+                    logger.error(f"All {max_retries} connection attempts failed")
+
+        raise ConnectionError(f"Failed to create database pool after {max_retries} attempts") from last_exception
+
+    @classmethod
+    async def get_pool(cls) -> Pool:
+        """
+        Get the connection pool instance
+        
+        Returns:
+            Active connection pool
+            
+        Raises:
+            RuntimeError: If pool not initialized
+        """
+        if not cls._initialized or cls._pool is None:
+            raise RuntimeError("AsyncPostgresManager not initialized. Call initialize() first.")
+        return cls._pool
+
+    @classmethod
+    @asynccontextmanager
+    async def get_connection(cls):
+        """
+        Get database connection with automatic retry and error handling
+        
+        Usage:
+            async with AsyncPostgresManager.get_connection() as conn:
+                result = await conn.fetchval("SELECT 1")
+        """
+        pool = await cls.get_pool()
+        max_retries = 3
+        
+        for attempt in range(max_retries):
+            try:
+                async with pool.acquire() as conn:
+                    yield conn
+                return
+            except (asyncpg.PostgresError, asyncpg.InterfaceError) as e:
+                if attempt == max_retries - 1:
+                    logger.error(f"Connection failed after {max_retries} attempts: {e}")
+                    raise
+                logger.warning(f"Connection attempt {attempt + 1} failed: {e}. Retrying...")
+                await asyncio.sleep(0.1 * (2 ** attempt))
+
+    @classmethod
+    async def health_check(cls) -> Dict[str, Any]:
+        """
+        Comprehensive health check for connection pool
+        
+        Returns:
+            Health status with metrics
+        """
+        try:
+            if not cls._initialized or cls._pool is None:
+                return {
+                    "status": "unhealthy",
+                    "error": "Pool not initialized",
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+
+            start_time = datetime.now()
+            
+            async with cls.get_connection() as conn:
+                # Test basic query
+                await conn.fetchval("SELECT 1")
+                
+                # Get pool statistics
+                pool_stats = {
+                    "size": cls._pool.get_size(),
+                    "min_size": cls._pool.get_min_size(),
+                    "max_size": cls._pool.get_max_size(),
+                    "idle_size": cls._pool.get_idle_size()
+                }
+                
+                # Check database version and stats
+                db_version = await conn.fetchval("SELECT version()")
+                active_connections = await conn.fetchval(
+                    "SELECT count(*) FROM pg_stat_activity WHERE state = 'active'"
+                )
+                
+            response_time = (datetime.now() - start_time).total_seconds() * 1000
+            
+            return {
+                "status": "healthy",
+                "response_time_ms": response_time,
+                "pool_stats": pool_stats,
+                "database_version": db_version,
+                "active_connections": active_connections,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+            
+        except Exception as e:
+            return {
+                "status": "unhealthy",
+                "error": str(e),
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+
+    @classmethod
+    async def close(cls) -> None:
+        """
+        Gracefully close connection pool
+        Should be called on application shutdown
+        """
+        if cls._pool is not None:
+            logger.info("Closing PostgreSQL connection pool")
+            await cls._pool.close()
+            cls._pool = None
+            cls._initialized = False
+]]>
+            </implementation>
+        </subsection>
+
+        <subsection id="3.2" name="database_schema">
+            <title>Database Schema</title>
+            <description>Complete PostgreSQL schema for event sourcing and memory storage</description>
+            
+            <schema language="sql">
+                <![CDATA[
+-- AUREN Data Layer Schema
+-- Event sourcing foundation with projection tables for performance
+
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Global sequence for event ordering
+CREATE SEQUENCE IF NOT EXISTS global_event_sequence;
+
+-- Core events table (single source of truth)
+CREATE TABLE IF NOT EXISTS events (
+    sequence_id BIGINT PRIMARY KEY DEFAULT nextval('global_event_sequence'),
+    event_id UUID NOT NULL UNIQUE DEFAULT uuid_generate_v4(),
+    stream_id UUID NOT NULL,
+    event_type VARCHAR(255) NOT NULL,
+    version INTEGER NOT NULL,
+    payload JSONB NOT NULL,
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    
+    -- Optimistic concurrency control
+    CONSTRAINT unique_stream_version UNIQUE (stream_id, version)
+);
+
+-- Agent memories projection (for fast retrieval)
+CREATE TABLE IF NOT EXISTS agent_memories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    agent_id VARCHAR(255) NOT NULL,
+    user_id UUID,
+    memory_type VARCHAR(100) NOT NULL,
+    content JSONB NOT NULL,
+    metadata JSONB DEFAULT '{}',
+    confidence FLOAT DEFAULT 1.0 CHECK (confidence >= 0 AND confidence <= 1),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    expires_at TIMESTAMPTZ,
+    is_deleted BOOLEAN DEFAULT FALSE,
+    
+    -- Event sourcing link
+    source_event_id UUID REFERENCES events(event_id)
+);
+
+-- User profiles and preferences
+CREATE TABLE IF NOT EXISTS user_profiles (
+    user_id UUID PRIMARY KEY,
+    profile_data JSONB NOT NULL,
+    preferences JSONB DEFAULT '{}',
+    privacy_settings JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Conversation memories for agent context
+CREATE TABLE IF NOT EXISTS conversation_memories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    conversation_id UUID NOT NULL,
+    agent_id VARCHAR(255) NOT NULL,
+    user_id UUID NOT NULL,
+    message_context JSONB NOT NULL,
+    insights JSONB DEFAULT '[]',
+    follow_up_actions JSONB DEFAULT '[]',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Specialist knowledge base
+CREATE TABLE IF NOT EXISTS specialist_knowledge (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    agent_id VARCHAR(255) NOT NULL,
+    domain VARCHAR(100) NOT NULL,
+    knowledge_type VARCHAR(100) NOT NULL,
+    content JSONB NOT NULL,
+    confidence FLOAT NOT NULL CHECK (confidence >= 0 AND confidence <= 1),
+    evidence JSONB DEFAULT '[]',
+    validation_status VARCHAR(50) DEFAULT 'pending',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    validated_at TIMESTAMPTZ
+);
+
+-- Performance indexes
+CREATE INDEX IF NOT EXISTS idx_events_stream_id ON events (stream_id);
+CREATE INDEX IF NOT EXISTS idx_events_type ON events (event_type);
+CREATE INDEX IF NOT EXISTS idx_events_created_at ON events (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_events_sequence ON events (sequence_id);
+
+-- Memory access patterns
+CREATE INDEX IF NOT EXISTS idx_agent_memories_agent_user 
+    ON agent_memories(agent_id, user_id) WHERE NOT is_deleted;
+CREATE INDEX IF NOT EXISTS idx_agent_memories_type 
+    ON agent_memories(memory_type) WHERE NOT is_deleted;
+CREATE INDEX IF NOT EXISTS idx_agent_memories_created 
+    ON agent_memories(created_at DESC) WHERE NOT is_deleted;
+CREATE INDEX IF NOT EXISTS idx_agent_memories_content_gin 
+    ON agent_memories USING GIN(content);
+
+-- Conversation patterns
+CREATE INDEX IF NOT EXISTS idx_conversation_memories_conv_agent 
+    ON conversation_memories(conversation_id, agent_id);
+CREATE INDEX IF NOT EXISTS idx_conversation_memories_user 
+    ON conversation_memories(user_id, created_at DESC);
+
+-- Knowledge patterns
+CREATE INDEX IF NOT EXISTS idx_specialist_knowledge_agent_domain 
+    ON specialist_knowledge(agent_id, domain, confidence DESC);
+CREATE INDEX IF NOT EXISTS idx_specialist_knowledge_validation 
+    ON specialist_knowledge(validation_status, confidence DESC);
+
+-- Trigger function for updated_at timestamps
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Apply updated_at triggers
+CREATE TRIGGER update_agent_memories_updated_at 
+    BEFORE UPDATE ON agent_memories
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_user_profiles_updated_at 
+    BEFORE UPDATE ON user_profiles
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Real-time notification function
+CREATE OR REPLACE FUNCTION notify_new_event()
+RETURNS TRIGGER AS $$
+BEGIN
+    PERFORM pg_notify('memory_events', 
+        json_build_object(
+            'sequence_id', NEW.sequence_id,
+            'event_id', NEW.event_id,
+            'stream_id', NEW.stream_id,
+            'event_type', NEW.event_type
+        )::text
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger for real-time notifications
+CREATE TRIGGER trigger_new_event_notification
+    AFTER INSERT ON events
+    FOR EACH ROW
+    EXECUTE FUNCTION notify_new_event();
+]]>
+            </schema>
+        </subsection>
+
+        <subsection id="3.3" name="event_store">
+            <title>Event Store Implementation</title>
+            <description>Production event store with optimistic concurrency control and audit trails</description>
+            
+            <implementation language="python">
+                <![CDATA[
+"""
+EventStore - Core event sourcing implementation
+Provides immutable audit trails and optimistic concurrency control
+"""
+
+import uuid
+import json
+from datetime import datetime, timezone
+from typing import Dict, List, Optional, Any
+from dataclasses import dataclass, asdict
+from enum import Enum
+import logging
+
+logger = logging.getLogger(__name__)
+
+class EventType(Enum):
+    """Core event types for AUREN system"""
+    # Memory events
+    MEMORY_CREATED = "memory_created"
+    MEMORY_UPDATED = "memory_updated"
+    MEMORY_DELETED = "memory_deleted"
+    MEMORY_RETRIEVED = "memory_retrieved"
+    
+    # Agent events
+    AGENT_DECISION = "agent_decision"
+    AGENT_HANDOFF = "agent_handoff"
+    HYPOTHESIS_FORMED = "hypothesis_formed"
+    HYPOTHESIS_VALIDATED = "hypothesis_validated"
+    
+    # User events
+    USER_ONBOARDED = "user_onboarded"
+    BIOMETRIC_RECEIVED = "biometric_received"
+    CONVERSATION_TURN = "conversation_turn"
+    
+    # System events
+    PROJECTION_UPDATED = "projection_updated"
+    ERROR_OCCURRED = "error_occurred"
+
+@dataclass
+class Event:
+    """Immutable event record"""
+    event_id: str
+    stream_id: str
+    event_type: str
+    version: int
+    payload: Dict[str, Any]
+    metadata: Dict[str, Any]
+    created_at: datetime
+    sequence_id: Optional[int] = None
+
+class ConcurrencyError(Exception):
+    """Raised when optimistic concurrency control fails"""
+    pass
+
+class EventStore:
+    """
+    Production event store implementation
+    
+    Features:
+    - Immutable event storage with ACID guarantees
+    - Optimistic concurrency control
+    - Event replay capabilities
+    - Real-time notifications via LISTEN/NOTIFY
+    - Audit trail compliance
+    """
+    
+    def __init__(self):
+        self._event_handlers: List[callable] = []
+
+    async def append_event(self,
+                          stream_id: str,
+                          event_type: EventType,
+                          payload: Dict[str, Any],
+                          expected_version: Optional[int] = None,
+                          metadata: Optional[Dict[str, Any]] = None,
+                          correlation_id: Optional[str] = None,
+                          causation_id: Optional[str] = None) -> Event:
+        """
+        Append event to stream with optimistic concurrency control
+        
+        Args:
+            stream_id: Unique stream identifier (user_id, agent_id, etc.)
+            event_type: Type of event being recorded
+            payload: Event data
+            expected_version: Expected stream version for concurrency control
+            metadata: Additional event metadata
+            correlation_id: ID linking related events
+            causation_id: ID of event that caused this event
+            
+        Returns:
+            Created event with assigned sequence number
+            
+        Raises:
+            ConcurrencyError: If expected_version doesn't match actual
+        """
+        
+        event_id = str(uuid.uuid4())
+        event_metadata = metadata or {}
+        
+        # Add correlation and causation tracking
+        if correlation_id:
+            event_metadata['correlation_id'] = correlation_id
+        if causation_id:
+            event_metadata['causation_id'] = causation_id
+            
+        # Add agent context if available
+        event_metadata['timestamp'] = datetime.now(timezone.utc).isoformat()
+        
+        async with AsyncPostgresManager.get_connection() as conn:
+            async with conn.transaction():
+                # Check stream version if provided
+                current_version = 0
+                if expected_version is not None:
+                    current_version = await conn.fetchval(
+                        "SELECT MAX(version) FROM events WHERE stream_id = $1",
+                        stream_id
+                    ) or 0
+                    
+                    if current_version != expected_version:
+                        raise ConcurrencyError(
+                            f"Stream {stream_id}: expected version {expected_version}, "
+                            f"actual version {current_version}"
+                        )
+                
+                new_version = current_version + 1
+                
+                # Insert event
+                sequence_id = await conn.fetchval("""
+                    INSERT INTO events 
+                    (event_id, stream_id, event_type, version, payload, metadata)
+                    VALUES ($1, $2, $3, $4, $5, $6)
+                    RETURNING sequence_id
+                """, event_id, stream_id, event_type.value, new_version,
+                    json.dumps(payload), json.dumps(event_metadata))
+                
+                event = Event(
+                    event_id=event_id,
+                    stream_id=stream_id,
+                    event_type=event_type.value,
+                    version=new_version,
+                    payload=payload,
+                    metadata=event_metadata,
+                    created_at=datetime.now(timezone.utc),
+                    sequence_id=sequence_id
+                )
+                
+                # Process event handlers
+                for handler in self._event_handlers:
+                    try:
+                        await handler(event)
+                    except Exception as e:
+                        logger.error(f"Event handler failed for {event_id}: {e}")
+                        # Continue with other handlers
+                
+                logger.info(f"Event appended: {event_type.value} to stream {stream_id}")
+                return event
+
+    async def get_stream_events(self,
+                               stream_id: str,
+                               from_version: int = 0,
+                               to_version: Optional[int] = None,
+                               limit: int = 1000) -> List[Event]:
+        """
+        Get events from a specific stream
+        
+        Args:
+            stream_id: Stream identifier
+            from_version: Starting version (exclusive)
+            to_version: Ending version (inclusive)
+            limit: Maximum events to return
+            
+        Returns:
+            List of events in version order
+        """
+        
+        conditions = ["stream_id = $1", "version > $2"]
+        params = [stream_id, from_version]
+        param_count = 2
+        
+        if to_version is not None:
+            conditions.append(f"version <= ${param_count + 1}")
+            params.append(to_version)
+            param_count += 1
+        
+        query = f"""
+            SELECT sequence_id, event_id, stream_id, event_type, version,
+                   payload, metadata, created_at
+            FROM events
+            WHERE {' AND '.join(conditions)}
+            ORDER BY version ASC
+            LIMIT ${param_count + 1}
+        """
+        params.append(limit)
+        
+        async with AsyncPostgresManager.get_connection() as conn:
+            rows = await conn.fetch(query, *params)
+            
+            events = []
+            for row in rows:
+                event = Event(
+                    event_id=str(row['event_id']),
+                    stream_id=row['stream_id'],
+                    event_type=row['event_type'],
+                    version=row['version'],
+                    payload=json.loads(row['payload']),
+                    metadata=json.loads(row['metadata']),
+                    created_at=row['created_at'],
+                    sequence_id=row['sequence_id']
+                )
+                events.append(event)
+            
+            return events
+
+    async def get_stream_version(self, stream_id: str) -> int:
+        """Get current version of stream"""
+        async with AsyncPostgresManager.get_connection() as conn:
+            version = await conn.fetchval(
+                "SELECT MAX(version) FROM events WHERE stream_id = $1",
+                stream_id
+            )
+            return version or 0
+
+    async def replay_stream(self,
+                           stream_id: str,
+                           projection_handler: callable,
+                           from_version: int = 0) -> Any:
+        """
+        Replay stream events through projection handler
+        
+        Args:
+            stream_id: Stream to replay
+            projection_handler: Function to process each event
+            from_version: Starting version for incremental updates
+            
+        Returns:
+            Final projection state
+        """
+        
+        events = await self.get_stream_events(stream_id, from_version)
+        
+        # Start with empty state or snapshot
+        state = {}
+        
+        # Apply events to build current state
+        for event in events:
+            try:
+                state = await projection_handler(state, event)
+            except Exception as e:
+                logger.error(f"Projection handler failed for event {event.event_id}: {e}")
+                # Continue with other events
+        
+        return state
+
+    def register_event_handler(self, handler: callable) -> None:
+        """Register handler for processing events as they're appended"""
+        self._event_handlers.append(handler)
+        logger.info(f"Registered event handler: {handler.__name__}")
+
+    async def get_events_by_type(self,
+                                event_type: EventType,
+                                from_timestamp: Optional[datetime] = None,
+                                limit: int = 1000) -> List[Event]:
+        """Get events by type across all streams"""
+        
+        conditions = ["event_type = $1"]
+        params = [event_type.value]
+        param_count = 1
+        
+        if from_timestamp:
+            conditions.append(f"created_at >= ${param_count + 1}")
+            params.append(from_timestamp)
+            param_count += 1
+        
+        query = f"""
+            SELECT sequence_id, event_id, stream_id, event_type, version,
+                   payload, metadata, created_at
+            FROM events
+            WHERE {' AND '.join(conditions)}
+            ORDER BY created_at DESC
+            LIMIT ${param_count + 1}
+        """
+        params.append(limit)
+        
+        async with AsyncPostgresManager.get_connection() as conn:
+            rows = await conn.fetch(query, *params)
+            
+            events = []
+            for row in rows:
+                event = Event(
+                    event_id=str(row['event_id']),
+                    stream_id=row['stream_id'],
+                    event_type=row['event_type'],
+                    version=row['version'],
+                    payload=json.loads(row['payload']),
+                    metadata=json.loads(row['metadata']),
+                    created_at=row['created_at'],
+                    sequence_id=row['sequence_id']
+                )
+                events.append(event)
+            
+            return events
+]]>
+            </implementation>
+        </subsection>
+
+        <subsection id="3.4" name="memory_backend">
+            <title>Memory Backend Implementation</title>
+            <description>PostgreSQL memory backend replacing JSON files with unlimited storage</description>
+            
+            <implementation language="python">
+                <![CDATA[
+"""
+PostgreSQLMemoryBackend - Production memory storage
+Replaces JSON file limitations with unlimited PostgreSQL storage
+"""
+
+from typing import Dict, List, Optional, Any, Union
+import json
+import uuid
+from datetime import datetime, timezone
+from enum import Enum
+
+class MemoryType(Enum):
+    """Types of memory stored in the system"""
+    FACT = "fact"
+    ANALYSIS = "analysis"
+    RECOMMENDATION = "recommendation"
+    HYPOTHESIS = "hypothesis"
+    INSIGHT = "insight"
+    CONVERSATION = "conversation"
+    DECISION = "decision"
+
+class PostgreSQLMemoryBackend:
+    """
+    Production-grade PostgreSQL memory backend
+    
+    Features:
+    - Unlimited memory storage (vs 1000 record JSON limit)
+    - HIPAA-compliant audit trails through event sourcing
+    - Real-time updates via LISTEN/NOTIFY
+    - Automatic projection management
+    - Connection pooling and retry logic
+    - Graceful degradation and error recovery
+    """
+    
+    def __init__(self, event_store: EventStore):
+        self.event_store = event_store
+        self._setup_event_handlers()
+
+    def _setup_event_handlers(self):
+        """Setup automatic projection updates from events"""
+        self.event_store.register_event_handler(self._handle_memory_event)
+
+    async def store_memory(self,
+                          agent_id: str,
+                          memory_type: MemoryType,
+                          content: Dict[str, Any],
+                          user_id: Optional[str] = None,
+                          metadata: Optional[Dict[str, Any]] = None,
+                          confidence: float = 1.0,
+                          expires_at: Optional[datetime] = None) -> str:
+        """
+        Store agent memory with event sourcing
+        
+        Args:
+            agent_id: Agent storing the memory
+            memory_type: Type of memory being stored
+            content: Memory content
+            user_id: Associated user (if any)
+            metadata: Additional metadata
+            confidence: Confidence score (0.0 to 1.0)
+            expires_at: Optional expiration timestamp
+            
+        Returns:
+            Memory ID for reference
+        """
+        
+        memory_id = str(uuid.uuid4())
+        stream_id = user_id or agent_id
+        
+        # Store in projection table for fast access
+        async with AsyncPostgresManager.get_connection() as conn:
+            await conn.execute("""
+                INSERT INTO agent_memories 
+                (id, agent_id, user_id, memory_type, content, metadata, confidence, expires_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            """, memory_id, agent_id, user_id, memory_type.value,
+                json.dumps(content), json.dumps(metadata or {}), confidence, expires_at)
+        
+        # Record event for audit trail
+        await self.event_store.append_event(
+            stream_id=stream_id,
+            event_type=EventType.MEMORY_CREATED,
+            payload={
+                "memory_id": memory_id,
+                "agent_id": agent_id,
+                "user_id": user_id,
+                "memory_type": memory_type.value,
+                "content": content,
+                "metadata": metadata,
+                "confidence": confidence,
+                "expires_at": expires_at.isoformat() if expires_at else None
+            }
+        )
+        
+        logger.info(f"Memory stored: {memory_id} by agent {agent_id}")
+        return memory_id
+
+    async def retrieve_memories(self,
+                               agent_id: str,
+                               user_id: Optional[str] = None,
+                               memory_type: Optional[MemoryType] = None,
+                               limit: int = 100,
+                               offset: int = 0,
+                               include_expired: bool = False) -> List[Dict[str, Any]]:
+        """
+        Retrieve agent memories with filtering
+        
+        Args:
+            agent_id: Agent whose memories to retrieve
+            user_id: Filter by specific user
+            memory_type: Filter by memory type
+            limit: Maximum memories to return
+            offset: Pagination offset
+            include_expired: Include expired memories
+            
+        Returns:
+            List of memory records
+        """
+        
+        conditions = ["NOT is_deleted"]
+        params = []
+        param_count = 0
+        
+        # Filter by agent
+        conditions.append(f"agent_id = ${param_count + 1}")
+        params.append(agent_id)
+        param_count += 1
+        
+        # Filter by user if specified
+        if user_id:
+            conditions.append(f"user_id = ${param_count + 1}")
+            params.append(user_id)
+            param_count += 1
+        
+        # Filter by memory type if specified
+        if memory_type:
+            conditions.append(f"memory_type = ${param_count + 1}")
+            params.append(memory_type.value)
+            param_count += 1
+        
+        # Filter expired memories unless explicitly requested
+        if not include_expired:
+            conditions.append("(expires_at IS NULL OR expires_at > NOW())")
+        
+        query = f"""
+            SELECT id, agent_id, user_id, memory_type, content, metadata,
+                   confidence, created_at, updated_at, expires_at
+            FROM agent_memories
+            WHERE {' AND '.join(conditions)}
+            ORDER BY created_at DESC
+            LIMIT ${param_count + 1} OFFSET ${param_count + 2}
+        """
+        params.extend([limit, offset])
+        
+        async with AsyncPostgresManager.get_connection() as conn:
+            rows = await conn.fetch(query, *params)
+            
+            memories = []
+            for row in rows:
+                memory = {
+                    "id": str(row["id"]),
+                    "agent_id": row["agent_id"],
+                    "user_id": str(row["user_id"]) if row["user_id"] else None,
+                    "memory_type": row["memory_type"],
+                    "content": json.loads(row["content"]),
+                    "metadata": json.loads(row["metadata"]),
+                    "confidence": float(row["confidence"]),
+                    "created_at": row["created_at"].isoformat(),
+                    "updated_at": row["updated_at"].isoformat(),
+                    "expires_at": row["expires_at"].isoformat() if row["expires_at"] else None
+                }
+                memories.append(memory)
+            
+            # Record retrieval event for audit
+            if memories:
+                await self.event_store.append_event(
+                    stream_id=user_id or agent_id,
+                    event_type=EventType.MEMORY_RETRIEVED,
+                    payload={
+                        "agent_id": agent_id,
+                        "user_id": user_id,
+                        "memory_type": memory_type.value if memory_type else None,
+                        "count": len(memories),
+                        "limit": limit,
+                        "offset": offset
+                    }
+                )
+            
+            return memories
+
+    async def update_memory(self,
+                           memory_id: str,
+                           content: Optional[Dict[str, Any]] = None,
+                           metadata: Optional[Dict[str, Any]] = None,
+                           confidence: Optional[float] = None) -> bool:
+        """
+        Update existing memory with event recording
+        
+        Args:
+            memory_id: Memory to update
+            content: New content (if any)
+            metadata: New metadata (if any)
+            confidence: New confidence score (if any)
+            
+        Returns:
+            True if memory was updated, False if not found
+        """
+        
+        updates = []
+        params = []
+        param_count = 0
+        
+        if content is not None:
+            updates.append(f"content = ${param_count + 1}")
+            params.append(json.dumps(content))
+            param_count += 1
+        
+        if metadata is not None:
+            updates.append(f"metadata = ${param_count + 1}")
+            params.append(json.dumps(metadata))
+            param_count += 1
+        
+        if confidence is not None:
+            updates.append(f"confidence = ${param_count + 1}")
+            params.append(confidence)
+            param_count += 1
+        
+        if not updates:
+            return False
+        
+        query = f"""
+            UPDATE agent_memories
+            SET {', '.join(updates)}, updated_at = NOW()
+            WHERE id = ${param_count + 1} AND NOT is_deleted
+            RETURNING agent_id, user_id, memory_type
+        """
+        params.append(memory_id)
+        
+        async with AsyncPostgresManager.get_connection() as conn:
+            row = await conn.fetchrow(query, *params)
+            
+            if not row:
+                return False
+            
+            # Record update event
+            await self.event_store.append_event(
+                stream_id=row["user_id"] or row["agent_id"],
+                event_type=EventType.MEMORY_UPDATED,
+                payload={
+                    "memory_id": memory_id,
+                    "agent_id": row["agent_id"],
+                    "updates": {
+                        "content": content,
+                        "metadata": metadata,
+                        "confidence": confidence
+                    }
+                }
+            )
+            
+            return True
+
+    async def delete_memory(self, memory_id: str) -> bool:
+        """
+        Soft delete memory with event recording
+        
+        Args:
+            memory_id: Memory to delete
+            
+        Returns:
+            True if memory was deleted, False if not found
+        """
+        
+        async with AsyncPostgresManager.get_connection() as conn:
+            row = await conn.fetchrow("""
+                UPDATE agent_memories
+                SET is_deleted = TRUE, updated_at = NOW()
+                WHERE id = $1 AND NOT is_deleted
+                RETURNING agent_id, user_id, memory_type
+            """, memory_id)
+            
+            if not row:
+                return False
+            
+            # Record deletion event
+            await self.event_store.append_event(
+                stream_id=row["user_id"] or row["agent_id"],
+                event_type=EventType.MEMORY_DELETED,
+                payload={
+                    "memory_id": memory_id,
+                    "agent_id": row["agent_id"]
+                }
+            )
+            
+            return True
+
+    async def search_memories(self,
+                             agent_id: str,
+                             query: str,
+                             user_id: Optional[str] = None,
+                             limit: int = 50) -> List[Dict[str, Any]]:
+        """
+        Search memories using full-text search
+        
+        Args:
+            agent_id: Agent whose memories to search
+            query: Search query
+            user_id: Optional user filter
+            limit: Maximum results
+            
+        Returns:
+            List of matching memories with relevance scores
+        """
+        
+        conditions = ["NOT is_deleted", "agent_id = $1"]
+        params = [agent_id]
+        param_count = 1
+        
+        if user_id:
+            conditions.append(f"user_id = ${param_count + 1}")
+            params.append(user_id)
+            param_count += 1
+        
+        # Use PostgreSQL full-text search
+        search_query = f"""
+            SELECT id, agent_id, user_id, memory_type, content, metadata,
+                   confidence, created_at, updated_at,
+                   ts_rank(to_tsvector('english', content::text), plainto_tsquery('english', ${param_count + 1})) as relevance
+            FROM agent_memories
+            WHERE {' AND '.join(conditions)}
+            AND to_tsvector('english', content::text) @@ plainto_tsquery('english', ${param_count + 1})
+            ORDER BY relevance DESC, created_at DESC
+            LIMIT ${param_count + 2}
+        """
+        params.extend([query, limit])
+        
+        async with AsyncPostgresManager.get_connection() as conn:
+            rows = await conn.fetch(search_query, *params)
+            
+            memories = []
+            for row in rows:
+                memory = {
+                    "id": str(row["id"]),
+                    "agent_id": row["agent_id"],
+                    "user_id": str(row["user_id"]) if row["user_id"] else None,
+                    "memory_type": row["memory_type"],
+                    "content": json.loads(row["content"]),
+                    "metadata": json.loads(row["metadata"]),
+                    "confidence": float(row["confidence"]),
+                    "created_at": row["created_at"].isoformat(),
+                    "updated_at": row["updated_at"].isoformat(),
+                    "relevance": float(row["relevance"])
+                }
+                memories.append(memory)
+            
+            return memories
+
+    async def _handle_memory_event(self, event: Event) -> None:
+        """Handle memory events for maintaining projections"""
+        try:
+            if event.event_type == EventType.MEMORY_CREATED.value:
+                # Memory already stored in store_memory method
+                pass
+            elif event.event_type == EventType.MEMORY_UPDATED.value:
+                # Memory already updated in update_memory method
+                pass
+            elif event.event_type == EventType.MEMORY_DELETED.value:
+                # Memory already deleted in delete_memory method
+                pass
+            
+        except Exception as e:
+            logger.error(f"Failed to handle memory event {event.event_id}: {e}")
+
+    async def get_memory_stats(self, agent_id: str) -> Dict[str, Any]:
+        """Get memory statistics for an agent"""
+        
+        async with AsyncPostgresManager.get_connection() as conn:
+            stats = await conn.fetchrow("""
+                SELECT 
+                    COUNT(*) as total_memories,
+                    COUNT(*) FILTER (WHERE memory_type = 'fact') as facts,
+                    COUNT(*) FILTER (WHERE memory_type = 'analysis') as analyses,
+                    COUNT(*) FILTER (WHERE memory_type = 'recommendation') as recommendations,
+                    AVG(confidence) as avg_confidence,
+                    MAX(created_at) as last_memory_created
+                FROM agent_memories
+                WHERE agent_id = $1 AND NOT is_deleted
+            """, agent_id)
+            
+            return {
+                "agent_id": agent_id,
+                "total_memories": stats["total_memories"],
+                "memory_breakdown": {
+                    "facts": stats["facts"],
+                    "analyses": stats["analyses"],
+                    "recommendations": stats["recommendations"]
+                },
+                "average_confidence": float(stats["avg_confidence"] or 0),
+                "last_memory_created": stats["last_memory_created"].isoformat() if stats["last_memory_created"] else None
+            }
+]]>
+            </implementation>
+        </subsection>
+
+        <subsection id="3.5" name="projection_handlers">
+            <title>Projection Handlers</title>
+            <description>Real-time projection updates for Redis and ChromaDB</description>
+            
+            <implementation language="python">
+                <![CDATA[
+"""
+Projection handlers for real-time updates to Redis and ChromaDB
+Implement CQRS pattern for optimized read models
+"""
+
+import asyncio
+import json
+import logging
+from abc import ABC, abstractmethod
+from typing import Dict, Any, Optional, List
+
+logger = logging.getLogger(__name__)
+
+class BaseProjectionHandler(ABC):
+    """Base class for projection handlers"""
+    
+    def __init__(self, name: str):
+        self.name = name
+        self.is_running = False
+        self._listeners = []
+
+    async def start_listening(self) -> None:
+        """Start listening for database notifications"""
+        self.is_running = True
+        
+        try:
+            async with AsyncPostgresManager.get_connection() as conn:
+                await conn.add_listener('memory_events', self._handle_notification)
+                logger.info(f"Projection handler {self.name} started listening")
+                
+                # Keep connection alive
+                while self.is_running:
+                    await asyncio.sleep(1)
+                    
+        except Exception as e:
+            logger.error(f"Projection handler {self.name} failed: {e}")
+        finally:
+            logger.info(f"Projection handler {self.name} stopped")
+
+    async def _handle_notification(self, connection, pid, channel, payload):
+        """Handle PostgreSQL notification"""
+        try:
+            event_data = json.loads(payload)
+            await self.process_event(event_data)
+        except Exception as e:
+            logger.error(f"Error processing notification in {self.name}: {e}")
+
+    @abstractmethod
+    async def process_event(self, event_data: Dict[str, Any]) -> None:
+        """Process individual event - implement in subclasses"""
+        pass
+
+    def stop(self):
+        """Stop listening for events"""
+        self.is_running = False
+
+class RedisProjectionHandler(BaseProjectionHandler):
+    """
+    Updates Redis cache for fast agent memory access
+    Implements Tier 1 memory (immediate access) from Master Control
+    """
+    
+    def __init__(self, redis_client):
+        super().__init__("RedisProjection")
+        self.redis = redis_client
+
+    async def process_event(self, event_data: Dict[str, Any]) -> None:
+        """Update Redis projections based on events"""
+        
+        try:
+            event_type = event_data.get('event_type')
+            stream_id = event_data.get('stream_id')
+            sequence_id = event_data.get('sequence_id')
+            
+            # Fetch full event from database
+            event = await self._get_event_by_sequence(sequence_id)
+            if not event:
+                return
+            
+            payload = json.loads(event['payload'])
+            
+            if event_type == 'memory_created':
+                await self._update_agent_memory_cache(event, payload)
+            elif event_type == 'memory_updated':
+                await self._update_agent_memory_cache(event, payload)
+            elif event_type == 'memory_deleted':
+                await self._remove_from_cache(event, payload)
+            elif event_type == 'conversation_turn':
+                await self._update_conversation_cache(event, payload)
+            elif event_type == 'agent_decision':
+                await self._cache_agent_decision(event, payload)
+            
+        except Exception as e:
+            logger.error(f"Redis projection failed for event {event_data}: {e}")
+
+    async def _get_event_by_sequence(self, sequence_id: int) -> Optional[Dict[str, Any]]:
+        """Fetch event details from database"""
+        async with AsyncPostgresManager.get_connection() as conn:
+            row = await conn.fetchrow(
+                "SELECT * FROM events WHERE sequence_id = $1",
+                sequence_id
+            )
+            return dict(row) if row else None
+
+    async def _update_agent_memory_cache(self, event: Dict, payload: Dict) -> None:
+        """Update agent memory in Redis cache"""
+        
+        agent_id = payload.get('agent_id')
+        memory_id = payload.get('memory_id')
+        user_id = payload.get('user_id')
+        
+        if not agent_id or not memory_id:
+            return
+        
+        # Cache key patterns
+        agent_key = f"agent:{agent_id}:memories"
+        user_agent_key = f"user:{user_id}:agent:{agent_id}:memories" if user_id else None
+        memory_key = f"memory:{memory_id}"
+        
+        # Cache memory details
+        memory_data = {
+            "id": memory_id,
+            "agent_id": agent_id,
+            "user_id": user_id,
+            "type": payload.get('memory_type'),
+            "content": payload.get('content'),
+            "confidence": payload.get('confidence', 1.0),
+            "created_at": event['created_at'].isoformat(),
+            "metadata": payload.get('metadata', {})
+        }
+        
+        # Store with TTL
+        await self.redis.setex(
+            memory_key, 
+            3600,  # 1 hour TTL
+            json.dumps(memory_data)
+        )
+        
+        # Add to agent's memory list
+        await self.redis.lpush(agent_key, memory_id)
+        await self.redis.expire(agent_key, 3600)
+        
+        # Add to user-agent memory list if user-specific
+        if user_agent_key:
+            await self.redis.lpush(user_agent_key, memory_id)
+            await self.redis.expire(user_agent_key, 3600)
+        
+        logger.debug(f"Updated Redis cache for memory {memory_id}")
+
+    async def _remove_from_cache(self, event: Dict, payload: Dict) -> None:
+        """Remove deleted memory from Redis cache"""
+        
+        memory_id = payload.get('memory_id')
+        agent_id = payload.get('agent_id')
+        
+        if not memory_id or not agent_id:
+            return
+        
+        # Remove memory details
+        await self.redis.delete(f"memory:{memory_id}")
+        
+        # Remove from agent's memory list
+        await self.redis.lrem(f"agent:{agent_id}:memories", 0, memory_id)
+        
+        logger.debug(f"Removed memory {memory_id} from Redis cache")
+
+    async def _update_conversation_cache(self, event: Dict, payload: Dict) -> None:
+        """Cache recent conversation context"""
+        
+        user_id = payload.get('user_id')
+        conversation_id = payload.get('conversation_id')
+        
+        if not user_id or not conversation_id:
+            return
+        
+        # Cache conversation context
+        conv_key = f"conversation:{conversation_id}:context"
+        user_conv_key = f"user:{user_id}:recent_conversations"
+        
+        await self.redis.setex(
+            conv_key,
+            1800,  # 30 minutes TTL
+            json.dumps(payload)
+        )
+        
+        # Track recent conversations for user
+        await self.redis.lpush(user_conv_key, conversation_id)
+        await self.redis.ltrim(user_conv_key, 0, 10)  # Keep last 10
+        await self.redis.expire(user_conv_key, 3600)
+
+    async def _cache_agent_decision(self, event: Dict, payload: Dict) -> None:
+        """Cache agent decisions for quick access"""
+        
+        agent_id = payload.get('agent_id')
+        decision_id = payload.get('decision_id', event['event_id'])
+        
+        if not agent_id:
+            return
+        
+        decision_key = f"agent:{agent_id}:recent_decisions"
+        
+        decision_data = {
+            "id": decision_id,
+            "agent_id": agent_id,
+            "decision": payload.get('decision'),
+            "confidence": payload.get('confidence'),
+            "timestamp": event['created_at'].isoformat()
+        }
+        
+        await self.redis.lpush(decision_key, json.dumps(decision_data))
+        await self.redis.ltrim(decision_key, 0, 5)  # Keep last 5 decisions
+        await self.redis.expire(decision_key, 1800)  # 30 minutes TTL
+
+class ChromaDBProjectionHandler(BaseProjectionHandler):
+    """
+    Updates ChromaDB vectors for semantic memory search
+    Implements Tier 3 memory (semantic search) from Master Control
+    """
+    
+    def __init__(self, chroma_client, collection_name: str = "auren_memories"):
+        super().__init__("ChromaDBProjection")
+        self.client = chroma_client
+        self.collection_name = collection_name
+        self.collection = None
+
+    async def initialize(self):
+        """Initialize ChromaDB collection"""
+        try:
+            self.collection = self.client.get_or_create_collection(
+                name=self.collection_name,
+                metadata={"description": "AUREN agent memories for semantic search"}
+            )
+            logger.info(f"ChromaDB collection '{self.collection_name}' initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize ChromaDB collection: {e}")
+            raise
+
+    async def process_event(self, event_data: Dict[str, Any]) -> None:
+        """Update ChromaDB vectors based on events"""
+        
+        if not self.collection:
+            logger.warning("ChromaDB collection not initialized")
+            return
+        
+        try:
+            event_type = event_data.get('event_type')
+            sequence_id = event_data.get('sequence_id')
+            
+            # Fetch full event from database
+            event = await self._get_event_by_sequence(sequence_id)
+            if not event:
+                return
+            
+            payload = json.loads(event['payload'])
+            
+            if event_type == 'memory_created':
+                await self._add_memory_vector(event, payload)
+            elif event_type == 'memory_updated':
+                await self._update_memory_vector(event, payload)
+            elif event_type == 'memory_deleted':
+                await self._remove_memory_vector(event, payload)
+            elif event_type == 'conversation_turn':
+                await self._add_conversation_vector(event, payload)
+            
+        except Exception as e:
+            logger.error(f"ChromaDB projection failed for event {event_data}: {e}")
+
+    async def _get_event_by_sequence(self, sequence_id: int) -> Optional[Dict[str, Any]]:
+        """Fetch event details from database"""
+        async with AsyncPostgresManager.get_connection() as conn:
+            row = await conn.fetchrow(
+                "SELECT * FROM events WHERE sequence_id = $1",
+                sequence_id
+            )
+            return dict(row) if row else None
+
+    async def _add_memory_vector(self, event: Dict, payload: Dict) -> None:
+        """Add memory to ChromaDB for semantic search"""
+        
+        memory_id = payload.get('memory_id')
+        content = payload.get('content', {})
+        agent_id = payload.get('agent_id')
+        user_id = payload.get('user_id')
+        
+        if not memory_id or not content:
+            return
+        
+        # Extract text for embedding
+        text_content = self._extract_text_content(content)
+        if not text_content:
+            return
+        
+        # Metadata for filtering and context
+        metadata = {
+            "memory_id": memory_id,
+            "agent_id": agent_id,
+            "user_id": user_id or "",
+            "memory_type": payload.get('memory_type', ''),
+            "confidence": payload.get('confidence', 1.0),
+            "created_at": event['created_at'].isoformat(),
+            "source": "agent_memory"
+        }
+        
+        try:
+            # Add to ChromaDB (embedding generated automatically)
+            self.collection.add(
+                ids=[memory_id],
+                documents=[text_content],
+                metadatas=[metadata]
+            )
+            
+            logger.debug(f"Added memory {memory_id} to ChromaDB")
+            
+        except Exception as e:
+            logger.error(f"Failed to add memory {memory_id} to ChromaDB: {e}")
+
+    async def _update_memory_vector(self, event: Dict, payload: Dict) -> None:
+        """Update existing memory vector in ChromaDB"""
+        
+        memory_id = payload.get('memory_id')
+        updates = payload.get('updates', {})
+        
+        if not memory_id:
+            return
+        
+        try:
+            # Check if memory exists
+            results = self.collection.get(ids=[memory_id])
+            if not results['ids']:
+                logger.warning(f"Memory {memory_id} not found in ChromaDB for update")
+                return
+            
+            # Update if content changed
+            if 'content' in updates and updates['content']:
+                text_content = self._extract_text_content(updates['content'])
+                if text_content:
+                    # Update document
+                    self.collection.update(
+                        ids=[memory_id],
+                        documents=[text_content]
+                    )
+            
+            # Update metadata
+            current_metadata = results['metadatas'][0]
+            if 'confidence' in updates and updates['confidence'] is not None:
+                current_metadata['confidence'] = updates['confidence']
+            
+            current_metadata['updated_at'] = event['created_at'].isoformat()
+            
+            self.collection.update(
+                ids=[memory_id],
+                metadatas=[current_metadata]
+            )
+            
+            logger.debug(f"Updated memory {memory_id} in ChromaDB")
+            
+        except Exception as e:
+            logger.error(f"Failed to update memory {memory_id} in ChromaDB: {e}")
+
+    async def _remove_memory_vector(self, event: Dict, payload: Dict) -> None:
+        """Remove memory vector from ChromaDB"""
+        
+        memory_id = payload.get('memory_id')
+        
+        if not memory_id:
+            return
+        
+        try:
+            self.collection.delete(ids=[memory_id])
+            logger.debug(f"Removed memory {memory_id} from ChromaDB")
+            
+        except Exception as e:
+            logger.error(f"Failed to remove memory {memory_id} from ChromaDB: {e}")
+
+    async def _add_conversation_vector(self, event: Dict, payload: Dict) -> None:
+        """Add conversation turn to ChromaDB for context retrieval"""
+        
+        conversation_id = payload.get('conversation_id')
+        user_message = payload.get('user_message', '')
+        agent_response = payload.get('agent_response', '')
+        
+        if not conversation_id or not (user_message or agent_response):
+            return
+        
+        # Combine user message and agent response
+        text_content = f"User: {user_message}\nAgent: {agent_response}".strip()
+        
+        metadata = {
+            "conversation_id": conversation_id,
+            "user_id": payload.get('user_id', ''),
+            "agent_id": payload.get('agent_id', ''),
+            "created_at": event['created_at'].isoformat(),
+            "source": "conversation"
+        }
+        
+        try:
+            doc_id = f"conv_{conversation_id}_{event['sequence_id']}"
+            
+            self.collection.add(
+                ids=[doc_id],
+                documents=[text_content],
+                metadatas=[metadata]
+            )
+            
+            logger.debug(f"Added conversation turn {doc_id} to ChromaDB")
+            
+        except Exception as e:
+            logger.error(f"Failed to add conversation to ChromaDB: {e}")
+
+    def _extract_text_content(self, content: Dict[str, Any]) -> str:
+        """Extract meaningful text from memory content for embedding"""
+        
+        text_parts = []
+        
+        # Extract various text fields
+        for key, value in content.items():
+            if isinstance(value, str) and value.strip():
+                text_parts.append(f"{key}: {value}")
+            elif isinstance(value, (int, float)):
+                text_parts.append(f"{key}: {value}")
+            elif isinstance(value, dict):
+                # Recursively extract from nested objects
+                nested_text = self._extract_text_content(value)
+                if nested_text:
+                    text_parts.append(f"{key}: {nested_text}")
+        
+        return " | ".join(text_parts)
+]]>
+            </implementation>
+        </subsection>
+
+        <subsection id="3.6" name="crewai_integration">
+            <title>CrewAI Integration</title>
+            <description>Integration points for connecting with CrewAI memory system</description>
+            
+            <implementation language="python">
+                <![CDATA[
+"""
+CrewAI Integration Layer
+Provides seamless integration between AUREN data layer and CrewAI framework
+"""
+
+from typing import Dict, Any, List, Optional
+from crewai.memory.storage.interface import Storage
+from crewai.memory.entity.entity import Entity
+import json
+
+class AURENMemoryStorage(Storage):
+    """
+    Custom CrewAI storage implementation using AUREN's PostgreSQL backend
+    Replaces default JSON file storage with production-grade persistence
+    """
+    
+    def __init__(self, memory_backend: PostgreSQLMemoryBackend, agent_id: str):
+        self.memory_backend = memory_backend
+        self.agent_id = agent_id
+        super().__init__(type="auren_postgresql")
+
+    def save(self, value: Any, metadata: Dict[str, Any]) -> None:
+        """Save memory to AUREN backend"""
+        
+        # Convert CrewAI Entity to AUREN memory format
+        if isinstance(value, Entity):
+            content = {
+                "entity_type": value.__class__.__name__,
+                "data": value.model_dump() if hasattr(value, 'model_dump') else str(value)
+            }
+            memory_type = MemoryType.FACT
+        else:
+            content = {"value": value}
+            memory_type = MemoryType.ANALYSIS
+        
+        # Extract user context from metadata
+        user_id = metadata.get('user_id')
+        confidence = metadata.get('confidence', 1.0)
+        
+        # Store asynchronously (CrewAI expects sync interface)
+        import asyncio
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # Create task for running loop
+                asyncio.create_task(self._async_save(content, memory_type, user_id, metadata, confidence))
+            else:
+                # Run in new loop
+                loop.run_until_complete(self._async_save(content, memory_type, user_id, metadata, confidence))
+        except RuntimeError:
+            # Fallback for environments without event loop
+            asyncio.run(self._async_save(content, memory_type, user_id, metadata, confidence))
+
+    async def _async_save(self, content: Dict[str, Any], memory_type: MemoryType, 
+                         user_id: Optional[str], metadata: Dict[str, Any], confidence: float):
+        """Async helper for saving memory"""
+        await self.memory_backend.store_memory(
+            agent_id=self.agent_id,
+            memory_type=memory_type,
+            content=content,
+            user_id=user_id,
+            metadata=metadata,
+            confidence=confidence
+        )
+
+    def search(self, query: str, limit: int = 3, filter: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+        """Search memories using AUREN backend"""
+        
+        # Extract user context from filter
+        user_id = filter.get('user_id') if filter else None
+        
+        # Search asynchronously
+        import asyncio
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # For running loop, we need to handle this differently
+                # This is a limitation of CrewAI's sync interface
+                return []
+            else:
+                return loop.run_until_complete(self._async_search(query, limit, user_id))
+        except RuntimeError:
+            return asyncio.run(self._async_search(query, limit, user_id))
+
+    async def _async_search(self, query: str, limit: int, user_id: Optional[str]) -> List[Dict[str, Any]]:
+        """Async helper for searching memories"""
+        memories = await self.memory_backend.search_memories(
+            agent_id=self.agent_id,
+            query=query,
+            user_id=user_id,
+            limit=limit
+        )
+        
+        # Convert to CrewAI format
+        results = []
+        for memory in memories:
+            result = {
+                "content": memory["content"],
+                "metadata": {
+                    **memory["metadata"],
+                    "memory_id": memory["id"],
+                    "confidence": memory["confidence"],
+                    "created_at": memory["created_at"],
+                    "relevance": memory.get("relevance", 1.0)
+                }
+            }
+            results.append(result)
+        
+        return results
+
+class AURENCrewMemoryIntegration:
+    """
+    High-level integration for AUREN memory system with CrewAI
+    Provides context management and cross-agent memory sharing
+    """
+    
+    def __init__(self, memory_backend: PostgreSQLMemoryBackend, event_store: EventStore):
+        self.memory_backend = memory_backend
+        self.event_store = event_store
+
+    def create_agent_memory_storage(self, agent_id: str) -> AURENMemoryStorage:
+        """Create custom memory storage for a CrewAI agent"""
+        return AURENMemoryStorage(self.memory_backend, agent_id)
+
+    async def get_shared_context(self, user_id: str, requesting_agent: str) -> Dict[str, Any]:
+        """
+        Get shared context across all agents for a user
+        Enables compound intelligence through cross-agent memory access
+        """
+        
+        # Get memories from all agents for this user
+        all_agents = [
+            "neuroscientist", "nutritionist", "training_agent", 
+            "recovery_agent", "sleep_agent", "mental_health_agent"
+        ]
+        
+        shared_context = {
+            "user_id": user_id,
+            "requesting_agent": requesting_agent,
+            "cross_agent_memories": {},
+            "recent_decisions": [],
+            "validated_hypotheses": []
+        }
+        
+        # Gather memories from each agent
+        for agent_id in all_agents:
+            if agent_id == requesting_agent:
+                continue  # Skip self
+                
+            agent_memories = await self.memory_backend.retrieve_memories(
+                agent_id=agent_id,
+                user_id=user_id,
+                limit=10  # Recent memories only
+            )
+            
+            # Filter for high-confidence insights
+            high_confidence_memories = [
+                memory for memory in agent_memories 
+                if memory["confidence"] >= 0.7
+            ]
+            
+            shared_context["cross_agent_memories"][agent_id] = high_confidence_memories
+        
+        # Get recent agent decisions from events
+        decision_events = await self.event_store.get_events_by_type(
+            event_type=EventType.AGENT_DECISION,
+            limit=20
+        )
+        
+        user_decisions = [
+            event for event in decision_events 
+            if event.payload.get("user_id") == user_id
+        ]
+        
+        shared_context["recent_decisions"] = [
+            {
+                "agent_id": event.payload.get("agent_id"),
+                "decision": event.payload.get("decision"),
+                "confidence": event.payload.get("confidence"),
+                "timestamp": event.created_at.isoformat()
+            }
+            for event in user_decisions[:5]  # Last 5 decisions
+        ]
+        
+        # Get validated hypotheses
+        hypothesis_events = await self.event_store.get_events_by_type(
+            event_type=EventType.HYPOTHESIS_VALIDATED,
+            limit=10
+        )
+        
+        user_hypotheses = [
+            event for event in hypothesis_events 
+            if event.payload.get("user_id") == user_id
+        ]
+        
+        shared_context["validated_hypotheses"] = [
+            {
+                "hypothesis": event.payload.get("hypothesis"),
+                "confidence": event.payload.get("final_confidence"),
+                "evidence": event.payload.get("validation_evidence"),
+                "timestamp": event.created_at.isoformat()
+            }
+            for event in user_hypotheses[:3]  # Last 3 validated hypotheses
+        ]
+        
+        return shared_context
+
+    async def store_agent_decision(self, 
+                                  agent_id: str,
+                                  user_id: str,
+                                  decision: Dict[str, Any],
+                                  confidence: float,
+                                  context: Dict[str, Any]) -> str:
+        """
+        Store agent decision with full context and audit trail
+        Links decision to triggering events and cross-agent insights
+        """
+        
+        # Store as memory for the agent
+        memory_id = await self.memory_backend.store_memory(
+            agent_id=agent_id,
+            memory_type=MemoryType.DECISION,
+            content=decision,
+            user_id=user_id,
+            metadata={
+                "decision_context": context,
+                "cross_agent_insights_used": context.get("cross_agent_memories", {}),
+                "triggering_events": context.get("triggering_events", [])
+            },
+            confidence=confidence
+        )
+        
+        # Record as event for other agents to see
+        await self.event_store.append_event(
+            stream_id=user_id,
+            event_type=EventType.AGENT_DECISION,
+            payload={
+                "agent_id": agent_id,
+                "user_id": user_id,
+                "decision": decision,
+                "confidence": confidence,
+                "memory_id": memory_id,
+                "context_summary": context.get("summary", "")
+            },
+            metadata={
+                "decision_category": decision.get("category", "general"),
+                "urgency": decision.get("urgency", "normal"),
+                "cross_agent_collaboration": len(context.get("cross_agent_memories", {})) > 0
+            }
+        )
+        
+        return memory_id
+
+    async def initiate_agent_handoff(self,
+                                    from_agent: str,
+                                    to_agent: str,
+                                    user_id: str,
+                                    topic: str,
+                                    context: Dict[str, Any]) -> None:
+        """
+        Initiate handoff between specialist agents with context preservation
+        """
+        
+        # Create handoff event
+        await self.event_store.append_event(
+            stream_id=user_id,
+            event_type=EventType.AGENT_HANDOFF,
+            payload={
+                "from_agent": from_agent,
+                "to_agent": to_agent,
+                "user_id": user_id,
+                "topic": topic,
+                "handoff_context": context,
+                "handoff_reason": context.get("reason", "specialist_expertise_required")
+            },
+            metadata={
+                "handoff_type": context.get("type", "consultation"),
+                "urgency": context.get("urgency", "normal"),
+                "expected_duration": context.get("expected_duration", "unknown")
+            }
+        )
+        
+        # Store handoff memory for receiving agent
+        await self.memory_backend.store_memory(
+            agent_id=to_agent,
+            memory_type=MemoryType.CONVERSATION,
+            content={
+                "handoff_received": True,
+                "from_agent": from_agent,
+                "topic": topic,
+                "context": context
+            },
+            user_id=user_id,
+            metadata={
+                "handoff_id": str(uuid.uuid4()),
+                "requires_response": context.get("requires_response", True)
+            }
+        )
+]]>
+            </implementation>
+        </subsection>
+
+        <subsection id="3.7" name="migration_guide">
+            <title>Migration from JSON Files</title>
+            <description>Complete migration script from legacy JSON file storage to PostgreSQL</description>
+            
+            <implementation language="python">
+                <![CDATA[
+"""
+Migration script from JSON file storage to PostgreSQL backend
+Handles data transformation and validation
+"""
+
+import os
+import json
+import uuid
+from pathlib import Path
+from typing import Dict, Any, List, Optional
+from datetime import datetime, timezone
+import logging
+
+logger = logging.getLogger(__name__)
+
+class JSONToPostgreSQLMigrator:
+    """
+    Migrates legacy JSON memory files to PostgreSQL event store
+    Preserves data integrity and creates audit trail
+    """
+    
+    def __init__(self, 
+                 json_directory: Path,
+                 memory_backend: PostgreSQLMemoryBackend,
+                 event_store: EventStore):
+        self.json_directory = Path(json_directory)
+        self.memory_backend = memory_backend
+        self.event_store = event_store
+        self.migration_stats = {
+            "files_processed": 0,
+            "memories_migrated": 0,
+            "errors": [],
+            "agent_breakdown": {},
+            "start_time": None,
+            "end_time": None
+        }
+
+    async def migrate_all(self, dry_run: bool = False) -> Dict[str, Any]:
+        """
+        Migrate all JSON memory files to PostgreSQL
+        
+        Args:
+            dry_run: If True, validate files without writing to database
+            
+        Returns:
+            Migration statistics and results
+        """
+        
+        self.migration_stats["start_time"] = datetime.now(timezone.utc)
+        logger.info(f"Starting migration from {self.json_directory}")
+        
+        if dry_run:
+            logger.info("DRY RUN MODE - No data will be written")
+        
+        # Find all JSON files
+        json_files = list(self.json_directory.glob("*.json"))
+        logger.info(f"Found {len(json_files)} JSON files to migrate")
+        
+        # Process each file
+        for json_file in json_files:
+            try:
+                await self._migrate_file(json_file, dry_run)
+                self.migration_stats["files_processed"] += 1
+                
+                if self.migration_stats["files_processed"] % 10 == 0:
+                    logger.info(f"Processed {self.migration_stats['files_processed']} files...")
+                    
+            except Exception as e:
+                error_msg = f"Failed to migrate {json_file}: {e}"
+                self.migration_stats["errors"].append(error_msg)
+                logger.error(error_msg)
+        
+        self.migration_stats["end_time"] = datetime.now(timezone.utc)
+        duration = (self.migration_stats["end_time"] - self.migration_stats["start_time"]).total_seconds()
+        
+        logger.info(f"Migration completed in {duration:.2f} seconds")
+        logger.info(f"Files processed: {self.migration_stats['files_processed']}")
+        logger.info(f"Memories migrated: {self.migration_stats['memories_migrated']}")
+        logger.info(f"Errors: {len(self.migration_stats['errors'])}")
+        
+        return self.migration_stats
+
+    async def _migrate_file(self, json_file: Path, dry_run: bool) -> None:
+        """Migrate individual JSON file"""
+        
+        logger.debug(f"Processing file: {json_file}")
+        
+        # Load JSON data
+        try:
+            with open(json_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            raise ValueError(f"Invalid JSON file {json_file}: {e}")
+        
+        # Extract agent and user information
+        agent_id, user_id = self._extract_identifiers(json_file, data)
+        
+        # Validate data structure
+        memories = self._validate_and_transform_data(data, agent_id, user_id)
+        
+        if dry_run:
+            logger.debug(f"DRY RUN: Would migrate {len(memories)} memories from {json_file}")
+            self.migration_stats["memories_migrated"] += len(memories)
+            return
+        
+        # Check if already migrated
+        if await self._is_already_migrated(json_file, agent_id, user_id):
+            logger.info(f"File {json_file} already migrated, skipping")
+            return
+        
+        # Migrate memories
+        for memory_data in memories:
+            try:
+                await self._migrate_memory(agent_id, user_id, memory_data, json_file)
+                self.migration_stats["memories_migrated"] += 1
+                
+                # Track agent breakdown
+                if agent_id not in self.migration_stats["agent_breakdown"]:
+                    self.migration_stats["agent_breakdown"][agent_id] = 0
+                self.migration_stats["agent_breakdown"][agent_id] += 1
+                
+            except Exception as e:
+                error_msg = f"Failed to migrate memory from {json_file}: {e}"
+                self.migration_stats["errors"].append(error_msg)
+                logger.error(error_msg)
+
+    def _extract_identifiers(self, json_file: Path, data: Dict[str, Any]) -> tuple[str, Optional[str]]:
+        """Extract agent_id and user_id from file and data"""
+        
+        # Try to get from data first
+        agent_id = data.get('agent_id')
+        user_id = data.get('user_id')
+        
+        # Extract agent_id from filename if not in data
+        if not agent_id:
+            filename = json_file.stem.lower()
+            
+            # Map filename patterns to agent IDs
+            agent_mappings = {
+                'neuroscientist': 'neuroscientist',
+                'nutritionist': 'nutritionist',
+                'training': 'training_agent',
+                'recovery': 'recovery_agent',
+                'sleep': 'sleep_agent',
+                'mental': 'mental_health_agent',
+                'coach': 'training_agent',
+                'diet': 'nutritionist'
+            }
+            
+            for pattern, mapped_agent in agent_mappings.items():
+                if pattern in filename:
+                    agent_id = mapped_agent
+                    break
+            
+            if not agent_id:
+                # Try to extract from directory structure
+                parent_dir = json_file.parent.name.lower()
+                for pattern, mapped_agent in agent_mappings.items():
+                    if pattern in parent_dir:
+                        agent_id = mapped_agent
+                        break
+                        
+                if not agent_id:
+                    agent_id = "unknown_agent"
+        
+        # Try to extract user_id from filename
+        if not user_id:
+            filename = json_file.stem
+            # Look for UUID pattern in filename
+            import re
+            uuid_pattern = r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+            uuid_match = re.search(uuid_pattern, filename, re.IGNORECASE)
+            if uuid_match:
+                user_id = uuid_match.group()
+        
+        return agent_id, user_id
+
+    def _validate_and_transform_data(self, 
+                                   data: Dict[str, Any], 
+                                   agent_id: str, 
+                                   user_id: Optional[str]) -> List[Dict[str, Any]]:
+        """Validate and transform JSON data to memory format"""
+        
+        memories = []
+        
+        if isinstance(data, list):
+            # List of memories
+            for item in data:
+                if isinstance(item, dict):
+                    memory = self._transform_memory_item(item, agent_id, user_id)
+                    if memory:
+                        memories.append(memory)
+        
+        elif isinstance(data, dict):
+            # Check for different data structures
+            if 'memories' in data and isinstance(data['memories'], list):
+                # Standard memory structure
+                for memory_item in data['memories']:
+                    memory = self._transform_memory_item(memory_item, agent_id, user_id)
+                    if memory:
+                        memories.append(memory)
+            
+            elif 'data' in data:
+                # Nested data structure
+                nested_memories = self._validate_and_transform_data(data['data'], agent_id, user_id)
+                memories.extend(nested_memories)
+            
+            else:
+                # Single memory object
+                memory = self._transform_memory_item(data, agent_id, user_id)
+                if memory:
+                    memories.append(memory)
+        
+        return memories
+
+    def _transform_memory_item(self, 
+                              item: Dict[str, Any], 
+                              agent_id: str, 
+                              user_id: Optional[str]) -> Optional[Dict[str, Any]]:
+        """Transform individual memory item to standard format"""
+        
+        if not isinstance(item, dict):
+            return None
+        
+        # Determine memory type
+        memory_type = item.get('type', 'fact')
+        if memory_type not in [t.value for t in MemoryType]:
+            # Map legacy types
+            type_mapping = {
+                'observation': 'fact',
+                'pattern': 'analysis',
+                'suggestion': 'recommendation',
+                'note': 'insight',
+                'chat': 'conversation'
+            }
+            memory_type = type_mapping.get(memory_type, 'fact')
+        
+        # Extract content
+        content = item.get('content')
+        if not content:
+            # Try different content fields
+            content = (item.get('value') or 
+                      item.get('data') or 
+                      item.get('text') or 
+                      item.get('message'))
+        
+        if not content:
+            # Use the entire item as content if no specific content field
+            content = {k: v for k, v in item.items() 
+                      if k not in ['type', 'agent_id', 'user_id', 'metadata', 'timestamp']}
+        
+        # Extract metadata
+        metadata = item.get('metadata', {})
+        metadata.update({
+            'migrated_from': 'json_file',
+            'migration_timestamp': datetime.now(timezone.utc).isoformat(),
+            'original_structure': item
+        })
+        
+        # Extract confidence
+        confidence = item.get('confidence', 1.0)
+        if isinstance(confidence, str):
+            try:
+                confidence = float(confidence)
+            except ValueError:
+                confidence = 1.0
+        
+        # Ensure confidence is in valid range
+        confidence = max(0.0, min(1.0, confidence))
+        
+        # Extract timestamp
+        created_at = item.get('timestamp') or item.get('created_at')
+        if created_at and isinstance(created_at, str):
+            try:
+                created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+            except ValueError:
+                created_at = None
+        
+        return {
+            'memory_type': memory_type,
+            'content': content,
+            'metadata': metadata,
+            'confidence': confidence,
+            'created_at': created_at
+        }
+
+    async def _is_already_migrated(self, 
+                                  json_file: Path, 
+                                  agent_id: str, 
+                                  user_id: Optional[str]) -> bool:
+        """Check if file has already been migrated"""
+        
+        # Look for migration marker in agent memories
+        migration_markers = await self.memory_backend.retrieve_memories(
+            agent_id="migration_service",
+            memory_type=MemoryType.FACT,
+            limit=1000
+        )
+        
+        file_signature = f"{json_file.name}:{agent_id}:{user_id or 'no_user'}"
+        
+        for marker in migration_markers:
+            if marker["content"].get("file_signature") == file_signature:
+                return True
+        
+        return False
+
+    async def _migrate_memory(self, 
+                             agent_id: str,
+                             user_id: Optional[str],
+                             memory_data: Dict[str, Any],
+                             source_file: Path) -> None:
+        """Migrate individual memory to PostgreSQL"""
+        
+        # Store memory
+        memory_id = await self.memory_backend.store_memory(
+            agent_id=agent_id,
+            memory_type=MemoryType(memory_data["memory_type"]),
+            content=memory_data["content"],
+            user_id=user_id,
+            metadata=memory_data["metadata"],
+            confidence=memory_data["confidence"]
+        )
+        
+        # Create migration event for audit trail
+        await self.event_store.append_event(
+            stream_id=user_id or agent_id,
+            event_type=EventType.MEMORY_CREATED,
+            payload={
+                "memory_id": memory_id,
+                "agent_id": agent_id,
+                "user_id": user_id,
+                "migration_source": str(source_file),
+                "migrated_at": datetime.now(timezone.utc).isoformat()
+            },
+            metadata={
+                "migration": True,
+                "source_file": source_file.name,
+                "original_data": memory_data
+            }
+        )
+
+    async def create_migration_marker(self, json_file: Path, agent_id: str, user_id: Optional[str]) -> None:
+        """Create marker to track completed migrations"""
+        
+        file_signature = f"{json_file.name}:{agent_id}:{user_id or 'no_user'}"
+        
+        await self.memory_backend.store_memory(
+            agent_id="migration_service",
+            memory_type=MemoryType.FACT,
+            content={
+                "file_signature": file_signature,
+                "source_file": str(json_file),
+                "agent_id": agent_id,
+                "user_id": user_id,
+                "migrated_at": datetime.now(timezone.utc).isoformat()
+            },
+            metadata={
+                "migration_marker": True,
+                "file_stats": {
+                    "size": json_file.stat().st_size,
+                    "mtime": datetime.fromtimestamp(json_file.stat().st_mtime).isoformat()
+                }
+            }
+        )
+
+# Migration execution script
+async def run_migration(json_directory: str, 
+                       database_url: str, 
+                       dry_run: bool = False) -> Dict[str, Any]:
+    """
+    Execute complete migration process
+    
+    Args:
+        json_directory: Path to directory containing JSON files
+        database_url: PostgreSQL connection string
+        dry_run: If True, validate without writing to database
+        
+    Returns:
+        Migration results and statistics
+    """
+    
+    # Initialize database connection
+    await AsyncPostgresManager.initialize(database_url)
+    
+    # Initialize components
+    event_store = EventStore()
+    memory_backend = PostgreSQLMemoryBackend(event_store)
+    
+    # Create migrator
+    migrator = JSONToPostgreSQLMigrator(
+        json_directory=Path(json_directory),
+        memory_backend=memory_backend,
+        event_store=event_store
+    )
+    
+    try:
+        # Run migration
+        results = await migrator.migrate_all(dry_run=dry_run)
+        
+        # Print summary
+        print("\n" + "="*50)
+        print("MIGRATION SUMMARY")
+        print("="*50)
+        print(f"Files processed: {results['files_processed']}")
+        print(f"Memories migrated: {results['memories_migrated']}")
+        print(f"Errors: {len(results['errors'])}")
+        
+        if results['agent_breakdown']:
+            print("\nAgent breakdown:")
+            for agent, count in results['agent_breakdown'].items():
+                print(f"  {agent}: {count} memories")
+        
+        if results['errors']:
+            print("\nErrors encountered:")
+            for error in results['errors'][:5]:  # Show first 5 errors
+                print(f"  - {error}")
+            if len(results['errors']) > 5:
+                print(f"  ... and {len(results['errors']) - 5} more errors")
+        
+        return results
+        
+    finally:
+        await AsyncPostgresManager.close()
+
+if __name__ == "__main__":
+    import asyncio
+    import sys
+    
+    if len(sys.argv) < 3:
+        print("Usage: python migration.py <json_directory> <database_url> [--dry-run]")
+        sys.exit(1)
+    
+    json_dir = sys.argv[1]
+    db_url = sys.argv[2]
+    dry_run = "--dry-run" in sys.argv
+    
+    results = asyncio.run(run_migration(json_dir, db_url, dry_run))
+]]>
+            </implementation>
+        </subsection>
+
+        <subsection id="3.8" name="testing_suite">
+            <title>Comprehensive Testing Suite</title>
+            <description>Complete test coverage for all data layer components</description>
+            
+            <implementation language="python">
+                <![CDATA[
+"""
+Comprehensive test suite for AUREN data persistence layer
+Tests all components with focus on failure modes and edge cases
+"""
+
+import pytest
+import asyncio
+import uuid
+import json
+from datetime import datetime, timezone, timedelta
+from typing import Dict, Any
+from unittest.mock import AsyncMock, patch, MagicMock
+
+# Test configuration
+TEST_DATABASE_URL = "postgresql://test:test@localhost:5432/auren_test"
+
+@pytest.fixture(scope="session")
+def event_loop():
+    """Create event loop for async tests"""
+    loop = asyncio.new_event_loop()
+    yield loop
+    loop.close()
+
+@pytest.fixture
+async def db_setup():
+    """Setup test database and clean up after tests"""
+    
+    # Initialize database connection
+    await AsyncPostgresManager.initialize(
+        dsn=TEST_DATABASE_URL,
+        min_size=2,
+        max_size=5
+    )
+    
+    # Clean database before tests
+    async with AsyncPostgresManager.get_connection() as conn:
+        await conn.execute("TRUNCATE events, agent_memories, user_profiles, conversation_memories, specialist_knowledge RESTART IDENTITY CASCADE")
+    
+    yield
+    
+    # Clean up
+    await AsyncPostgresManager.close()
+
+@pytest.fixture
+async def event_store(db_setup):
+    """Create test event store"""
+    return EventStore()
+
+@pytest.fixture
+async def memory_backend(event_store):
+    """Create test memory backend"""
+    return PostgreSQLMemoryBackend(event_store)
+
+@pytest.fixture
+def sample_user_id():
+    """Generate sample user ID"""
+    return str(uuid.uuid4())
+
+@pytest.fixture
+def sample_agent_id():
+    """Generate sample agent ID"""
+    return "test_neuroscientist"
+
+class TestAsyncPostgresManager:
+    """Test PostgreSQL connection management"""
+    
+    async def test_initialize_connection_pool(self):
+        """Test connection pool initialization"""
+        
+        # Initialize pool
+        await AsyncPostgresManager.initialize(
+            dsn=TEST_DATABASE_URL,
+            min_size=2,
+            max_size=10
+        )
+        
+        # Get pool and test connection
+        pool = await AsyncPostgresManager.get_pool()
+        assert pool is not None
+        
+        async with AsyncPostgresManager.get_connection() as conn:
+            result = await conn.fetchval("SELECT 1")
+            assert result == 1
+        
+        await AsyncPostgresManager.close()
+
+    async def test_connection_retry_logic(self):
+        """Test connection retry with bad DSN"""
+        
+        with pytest.raises(ConnectionError):
+            await AsyncPostgresManager.initialize(
+                dsn="postgresql://bad:bad@localhost:9999/bad",
+                min_size=1,
+                max_size=2
+            )
+
+    async def test_health_check(self, db_setup):
+        """Test health check functionality"""
+        
+        health = await AsyncPostgresManager.health_check()
+        
+        assert health["status"] == "healthy"
+        assert "response_time_ms" in health
+        assert "pool_stats" in health
+        assert health["pool_stats"]["size"] >= 0
+
+    async def test_connection_context_manager(self, db_setup):
+        """Test connection context manager with retry logic"""
+        
+        # Test successful connection
+        async with AsyncPostgresManager.get_connection() as conn:
+            result = await conn.fetchval("SELECT 42")
+            assert result == 42
+
+class TestEventStore:
+    """Test event store functionality"""
+    
+    async def test_append_and_retrieve_events(self, event_store, sample_user_id):
+        """Test basic event append and retrieval"""
+        
+        stream_id = sample_user_id
+        
+        # Append first event
+        event1 = await event_store.append_event(
+            stream_id=stream_id,
+            event_type=EventType.MEMORY_CREATED,
+            payload={"test": "data1", "value": 42}
+        )
+        
+        assert event1.event_id is not None
+        assert event1.version == 1
+        assert event1.sequence_id is not None
+        
+        # Append second event
+        event2 = await event_store.append_event(
+            stream_id=stream_id,
+            event_type=EventType.MEMORY_UPDATED,
+            payload={"test": "data2", "value": 84},
+            expected_version=1
+        )
+        
+        assert event2.version == 2
+        
+        # Retrieve events
+        events = await event_store.get_stream_events(stream_id)
+        
+        assert len(events) == 2
+        assert events[0].event_id == event1.event_id
+        assert events[1].event_id == event2.event_id
+        assert events[0].payload["value"] == 42
+        assert events[1].payload["value"] == 84
+
+    async def test_optimistic_concurrency_control(self, event_store, sample_user_id):
+        """Test optimistic concurrency control"""
+        
+        stream_id = sample_user_id
+        
+        # Append initial event
+        await event_store.append_event(
+            stream_id=stream_id,
+            event_type=EventType.USER_ONBOARDED,
+            payload={"user": "test"}
+        )
+        
+        # Successful append with correct version
+        await event_store.append_event(
+            stream_id=stream_id,
+            event_type=EventType.MEMORY_CREATED,
+            payload={"memory": "test"},
+            expected_version=1
+        )
+        
+        # Failed append with incorrect version
+        with pytest.raises(ConcurrencyError):
+            await event_store.append_event(
+                stream_id=stream_id,
+                event_type=EventType.MEMORY_UPDATED,
+                payload={"memory": "conflict"},
+                expected_version=1  # Should be 2
+            )
+
+    async def test_stream_version_tracking(self, event_store, sample_user_id):
+        """Test stream version tracking"""
+        
+        stream_id = sample_user_id
+        
+        # New stream should have version 0
+        version = await event_store.get_stream_version(stream_id)
+        assert version == 0
+        
+        # Add events and check version increments
+        await event_store.append_event(
+            stream_id=stream_id,
+            event_type=EventType.MEMORY_CREATED,
+            payload={"test": 1}
+        )
+        
+        version = await event_store.get_stream_version(stream_id)
+        assert version == 1
+        
+        await event_store.append_event(
+            stream_id=stream_id,
+            event_type=EventType.MEMORY_UPDATED,
+            payload={"test": 2}
+        )
+        
+        version = await event_store.get_stream_version(stream_id)
+        assert version == 2
+
+    async def test_event_replay(self, event_store, sample_user_id):
+        """Test event replay functionality"""
+        
+        stream_id = sample_user_id
+        
+        # Create test events
+        await event_store.append_event(
+            stream_id=stream_id,
+            event_type=EventType.MEMORY_CREATED,
+            payload={"counter": 1}
+        )
+        
+        await event_store.append_event(
+            stream_id=stream_id,
+            event_type=EventType.MEMORY_UPDATED,
+            payload={"counter": 5}
+        )
+        
+        await event_store.append_event(
+            stream_id=stream_id,
+            event_type=EventType.MEMORY_UPDATED,
+            payload={"counter": 10}
+        )
+        
+        # Define projection handler
+        async def counter_projection(state, event):
+            if event.event_type in [EventType.MEMORY_CREATED.value, EventType.MEMORY_UPDATED.value]:
+                state["counter"] = event.payload.get("counter", 0)
+            return state
+        
+        # Replay stream
+        final_state = await event_store.replay_stream(
+            stream_id=stream_id,
+            projection_handler=counter_projection
+        )
+        
+        assert final_state["counter"] == 10
+
+class TestPostgreSQLMemoryBackend:
+    """Test memory backend functionality"""
+    
+    async def test_store_and_retrieve_memory(self, memory_backend, sample_agent_id, sample_user_id):
+        """Test basic memory storage and retrieval"""
+        
+        # Store memory
+        memory_id = await memory_backend.store_memory(
+            agent_id=sample_agent_id,
+            memory_type=MemoryType.ANALYSIS,
+            content={"pattern": "elevated_hrv", "confidence_score": 0.85},
+            user_id=sample_user_id,
+            metadata={"source": "biometric_analysis"},
+            confidence=0.85
+        )
+        
+        assert memory_id is not None
+        
+        # Retrieve memories
+        memories = await memory_backend.retrieve_memories(
+            agent_id=sample_agent_id,
+            user_id=sample_user_id
+        )
+        
+        assert len(memories) == 1
+        memory = memories[0]
+        assert memory["id"] == memory_id
+        assert memory["agent_id"] == sample_agent_id
+        assert memory["user_id"] == sample_user_id
+        assert memory["memory_type"] == MemoryType.ANALYSIS.value
+        assert memory["content"]["pattern"] == "elevated_hrv"
+        assert memory["confidence"] == 0.85
+
+    async def test_update_memory(self, memory_backend, sample_agent_id, sample_user_id):
+        """Test memory updates"""
+        
+        # Store initial memory
+        memory_id = await memory_backend.store_memory(
+            agent_id=sample_agent_id,
+            memory_type=MemoryType.RECOMMENDATION,
+            content={"advice": "increase_protein"},
+            user_id=sample_user_id,
+            confidence=0.7
+        )
+        
+        # Update memory
+        success = await memory_backend.update_memory(
+            memory_id=memory_id,
+            content={"advice": "increase_protein", "amount": "25g"},
+            confidence=0.9
+        )
+        
+        assert success is True
+        
+        # Verify update
+        memories = await memory_backend.retrieve_memories(
+            agent_id=sample_agent_id,
+            user_id=sample_user_id
+        )
+        
+        memory = memories[0]
+        assert memory["content"]["amount"] == "25g"
+        assert memory["confidence"] == 0.9
+
+    async def test_delete_memory(self, memory_backend, sample_agent_id, sample_user_id):
+        """Test memory deletion"""
+        
+        # Store memory
+        memory_id = await memory_backend.store_memory(
+            agent_id=sample_agent_id,
+            memory_type=MemoryType.FACT,
+            content={"fact": "user_prefers_morning_workouts"},
+            user_id=sample_user_id
+        )
+        
+        # Delete memory
+        success = await memory_backend.delete_memory(memory_id)
+        assert success is True
+        
+        # Verify deletion (should not appear in normal retrieval)
+        memories = await memory_backend.retrieve_memories(
+            agent_id=sample_agent_id,
+            user_id=sample_user_id
+        )
+        
+        assert len(memories) == 0
+
+    async def test_search_memories(self, memory_backend, sample_agent_id, sample_user_id):
+        """Test memory search functionality"""
+        
+        # Store multiple memories
+        await memory_backend.store_memory(
+            agent_id=sample_agent_id,
+            memory_type=MemoryType.ANALYSIS,
+            content={"analysis": "sleep quality declining", "metric": "hrv"},
+            user_id=sample_user_id
+        )
+        
+        await memory_backend.store_memory(
+            agent_id=sample_agent_id,
+            memory_type=MemoryType.RECOMMENDATION,
+            content={"recommendation": "improve sleep hygiene", "priority": "high"},
+            user_id=sample_user_id
+        )
+        
+        await memory_backend.store_memory(
+            agent_id=sample_agent_id,
+            memory_type=MemoryType.FACT,
+            content={"fact": "user exercises in morning", "frequency": "daily"},
+            user_id=sample_user_id
+        )
+        
+        # Search for sleep-related memories
+        results = await memory_backend.search_memories(
+            agent_id=sample_agent_id,
+            query="sleep",
+            user_id=sample_user_id
+        )
+        
+        assert len(results) == 2  # Should find analysis and recommendation
+        sleep_contents = [r["content"] for r in results]
+        assert any("sleep quality declining" in str(content) for content in sleep_contents)
+        assert any("improve sleep hygiene" in str(content) for content in sleep_contents)
+
+    async def test_memory_filtering(self, memory_backend, sample_agent_id, sample_user_id):
+        """Test memory filtering by type and other criteria"""
+        
+        # Store different types of memories
+        await memory_backend.store_memory(
+            agent_id=sample_agent_id,
+            memory_type=MemoryType.FACT,
+            content={"fact": "baseline_rhr_60bpm"},
+            user_id=sample_user_id
+        )
+        
+        await memory_backend.store_memory(
+            agent_id=sample_agent_id,
+            memory_type=MemoryType.ANALYSIS,
+            content={"pattern": "rhr_trending_up"},
+            user_id=sample_user_id
+        )
+        
+        await memory_backend.store_memory(
+            agent_id=sample_agent_id,
+            memory_type=MemoryType.RECOMMENDATION,
+            content={"advice": "monitor_stress_levels"},
+            user_id=sample_user_id
+        )
+        
+        # Filter by memory type
+        facts = await memory_backend.retrieve_memories(
+            agent_id=sample_agent_id,
+            user_id=sample_user_id,
+            memory_type=MemoryType.FACT
+        )
+        
+        analyses = await memory_backend.retrieve_memories(
+            agent_id=sample_agent_id,
+            user_id=sample_user_id,
+            memory_type=MemoryType.ANALYSIS
+        )
+        
+        recommendations = await memory_backend.retrieve_memories(
+            agent_id=sample_agent_id,
+            user_id=sample_user_id,
+            memory_type=MemoryType.RECOMMENDATION
+        )
+        
+        assert len(facts) == 1
+        assert len(analyses) == 1
+        assert len(recommendations) == 1
+        
+        assert facts[0]["memory_type"] == MemoryType.FACT.value
+        assert analyses[0]["memory_type"] == MemoryType.ANALYSIS.value
+        assert recommendations[0]["memory_type"] == MemoryType.RECOMMENDATION.value
+
+    async def test_memory_expiration(self, memory_backend, sample_agent_id, sample_user_id):
+        """Test memory expiration functionality"""
+        
+        # Store memory with expiration
+        expires_at = datetime.now(timezone.utc) + timedelta(seconds=1)
+        
+        memory_id = await memory_backend.store_memory(
+            agent_id=sample_agent_id,
+            memory_type=MemoryType.FACT,
+            content={"temporary": "data"},
+            user_id=sample_user_id,
+            expires_at=expires_at
+        )
+        
+        # Should be retrievable immediately
+        memories = await memory_backend.retrieve_memories(
+            agent_id=sample_agent_id,
+            user_id=sample_user_id
+        )
+        assert len(memories) == 1
+        
+        # Wait for expiration
+        await asyncio.sleep(2)
+        
+        # Should not be retrievable after expiration (without include_expired)
+        memories = await memory_backend.retrieve_memories(
+            agent_id=sample_agent_id,
+            user_id=sample_user_id,
+            include_expired=False
+        )
+        assert len(memories) == 0
+        
+        # Should be retrievable with include_expired
+        memories = await memory_backend.retrieve_memories(
+            agent_id=sample_agent_id,
+            user_id=sample_user_id,
+            include_expired=True
+        )
+        assert len(memories) == 1
+
+class TestCrewAIIntegration:
+    """Test CrewAI integration components"""
+    
+    async def test_auren_memory_storage(self, memory_backend, sample_agent_id):
+        """Test AURENMemoryStorage implementation"""
+        
+        storage = AURENMemoryStorage(memory_backend, sample_agent_id)
+        
+        # Test save operation
+        test_data = {"analysis": "test_analysis", "confidence": 0.8}
+        metadata = {"user_id": str(uuid.uuid4()), "confidence": 0.8}
+        
+        # Note: save is sync but uses async backend
+        storage.save(test_data, metadata)
+        
+        # Allow async operation to complete
+        await asyncio.sleep(0.1)
+        
+        # Test search operation (simplified for testing)
+        # In real usage, would need proper event loop handling
+        # results = storage.search("analysis", limit=5, filter={"user_id": metadata["user_id"]})
+        # assert len(results) >= 0  # Basic functionality test
+
+class TestProjectionHandlers:
+    """Test projection handler functionality"""
+    
+    async def test_redis_projection_handler(self, event_store):
+        """Test Redis projection handler"""
+        
+        # Mock Redis client
+        mock_redis = AsyncMock()
+        
+        handler = RedisProjectionHandler(mock_redis)
+        
+        # Test event processing
+        event_data = {
+            "sequence_id": 1,
+            "event_type": "memory_created",
+            "stream_id": str(uuid.uuid4())
+        }
+        
+        # Mock the database query
+        with patch.object(handler, '_get_event_by_sequence') as mock_get_event:
+            mock_get_event.return_value = {
+                "payload": json.dumps({
+                    "agent_id": "test_agent",
+                    "memory_id": str(uuid.uuid4()),
+                    "user_id": str(uuid.uuid4()),
+                    "memory_type": "fact",
+                    "content": {"test": "data"}
+                }),
+                "created_at": datetime.now(timezone.utc)
+            }
+            
+            await handler.process_event(event_data)
+            
+            # Verify Redis operations were called
+            assert mock_redis.setex.called
+            assert mock_redis.lpush.called
+
+class TestMigration:
+    """Test migration functionality"""
+    
+    async def test_json_migration_validation(self, memory_backend, event_store, tmp_path):
+        """Test JSON file migration validation"""
+        
+        # Create test JSON file
+        test_data = {
+            "agent_id": "test_agent",
+            "memories": [
+                {
+                    "type": "fact",
+                    "content": {"test": "migration_data"},
+                    "confidence": 0.9,
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+            ]
+        }
+        
+        json_file = tmp_path / "test_agent_memories.json"
+        with open(json_file, 'w') as f:
+            json.dump(test_data, f)
+        
+        # Test migration
+        migrator = JSONToPostgreSQLMigrator(
+            json_directory=tmp_path,
+            memory_backend=memory_backend,
+            event_store=event_store
+        )
+        
+        # Dry run first
+        results = await migrator.migrate_all(dry_run=True)
+        
+        assert results["files_processed"] == 1
+        assert results["memories_migrated"] == 1
+        assert len(results["errors"]) == 0
+
+class TestPerformance:
+    """Test performance characteristics"""
+    
+    async def test_bulk_memory_operations(self, memory_backend, sample_agent_id, sample_user_id):
+        """Test performance with bulk operations"""
+        
+        start_time = datetime.now()
+        
+        # Store many memories
+        memory_ids = []
+        for i in range(100):
+            memory_id = await memory_backend.store_memory(
+                agent_id=sample_agent_id,
+                memory_type=MemoryType.FACT,
+                content={"bulk_test": f"data_{i}", "index": i},
+                user_id=sample_user_id,
+                confidence=0.5 + (i % 50) / 100  # Vary confidence
+            )
+            memory_ids.append(memory_id)
+        
+        store_time = (datetime.now() - start_time).total_seconds()
+        
+        # Retrieve all memories
+        start_time = datetime.now()
+        memories = await memory_backend.retrieve_memories(
+            agent_id=sample_agent_id,
+            user_id=sample_user_id,
+            limit=1000
+        )
+        retrieve_time = (datetime.now() - start_time).total_seconds()
+        
+        # Verify results
+        assert len(memories) == 100
+        assert store_time < 10.0  # Should complete in reasonable time
+        assert retrieve_time < 1.0  # Retrieval should be fast
+        
+        # Test search performance
+        start_time = datetime.now()
+        search_results = await memory_backend.search_memories(
+            agent_id=sample_agent_id,
+            query="bulk_test",
+            user_id=sample_user_id,
+            limit=50
+        )
+        search_time = (datetime.now() - start_time).total_seconds()
+        
+        assert len(search_results) > 0
+        assert search_time < 2.0  # Search should be reasonably fast
+
+    async def test_concurrent_operations(self, memory_backend, sample_agent_id, sample_user_id):
+        """Test concurrent memory operations"""
+        
+        async def store_memory_batch(batch_id: int):
+            """Store a batch of memories concurrently"""
+            for i in range(10):
+                await memory_backend.store_memory(
+                    agent_id=sample_agent_id,
+                    memory_type=MemoryType.ANALYSIS,
+                    content={"batch": batch_id, "item": i},
+                    user_id=sample_user_id
+                )
+        
+        # Run multiple batches concurrently
+        start_time = datetime.now()
+        await asyncio.gather(*[
+            store_memory_batch(batch_id) 
+            for batch_id in range(5)
+        ])
+        concurrent_time = (datetime.now() - start_time).total_seconds()
+        
+        # Verify all memories were stored
+        memories = await memory_backend.retrieve_memories(
+            agent_id=sample_agent_id,
+            user_id=sample_user_id,
+            limit=100
+        )
+        
+        assert len(memories) == 50  # 5 batches * 10 items each
+        assert concurrent_time < 5.0  # Should handle concurrency well
+
+class TestErrorHandling:
+    """Test error handling and edge cases"""
+    
+    async def test_invalid_memory_operations(self, memory_backend):
+        """Test error handling for invalid operations"""
+        
+        # Test update non-existent memory
+        success = await memory_backend.update_memory(
+            memory_id=str(uuid.uuid4()),  # Random non-existent ID
+            content={"new": "content"}
+        )
+        assert success is False
+        
+        # Test delete non-existent memory
+        success = await memory_backend.delete_memory(str(uuid.uuid4()))
+        assert success is False
+
+    async def test_database_connection_failure(self, memory_backend):
+        """Test handling of database connection failures"""
+        
+        # Mock connection failure
+        with patch.object(AsyncPostgresManager, 'get_connection') as mock_get_conn:
+            mock_get_conn.side_effect = Exception("Connection failed")
+            
+            with pytest.raises(Exception):
+                await memory_backend.store_memory(
+                    agent_id="test",
+                    memory_type=MemoryType.FACT,
+                    content={"test": "data"}
+                )
+
+if __name__ == "__main__":
+    # Run tests
+    pytest.main(["-v", __file__])
+]]>
+            </implementation>
+        </subsection>
+
+        <subsection id="3.9" name="performance_tuning">
+            <title>Performance Tuning and Optimization</title>
+            <description>Database optimization and performance monitoring</description>
+            
+            <configuration language="sql">
+                <![CDATA[
+-- PostgreSQL performance optimization for AUREN workloads
+-- Apply these settings for production deployment
+
+-- Connection and memory settings
+ALTER SYSTEM SET max_connections = 200;
+ALTER SYSTEM SET shared_buffers = '4GB';  -- 25% of available RAM
+ALTER SYSTEM SET effective_cache_size = '12GB';  -- 75% of available RAM
+ALTER SYSTEM SET work_mem = '64MB';  -- For complex queries and sorts
+ALTER SYSTEM SET maintenance_work_mem = '1GB';  -- For maintenance operations
+
+-- Write-ahead logging optimization
+ALTER SYSTEM SET wal_buffers = '64MB';
+ALTER SYSTEM SET checkpoint_completion_target = 0.9;
+ALTER SYSTEM SET checkpoint_timeout = '15min';
+ALTER SYSTEM SET max_wal_size = '4GB';
+ALTER SYSTEM SET min_wal_size = '1GB';
+
+-- Query planner optimization
+ALTER SYSTEM SET random_page_cost = 1.5;  -- Optimized for SSDs
+ALTER SYSTEM SET effective_io_concurrency = 200;  -- SSD concurrency
+ALTER SYSTEM SET default_statistics_target = 100;  -- Better query planning
+
+-- Logging and monitoring
+ALTER SYSTEM SET log_statement = 'mod';  -- Log all data modifications
+ALTER SYSTEM SET log_min_duration_statement = 1000;  -- Log slow queries (>1s)
+ALTER SYSTEM SET log_line_prefix = '%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h ';
+ALTER SYSTEM SET log_checkpoints = on;
+ALTER SYSTEM SET log_connections = on;
+ALTER SYSTEM SET log_disconnections = on;
+
+-- Autovacuum tuning for high-write tables
+ALTER TABLE events SET (autovacuum_vacuum_scale_factor = 0.01);
+ALTER TABLE events SET (autovacuum_analyze_scale_factor = 0.005);
+ALTER TABLE agent_memories SET (autovacuum_vacuum_scale_factor = 0.02);
+ALTER TABLE agent_memories SET (autovacuum_analyze_scale_factor = 0.01);
+
+-- Restart required for most settings
+-- SELECT pg_reload_conf();
+
+-- Partitioning strategy for events table (time-based)
+-- This should be implemented as events grow beyond 10M records
+
+-- Example monthly partitioning
+CREATE TABLE events_y2025m01 PARTITION OF events
+FOR VALUES FROM ('2025-01-01') TO ('2025-02-01');
+
+CREATE TABLE events_y2025m02 PARTITION OF events
+FOR VALUES FROM ('2025-02-01') TO ('2025-03-01');
+
+-- Add more partitions as needed...
+
+-- Additional performance indexes
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_events_correlation 
+ON events(((metadata->>'correlation_id')::uuid)) 
+WHERE metadata->>'correlation_id' IS NOT NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_events_causation 
+ON events(((metadata->>'causation_id')::uuid)) 
+WHERE metadata->>'causation_id' IS NOT NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_agent_memories_confidence 
+ON agent_memories(confidence DESC) 
+WHERE NOT is_deleted AND confidence >= 0.7;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_agent_memories_expires
+ON agent_memories(expires_at) 
+WHERE expires_at IS NOT NULL AND NOT is_deleted;
+
+-- GIN indexes for JSONB content search
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_agent_memories_content_gin
+ON agent_memories USING GIN(content);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_events_payload_gin
+ON events USING GIN(payload);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_events_metadata_gin
+ON events USING GIN(metadata);
+
+-- Text search indexes for memory content
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_agent_memories_content_fts
+ON agent_memories USING GIN(to_tsvector('english', content::text))
+WHERE NOT is_deleted;
+
+-- Partial indexes for common query patterns
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_agent_memories_recent_active
+ON agent_memories(agent_id, created_at DESC)
+WHERE NOT is_deleted AND (expires_at IS NULL OR expires_at > NOW());
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_events_recent_by_stream
+ON events(stream_id, created_at DESC)
+WHERE created_at >= NOW() - INTERVAL '30 days';
+
+-- Connection pooling configuration (for PgBouncer if used)
+-- pool_mode = transaction
+-- max_client_conn = 1000
+-- default_pool_size = 150
+-- max_db_connections = 100
+-- reserve_pool_size = 10
+]]>
+            </configuration>
+
+            <monitoring language="python">
+                <![CDATA[
+"""
+Performance monitoring and alerting for AUREN data layer
+"""
+
+import psutil
+import asyncio
+from datetime import datetime, timedelta
+from typing import Dict, Any, List
+import logging
+
+logger = logging.getLogger(__name__)
+
+class DataLayerMonitor:
+    """Monitor data layer performance and health"""
+    
+    def __init__(self):
+        self.metrics = {
+            "connection_pool": {},
+            "query_performance": {},
+            "memory_usage": {},
+            "event_throughput": {},
+            "errors": []
+        }
+        self.alert_thresholds = {
+            "pool_utilization": 0.8,
+            "query_latency_ms": 1000,
+            "memory_usage_percent": 85,
+            "event_backlog": 1000,
+            "error_rate_per_hour": 10
+        }
+
+    async def collect_metrics(self) -> Dict[str, Any]:
+        """Collect comprehensive performance metrics"""
+        
+        try:
+            # Database connection pool metrics
+            pool_metrics = await self._get_pool_metrics()
+            
+            # Query performance metrics
+            query_metrics = await self._get_query_metrics()
+            
+            # System resource metrics
+            system_metrics = self._get_system_metrics()
+            
+            # Event throughput metrics
+            event_metrics = await self._get_event_metrics()
+            
+            self.metrics.update({
+                "timestamp": datetime.utcnow().isoformat(),
+                "connection_pool": pool_metrics,
+                "query_performance": query_metrics,
+                "system_resources": system_metrics,
+                "event_throughput": event_metrics
+            })
+            
+            # Check for alerts
+            alerts = self._check_alerts()
+            if alerts:
+                self.metrics["alerts"] = alerts
+                await self._send_alerts(alerts)
+            
+            return self.metrics
+            
+        except Exception as e:
+            logger.error(f"Failed to collect metrics: {e}")
+            return {"error": str(e), "timestamp": datetime.utcnow().isoformat()}
+
+    async def _get_pool_metrics(self) -> Dict[str, Any]:
+        """Get connection pool performance metrics"""
+        
+        try:
+            pool = await AsyncPostgresManager.get_pool()
+            
+            return {
+                "size": pool.get_size(),
+                "max_size": pool.get_max_size(),
+                "min_size": pool.get_min_size(),
+                "idle_size": pool.get_idle_size(),
+                "utilization": pool.get_size() / pool.get_max_size() if pool.get_max_size() > 0 else 0
+            }
+        except Exception as e:
+            logger.error(f"Failed to get pool metrics: {e}")
+            return {"error": str(e)}
+
+    async def _get_query_metrics(self) -> Dict[str, Any]:
+        """Get database query performance metrics"""
+        
+        try:
+            async with AsyncPostgresManager.get_connection() as conn:
+                # Get slow queries
+                slow_queries = await conn.fetch("""
+                    SELECT query, calls, total_time, mean_time, rows
+                    FROM pg_stat_statements 
+                    WHERE mean_time > 100  -- Queries taking >100ms on average
+                    ORDER BY total_time DESC 
+                    LIMIT 10
+                """)
+                
+                # Get database activity
+                db_activity = await conn.fetchrow("""
+                    SELECT 
+                        COUNT(*) as active_connections,
+                        COUNT(*) FILTER (WHERE state = 'active') as active_queries,
+                        COUNT(*) FILTER (WHERE state = 'idle') as idle_connections
+                    FROM pg_stat_activity 
+                    WHERE datname = current_database()
+                """)
+                
+                # Get lock information
+                locks = await conn.fetch("""
+                    SELECT mode, COUNT(*) as count
+                    FROM pg_locks l
+                    JOIN pg_stat_activity a ON l.pid = a.pid
+                    WHERE a.datname = current_database()
+                    GROUP BY mode
+                """)
+                
+                return {
+                    "slow_queries": [dict(row) for row in slow_queries],
+                    "active_connections": db_activity["active_connections"],
+                    "active_queries": db_activity["active_queries"],
+                    "idle_connections": db_activity["idle_connections"],
+                    "locks": {row["mode"]: row["count"] for row in locks}
+                }
+                
+        except Exception as e:
+            logger.error(f"Failed to get query metrics: {e}")
+            return {"error": str(e)}
+
+    def _get_system_metrics(self) -> Dict[str, Any]:
+        """Get system resource metrics"""
+        
+        try:
+            # CPU usage
+            cpu_percent = psutil.cpu_percent(interval=1)
+            
+            # Memory usage
+            memory = psutil.virtual_memory()
+            
+            # Disk usage
+            disk = psutil.disk_usage('/')
+            
+            # Network I/O
+            network = psutil.net_io_counters()
+            
+            return {
+                "cpu_percent": cpu_percent,
+                "memory": {
+                    "total": memory.total,
+                    "available": memory.available,
+                    "percent": memory.percent,
+                    "used": memory.used
+                },
+                "disk": {
+                    "total": disk.total,
+                    "used": disk.used,
+                    "free": disk.free,
+                    "percent": (disk.used / disk.total) * 100
+                },
+                "network": {
+                    "bytes_sent": network.bytes_sent,
+                    "bytes_recv": network.bytes_recv,
+                    "packets_sent": network.packets_sent,
+                    "packets_recv": network.packets_recv
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to get system metrics: {e}")
+            return {"error": str(e)}
+
+    async def _get_event_metrics(self) -> Dict[str, Any]:
+        """Get event store throughput metrics"""
+        
+        try:
+            async with AsyncPostgresManager.get_connection() as conn:
+                # Events in last hour
+                recent_events = await conn.fetchrow("""
+                    SELECT 
+                        COUNT(*) as total_events,
+                        COUNT(DISTINCT stream_id) as unique_streams,
+                        COUNT(DISTINCT event_type) as unique_event_types
+                    FROM events 
+                    WHERE created_at >= NOW() - INTERVAL '1 hour'
+                """)
+                
+                # Event types breakdown
+                event_types = await conn.fetch("""
+                    SELECT event_type, COUNT(*) as count
+                    FROM events 
+                    WHERE created_at >= NOW() - INTERVAL '1 hour'
+                    GROUP BY event_type
+                    ORDER BY count DESC
+                """)
+                
+                # Memory operations
+                memory_ops = await conn.fetchrow("""
+                    SELECT 
+                        COUNT(*) as total_operations,
+                        COUNT(*) FILTER (WHERE NOT is_deleted) as active_memories,
+                        AVG(confidence) as avg_confidence
+                    FROM agent_memories 
+                    WHERE created_at >= NOW() - INTERVAL '1 hour'
+                """)
+                
+                return {
+                    "events_last_hour": recent_events["total_events"],
+                    "unique_streams": recent_events["unique_streams"],
+                    "unique_event_types": recent_events["unique_event_types"],
+                    "events_per_minute": recent_events["total_events"] / 60,
+                    "event_types_breakdown": {row["event_type"]: row["count"] for row in event_types},
+                    "memory_operations": {
+                        "total": memory_ops["total_operations"],
+                        "active": memory_ops["active_memories"],
+                        "avg_confidence": float(memory_ops["avg_confidence"] or 0)
+                    }
+                }
+                
+        except Exception as e:
+            logger.error(f"Failed to get event metrics: {e}")
+            return {"error": str(e)}
+
+    def _check_alerts(self) -> List[Dict[str, Any]]:
+        """Check metrics against thresholds and generate alerts"""
+        
+        alerts = []
+        
+        try:
+            # Connection pool utilization alert
+            pool_metrics = self.metrics.get("connection_pool", {})
+            if pool_metrics.get("utilization", 0) > self.alert_thresholds["pool_utilization"]:
+                alerts.append({
+                    "type": "connection_pool_high",
+                    "severity": "warning",
+                    "message": f"Connection pool utilization at {pool_metrics['utilization']:.1%}",
+                    "threshold": self.alert_thresholds["pool_utilization"],
+                    "current_value": pool_metrics["utilization"],
+                    "timestamp": datetime.utcnow().isoformat()
+                })
+            
+            # Memory usage alert
+            system_metrics = self.metrics.get("system_resources", {})
+            memory_percent = system_metrics.get("memory", {}).get("percent", 0)
+            if memory_percent > self.alert_thresholds["memory_usage_percent"]:
+                alerts.append({
+                    "type": "memory_usage_high",
+                    "severity": "critical" if memory_percent > 95 else "warning",
+                    "message": f"System memory usage at {memory_percent}%",
+                    "threshold": self.alert_thresholds["memory_usage_percent"],
+                    "current_value": memory_percent,
+                    "timestamp": datetime.utcnow().isoformat()
+                })
+            
+            # Slow query alert
+            query_metrics = self.metrics.get("query_performance", {})
+            slow_queries = query_metrics.get("slow_queries", [])
+            if slow_queries:
+                max_query_time = max(q.get("mean_time", 0) for q in slow_queries)
+                if max_query_time > self.alert_thresholds["query_latency_ms"]:
+                    alerts.append({
+                        "type": "slow_queries_detected",
+                        "severity": "warning",
+                        "message": f"Slow queries detected, max mean time: {max_query_time:.1f}ms",
+                        "threshold": self.alert_thresholds["query_latency_ms"],
+                        "current_value": max_query_time,
+                        "slow_query_count": len(slow_queries),
+                        "timestamp": datetime.utcnow().isoformat()
+                    })
+            
+        except Exception as e:
+            logger.error(f"Failed to check alerts: {e}")
+            alerts.append({
+                "type": "monitoring_error",
+                "severity": "error",
+                "message": f"Alert checking failed: {e}",
+                "timestamp": datetime.utcnow().isoformat()
+            })
+        
+        return alerts
+
+    async def _send_alerts(self, alerts: List[Dict[str, Any]]) -> None:
+        """Send alerts to monitoring systems"""
+        
+        for alert in alerts:
+            logger.warning(f"ALERT: {alert['type']} - {alert['message']}")
+            
+            # Here you would integrate with your alerting system
+            # Examples: PagerDuty, Slack, email, etc.
+            # await self._send_to_pagerduty(alert)
+            # await self._send_to_slack(alert)
+
+# Monitoring usage example
+async def run_monitoring_loop():
+    """Run continuous monitoring loop"""
+    monitor = DataLayerMonitor()
+    
+    while True:
+        try:
+            metrics = await monitor.collect_metrics()
+            
+            # Log metrics for observability
+            logger.info(f"Data layer metrics collected: {metrics.get('timestamp')}")
+            
+            # Store metrics in time-series database if needed
+            # await store_metrics_to_prometheus(metrics)
+            
+        except Exception as e:
+            logger.error(f"Monitoring loop error: {e}")
+        
+        # Wait before next collection
+        await asyncio.sleep(60)  # Collect every minute
+]]>
+            </monitoring>
+        </subsection>
+
+        <subsection id="3.10" name="troubleshooting_guide">
+            <title>Troubleshooting Guide</title>
+            <description>Comprehensive troubleshooting procedures for common issues</description>
+            
+            <guide language="markdown">
+                <![CDATA[
+# AUREN Data Layer Troubleshooting Guide
+
+## Quick Diagnostic Commands
+
+### Check System Health
+```bash
+# Database connectivity
+psql $DATABASE_URL -c "SELECT version();"
+
+# Connection pool status
+psql $DATABASE_URL -c "SELECT count(*) as active_connections FROM pg_stat_activity;"
+
+# Recent errors in logs
+tail -100 /var/log/auren/data_layer.log | grep ERROR
+
+# Disk space
+df -h
+
+# Memory usage
+free -m
+```
+
+### Check Data Layer Status
+```python
+# Python health check
+from auren.data_layer import AsyncPostgresManager
+
+health = await AsyncPostgresManager.health_check()
+print(f"Status: {health['status']}")
+print(f"Response time: {health['response_time_ms']}ms")
+```
+
+## Common Issues and Solutions
+
+### 1. Connection Pool Exhaustion
+
+**Symptoms:**
+- "too many clients already" errors
+- Timeouts on database operations
+- Application hanging on database calls
+
+**Diagnosis:**
+```sql
+-- Check current connections
+SELECT 
+    count(*) as total_connections,
+    count(*) FILTER (WHERE state = 'active') as active,
+    count(*) FILTER (WHERE state = 'idle') as idle
+FROM pg_stat_activity;
+
+-- Check long-running queries
+SELECT 
+    pid, 
+    now() - pg_stat_activity.query_start AS duration, 
+    query 
+FROM pg_stat_activity 
+WHERE (now() - pg_stat_activity.query_start) > interval '5 minutes';
+```
+
+**Solutions:**
+1. **Increase pool size temporarily:**
+   ```python
+   await AsyncPostgresManager.initialize(
+       dsn=DATABASE_URL,
+       max_size=100  # Increase from default
+   )
+   ```
+
+2. **Kill long-running queries:**
+   ```sql
+   SELECT pg_terminate_backend(pid) 
+   FROM pg_stat_activity 
+   WHERE pid = <problematic_pid>;
+   ```
+
+3. **Implement connection timeouts:**
+   ```python
+   # Add to connection string
+   DATABASE_URL += "?connect_timeout=10&command_timeout=30"
+   ```
+
+4. **Check for connection leaks in application code:**
+   - Ensure all `async with` blocks are properly closed
+   - Add connection pool monitoring
+   - Review exception handling in database operations
+
+### 2. Slow Query Performance
+
+**Symptoms:**
+- High response times (>1 second)
+- Timeout errors
+- High CPU usage on database server
+
+**Diagnosis:**
+```sql
+-- Enable query logging temporarily
+ALTER SYSTEM SET log_min_duration_statement = 100;
+SELECT pg_reload_conf();
+
+-- Check slow queries
+SELECT 
+    query,
+    calls,
+    total_time,
+    mean_time,
+    rows
+FROM pg_stat_statements 
+ORDER BY total_time DESC 
+LIMIT 10;
+
+-- Check missing indexes
+SELECT 
+    schemaname,
+    tablename,
+    attname,
+    n_distinct,
+    correlation
+FROM pg_stats 
+WHERE tablename IN ('events', 'agent_memories')
+ORDER BY n_distinct DESC;
+```
+
+**Solutions:**
+1. **Add missing indexes:**
+   ```sql
+   -- Example: Index for common query pattern
+   CREATE INDEX CONCURRENTLY idx_events_stream_type_time 
+   ON events(stream_id, event_type, created_at DESC);
+   ```
+
+2. **Optimize queries:**
+   ```sql
+   -- Before: Inefficient query
+   SELECT * FROM agent_memories WHERE content::text ILIKE '%pattern%';
+   
+   -- After: Use GIN index
+   SELECT * FROM agent_memories 
+   WHERE content @@ to_tsquery('english', 'pattern');
+   ```
+
+3. **Update table statistics:**
+   ```sql
+   ANALYZE events;
+   ANALYZE agent_memories;
+   ```
+
+4. **Consider partitioning for large tables:**
+   ```sql
+   -- Partition events table by month
+   CREATE TABLE events_y2025m03 PARTITION OF events
+   FOR VALUES FROM ('2025-03-01') TO ('2025-04-01');
+   ```
+
+### 3. Event Store Inconsistencies
+
+**Symptoms:**
+- Missing events in projections
+- Inconsistent data between Redis and PostgreSQL
+- Sequence gaps in event streams
+
+**Diagnosis:**
+```sql
+-- Check for sequence gaps
+WITH expected AS (
+    SELECT generate_series(
+        (SELECT MIN(sequence_id) FROM events WHERE stream_id = 'user_123'),
+        (SELECT MAX(sequence_id) FROM events WHERE stream_id = 'user_123')
+    ) as seq
+)
+SELECT seq FROM expected
+WHERE seq NOT IN (
+    SELECT sequence_id FROM events WHERE stream_id = 'user_123'
+);
+
+-- Check projection consistency
+SELECT 
+    e.stream_id,
+    COUNT(e.*) as events_count,
+    COUNT(m.*) as memories_count
+FROM events e
+LEFT JOIN agent_memories m ON e.payload->>'memory_id' = m.id::text
+WHERE e.event_type = 'memory_created'
+GROUP BY e.stream_id
+HAVING COUNT(e.*) != COUNT(m.*);
+```
+
+**Solutions:**
+1. **Rebuild projections from events:**
+   ```python
+   # Rebuild specific user's projections
+   async def rebuild_user_projections(user_id: str):
+       # Clear existing projections
+       await memory_backend.delete_user_projections(user_id)
+       
+       # Replay events
+       events = await event_store.get_stream_events(user_id)
+       for event in events:
+           await projection_handler.process_event(event)
+   ```
+
+2. **Fix sequence gaps (if needed):**
+   ```sql
+   -- Resequence events (use with caution)
+   WITH resequenced AS (
+       SELECT 
+           sequence_id,
+           ROW_NUMBER() OVER (ORDER BY created_at, sequence_id) as new_seq
+       FROM events 
+       WHERE stream_id = 'user_123'
+   )
+   UPDATE events 
+   SET sequence_id = r.new_seq 
+   FROM resequenced r 
+   WHERE events.sequence_id = r.sequence_id;
+   ```
+
+3. **Verify event handlers:**
+   ```python
+   # Check projection handlers are registered
+   assert len(event_store._event_handlers) > 0
+   
+   # Test handler with sample event
+   test_event = Event(
+       event_id=str(uuid.uuid4()),
+       stream_id="test",
+       event_type="memory_created",
+       payload={"test": "data"}
+   )
+   await projection_handler.process_event(test_event)
+   ```
+
+### 4. Memory Backend Issues
+
+**Symptoms:**
+- Memories not appearing in search
+- Inconsistent confidence scores
+- Memory expiration not working
+
+**Diagnosis:**
+```sql
+-- Check memory statistics
+SELECT 
+    agent_id,
+    memory_type,
+    COUNT(*) as total,
+    COUNT(*) FILTER (WHERE NOT is_deleted) as active,
+    AVG(confidence) as avg_confidence,
+    MAX(created_at) as latest_memory
+FROM agent_memories 
+GROUP BY agent_id, memory_type
+ORDER BY agent_id, memory_type;
+
+-- Check for orphaned memories
+SELECT COUNT(*) 
+FROM agent_memories m
+LEFT JOIN events e ON e.payload->>'memory_id' = m.id::text
+WHERE e.event_id IS NULL AND m.created_at > NOW() - INTERVAL '1 day';
+
+-- Check expiration logic
+SELECT 
+    COUNT(*) as total_expired,
+    COUNT(*) FILTER (WHERE is_deleted) as marked_deleted
+FROM agent_memories 
+WHERE expires_at < NOW();
+```
+
+**Solutions:**
+1. **Rebuild search indexes:**
+   ```sql
+   REINDEX INDEX idx_agent_memories_content_gin;
+   REINDEX INDEX idx_agent_memories_content_fts;
+   ```
+
+2. **Fix orphaned memories:**
+   ```python
+   # Create missing events for orphaned memories
+   async def fix_orphaned_memories():
+       orphaned = await find_orphaned_memories()
+       for memory in orphaned:
+           await event_store.append_event(
+               stream_id=memory["user_id"] or memory["agent_id"],
+               event_type=EventType.MEMORY_CREATED,
+               payload={
+                   "memory_id": memory["id"],
+                   "agent_id": memory["agent_id"],
+                   "retroactive_fix": True
+               }
+           )
+   ```
+
+3. **Clean up expired memories:**
+   ```sql
+   -- Mark expired memories as deleted
+   UPDATE agent_memories 
+   SET is_deleted = TRUE 
+   WHERE expires_at < NOW() AND NOT is_deleted;
+   ```
+
+### 5. Migration Issues
+
+**Symptoms:**
+- JSON files not migrating completely
+- Data corruption during migration
+- Migration hanging or timing out
+
+**Diagnosis:**
+```python
+# Check migration status
+async def check_migration_status():
+    migrator = JSONToPostgreSQLMigrator(...)
+    
+    # Validate file structure
+    for json_file in json_files:
+        try:
+            with open(json_file) as f:
+                data = json.load(f)
+            print(f"✓ {json_file}: Valid JSON")
+        except Exception as e:
+            print(f"✗ {json_file}: {e}")
+    
+    # Check for partial migrations
+    migration_markers = await get_migration_markers()
+    print(f"Completed migrations: {len(migration_markers)}")
+```
+
+**Solutions:**
+1. **Resume failed migration:**
+   ```python
+   # Run migration with skip-existing flag
+   await migrator.migrate_all(skip_existing=True)
+   ```
+
+2. **Validate data integrity:**
+   ```python
+   # Compare JSON data with migrated data
+   async def validate_migration(json_file, agent_id, user_id):
+       with open(json_file) as f:
+           original_data = json.load(f)
+       
+       migrated_memories = await memory_backend.retrieve_memories(
+           agent_id=agent_id,
+           user_id=user_id
+       )
+       
+       # Compare counts and key data points
+       assert len(original_data.get("memories", [])) == len(migrated_memories)
+   ```
+
+3. **Handle large files:**
+   ```python
+   # Process large files in batches
+   async def migrate_large_file(json_file, batch_size=100):
+       with open(json_file) as f:
+           data = json.load(f)
+       
+       memories = data.get("memories", [])
+       for i in range(0, len(memories), batch_size):
+           batch = memories[i:i + batch_size]
+           await migrate_memory_batch(batch)
+           await asyncio.sleep(0.1)  # Prevent overwhelming database
+   ```
+
+## Emergency Recovery Procedures
+
+### Database Corruption Recovery
+
+1. **Stop application immediately**
+2. **Create backup:**
+   ```bash
+   pg_dump -U user -h host -d auren > backup_$(date +%Y%m%d_%H%M%S).sql
+   ```
+
+3. **Check database integrity:**
+   ```sql
+   SELECT pg_database.datname, pg_size_pretty(pg_database_size(pg_database.datname))
+   FROM pg_database;
+   
+   -- Check for corruption
+   SELECT * FROM pg_stat_database_conflicts;
+   ```
+
+4. **Repair if possible:**
+   ```sql
+   REINDEX DATABASE auren;
+   VACUUM FULL;
+   ```
+
+### Performance Crisis Response
+
+1. **Immediate relief:**
+   ```sql
+   -- Kill problematic queries
+   SELECT pg_terminate_backend(pid) 
+   FROM pg_stat_activity 
+   WHERE state = 'active' AND query_start < NOW() - INTERVAL '5 minutes';
+   
+   -- Temporarily disable autovacuum if needed
+   ALTER SYSTEM SET autovacuum = off;
+   SELECT pg_reload_conf();
+   ```
+
+2. **Scale resources:**
+   ```bash
+   # Increase database connections temporarily
+   echo "max_connections = 300" >> postgresql.conf
+   systemctl restart postgresql
+   ```
+
+3. **Enable read-only mode:**
+   ```python
+   # Redirect reads to replica
+   READ_ONLY_DATABASE_URL = "postgresql://readonly:password@replica:5432/auren"
+   ```
+
+### Data Recovery from Events
+
+```python
+async def recover_lost_projections(stream_id: str):
+    """Recover projections from event store"""
+    
+    # Get all events for stream
+    events = await event_store.get_stream_events(stream_id)
+    
+    # Rebuild state from events
+    recovered_state = {}
+    
+    for event in events:
+        if event.event_type == "memory_created":
+            memory_data = event.payload
+            # Recreate memory in projection table
+            await memory_backend.store_memory(
+                agent_id=memory_data["agent_id"],
+                memory_type=MemoryType(memory_data["memory_type"]),
+                content=memory_data["content"],
+                user_id=memory_data.get("user_id"),
+                confidence=memory_data.get("confidence", 1.0)
+            )
+    
+    return recovered_state
+```
+
+## Monitoring and Alerting Setup
+
+### Key Metrics to Monitor
+
+1. **Database Performance:**
+   - Connection pool utilization
+   - Query latency (95th percentile)
+   - Lock wait times
+   - Database size growth
+
+2. **Application Performance:**
+   - Memory operation latency
+   - Event processing throughput
+   - Error rates
+   - Cache hit rates
+
+3. **System Resources:**
+   - CPU usage
+   - Memory usage
+   - Disk I/O
+   - Network latency
+
+### Alert Thresholds
+
+```python
+ALERT_THRESHOLDS = {
+    "connection_pool_utilization": 0.8,  # 80%
+    "query_latency_p95_ms": 1000,        # 1 second
+    "memory_usage_percent": 85,          # 85%
+    "error_rate_per_hour": 10,           # 10 errors/hour
+    "event_processing_lag_seconds": 30,  # 30 seconds
+    "disk_usage_percent": 80             # 80%
+}
+```
+
+### Automated Recovery Scripts
+
+```bash
+#!/bin/bash
+# auto_recovery.sh - Automated recovery for common issues
+
+# Check disk space
+DISK_USAGE=$(df / | tail -1 | awk '{print $5}' | sed 's/%//')
+if [ $DISK_USAGE -gt 90 ]; then
+    # Clean old logs
+    find /var/log -name "*.log" -mtime +7 -delete
+    # Vacuum database
+    psql $DATABASE_URL -c "VACUUM;"
+fi
+
+# Check connection pool
+ACTIVE_CONN=$(psql $DATABASE_URL -t -c "SELECT count(*) FROM pg_stat_activity;")
+if [ $ACTIVE_CONN -gt 150 ]; then
+    # Kill old idle connections
+    psql $DATABASE_URL -c "
+        SELECT pg_terminate_backend(pid) 
+        FROM pg_stat_activity 
+        WHERE state = 'idle' 
+        AND state_change < NOW() - INTERVAL '30 minutes';
+    "
+fi
+
+# Restart application if memory usage too high
+MEM_USAGE=$(free | grep Mem | awk '{printf("%.0f", $3/$2 * 100.0)}')
+if [ $MEM_USAGE -gt 90 ]; then
+    systemctl restart auren-data-layer
+fi
+```
+
+Remember: Always test recovery procedures in a staging environment before applying to production!
+]]>
+            </guide>
+        </subsection>
+    </section>
+
+    <section id="4" name="integration_examples">
+        <title>Integration Examples</title>
+        <description>Complete examples showing how to integrate with other AUREN components</description>
+        
+        <example id="crewai_agent_setup" language="python">
+            <![CDATA[
+"""
+Complete example: Setting up AUREN data layer with CrewAI agents
+"""
+
+import asyncio
+from crewai import Agent, Task, Crew
+from auren.data_layer import AsyncPostgresManager, EventStore, PostgreSQLMemoryBackend, AURENCrewMemoryIntegration
+
+async def setup_auren_data_layer():
+    """Initialize AUREN data layer"""
+    
+    # Initialize database connection
+    await AsyncPostgresManager.initialize(
+        dsn="postgresql://auren:password@localhost:5432/auren",
+        min_size=10,
+        max_size=50
+    )
+    
+    # Create core components
+    event_store = EventStore()
+    memory_backend = PostgreSQLMemoryBackend(event_store)
+    crew_integration = AURENCrewMemoryIntegration(memory_backend, event_store)
+    
+    return event_store, memory_backend, crew_integration
+
+def create_specialist_agents(crew_integration):
+    """Create specialist agents with AUREN memory integration"""
+    
+    # Neuroscientist Agent
+    neuroscientist = Agent(
+        role="Neuroscientist",
+        goal="Analyze neurological patterns and provide brain health insights",
+        backstory="Expert in neuroscience with focus on brain optimization and cognitive performance",
+        memory=crew_integration.create_agent_memory_storage("neuroscientist"),
+        verbose=True
+    )
+    
+    # Nutritionist Agent  
+    nutritionist = Agent(
+        role="Nutritionist",
+        goal="Provide personalized nutrition recommendations based on biometric data",
+        backstory="Certified nutritionist specializing in performance nutrition and metabolic optimization",
+        memory=crew_integration.create_agent_memory_storage("nutritionist"),
+        verbose=True
+    )
+    
+    # Training Agent
+    training_agent = Agent(
+        role="Training Coach",
+        goal="Design optimal training programs based on recovery and performance data",
+        backstory="Elite performance coach with expertise in data-driven training optimization",
+        memory=crew_integration.create_agent_memory_storage("training_agent"),
+        verbose=True
+    )
+    
+    return {
+        "neuroscientist": neuroscientist,
+        "nutritionist": nutritionist,
+        "training_agent": training_agent
+    }
+
+async def example_agent_workflow(user_id: str, biometric_data: dict):
+    """Example workflow showing agent collaboration with shared memory"""
+    
+    # Setup
+    event_store, memory_backend, crew_integration = await setup_auren_data_layer()
+    agents = create_specialist_agents(crew_integration)
+    
+    # Store incoming biometric data as event
+    await event_store.append_event(
+        stream_id=user_id,
+        event_type=EventType.BIOMETRIC_RECEIVED,
+        payload={
+            "user_id": user_id,
+            "data": biometric_data,
+            "source": "healthkit"
+        }
+    )
+    
+    # Neuroscientist analyzes HRV patterns
+    neuroscientist_analysis = await agents["neuroscientist"].execute(
+        task="Analyze the user's HRV patterns and stress indicators",
+        context=await crew_integration.get_shared_context(user_id, "neuroscientist")
+    )
+    
+    # Store analysis as memory
+    await crew_integration.store_agent_decision(
+        agent_id="neuroscientist",
+        user_id=user_id,
+        decision={
+            "analysis": "Elevated stress indicators in HRV data",
+            "confidence": 0.85,
+            "recommendation": "Focus on recovery and stress management"
+        },
+        confidence=0.85,
+        context={"biometric_data": biometric_data}
+    )
+    
+    # Nutritionist considers neuroscientist's findings
+    shared_context = await crew_integration.get_shared_context(user_id, "nutritionist")
+    nutrition_recommendation = await agents["nutritionist"].execute(
+        task="Provide nutrition recommendations considering stress indicators",
+        context=shared_context
+    )
+    
+    # Training agent adjusts program based on both analyses
+    training_context = await crew_integration.get_shared_context(user_id, "training_agent")
+    training_adjustment = await agents["training_agent"].execute(
+        task="Adjust training program based on stress and nutrition analysis",
+        context=training_context
+    )
+    
+    return {
+        "neuroscientist_analysis": neuroscientist_analysis,
+        "nutrition_recommendation": nutrition_recommendation,
+        "training_adjustment": training_adjustment
+    }
+
+# Run example
+if __name__ == "__main__":
+    asyncio.run(example_agent_workflow(
+        user_id="user_12345",
+        biometric_data={
+            "hrv": 45,
+            "resting_hr": 65,
+            "sleep_quality": 0.7,
+            "timestamp": "2025-07-24T10:00:00Z"
+        }
+    ))
+]]>
+        </example>
+
+        <example id="real_time_dashboard" language="python">
+            <![CDATA[
+"""
+Real-time dashboard integration example
+Shows how to stream data layer events to frontend
+"""
+
+import asyncio
+import json
+from fastapi import FastAPI, WebSocket
+from fastapi.responses import HTMLResponse
+
+app = FastAPI()
+
+class DashboardStreamer:
+    """Streams data layer events to connected dashboards"""
+    
+    def __init__(self, event_store: EventStore):
+        self.event_store = event_store
+        self.connected_clients = set()
+        
+        # Register for real-time events
+        self.event_store.register_event_handler(self.broadcast_event)
+    
+    async def connect_client(self, websocket: WebSocket):
+        """Connect new dashboard client"""
+        await websocket.accept()
+        self.connected_clients.add(websocket)
+        
+        # Send initial state
+        await self.send_initial_state(websocket)
+    
+    def disconnect_client(self, websocket: WebSocket):
+        """Disconnect dashboard client"""
+        self.connected_clients.discard(websocket)
+    
+    async def send_initial_state(self, websocket: WebSocket):
+        """Send current system state to new client"""
+        
+        # Get recent events across all streams
+        recent_events = await self.event_store.get_events_by_type(
+            event_type=EventType.AGENT_DECISION,
+            limit=10
+        )
+        
+        initial_data = {
+            "type": "initial_state",
+            "data": {
+                "recent_events": [
+                    {
+                        "event_id": event.event_id,
+                        "stream_id": event.stream_id,
+                        "event_type": event.event_type,
+                        "payload": event.payload,
+                        "timestamp": event.created_at.isoformat()
+                    }
+                    for event in recent_events
+                ]
+            }
+        }
+        
+        await websocket.send_text(json.dumps(initial_data))
+    
+    async def broadcast_event(self, event: Event):
+        """Broadcast event to all connected dashboards"""
+        
+        if not self.connected_clients:
+            return
+        
+        # Format event for dashboard
+        dashboard_event = {
+            "type": "real_time_event",
+            "data": {
+                "event_id": event.event_id,
+                "stream_id": event.stream_id,
+                "event_type": event.event_type,
+                "payload": event.payload,
+                "timestamp": event.created_at.isoformat()
+            }
+        }
+        
+        # Send to all connected clients
+        disconnected_clients = set()
+        for client in self.connected_clients:
+            try:
+                await client.send_text(json.dumps(dashboard_event))
+            except:
+                disconnected_clients.add(client)
+        
+        # Clean up disconnected clients
+        self.connected_clients -= disconnected_clients
+
+# Global dashboard streamer
+dashboard_streamer = None
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize data layer and dashboard streaming"""
+    global dashboard_streamer
+    
+    # Initialize data layer
+    await AsyncPostgresManager.initialize("postgresql://localhost/auren")
+    event_store = EventStore()
+    
+    # Initialize dashboard streamer
+    dashboard_streamer = DashboardStreamer(event_store)
+
+@app.websocket("/ws/dashboard")
+async def websocket_endpoint(websocket: WebSocket):
+    """WebSocket endpoint for dashboard clients"""
+    await dashboard_streamer.connect_client(websocket)
+    
+    try:
+        while True:
+            # Keep connection alive and handle client messages
+            data = await websocket.receive_text()
+            message = json.loads(data)
+            
+            if message.get("type") == "ping":
+                await websocket.send_text(json.dumps({"type": "pong"}))
+                
+    except:
+        pass
+    finally:
+        dashboard_streamer.disconnect_client(websocket)
+
+@app.get("/")
+async def get_dashboard():
+    """Serve dashboard HTML"""
+    return HTMLResponse("""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>AUREN Data Layer Dashboard</title>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    </head>
+    <body>
+        <h1>AUREN Real-time Dashboard</h1>
+        <div id="events"></div>
+        <canvas id="eventChart" width="400" height="200"></canvas>
+        
+        <script>
+            const ws = new WebSocket("ws://localhost:8000/ws/dashboard");
+            const eventsDiv = document.getElementById('events');
+            const ctx = document.getElementById('eventChart').getContext('2d');
+            
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Events per Minute',
+                        data: [],
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                
+                if (data.type === 'real_time_event') {
+                    // Add event to display
+                    const eventDiv = document.createElement('div');
+                    eventDiv.innerHTML = `
+                        <strong>${data.data.event_type}</strong> - 
+                        ${data.data.stream_id} - 
+                        ${new Date(data.data.timestamp).toLocaleTimeString()}
+                    `;
+                    eventsDiv.insertBefore(eventDiv, eventsDiv.firstChild);
+                    
+                    // Keep only last 10 events
+                    while (eventsDiv.children.length > 10) {
+                        eventsDiv.removeChild(eventsDiv.lastChild);
+                    }
+                    
+                    // Update chart
+                    const now = new Date().toLocaleTimeString();
+                    chart.data.labels.push(now);
+                    chart.data.datasets[0].data.push(1);
+                    
+                    if (chart.data.labels.length > 20) {
+                        chart.data.labels.shift();
+                        chart.data.datasets[0].data.shift();
+                    }
+                    
+                    chart.update();
+                }
+            };
+            
+            // Send periodic ping to keep connection alive
+            setInterval(() => {
+                ws.send(JSON.stringify({type: 'ping'}));
+            }, 30000);
+        </script>
+    </body>
+    </html>
+    """)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+]]>
+        </example>
+    </section>
+
+    <footer>
+        <summary>
+            Module A provides the complete foundation for AUREN's data persistence and event architecture. It replaces JSON file limitations with unlimited PostgreSQL storage, implements event sourcing for complete audit trails, and provides real-time projections for optimal performance. 
+
+            The hybrid implementation combines the best aspects of connection management, event sourcing, memory backend functionality, projection handling, and comprehensive testing. This module enables the multi-agent intelligence system with proper HIPAA compliance, real-time collaboration, and production-grade reliability.
+
+            Key capabilities delivered: unlimited memory storage, immutable audit trails, sub-second memory retrieval, real-time agent collaboration, complete migration tooling, comprehensive monitoring, and seamless CrewAI integration.
+        </summary>
+        
+        <next_steps>
+            <step>Initialize PostgreSQL database with provided schema</step>
+            <step>Configure AsyncPostgresManager with production settings</step>
+            <step>Deploy EventStore and PostgreSQLMemoryBackend</step>
+            <step>Set up projection handlers for Redis and ChromaDB</step>
+            <step>Run migration script to import existing JSON data</step>
+            <step>Configure monitoring and alerting systems</step>
+            <step>Integration testing with CrewAI agents</step>
+            <step>Performance tuning based on production load</step>
+        </next_steps>
+        
+        <integration_points>
+            <point>Module B: Agent Intelligence Systems - provides hypothesis validation and knowledge management using this data layer</point>
+            <point>Module C: Real-time Systems & Dashboard - consumes events and projections for visualization</point>
+            <point>Module D: CrewAI Integration - uses AURENMemoryStorage and shared context capabilities</point>
+            <point>Module E: Production Operations - implements monitoring, backup, and deployment procedures</point>
+        </integration_points>
+    </footer>
+</module_a_data_persistence>

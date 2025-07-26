@@ -1,301 +1,755 @@
 """
-PostgreSQL Memory Backend for AUREN Intelligence System
-
-Provides persistent storage for agent knowledge using PostgreSQL.
-Replaces the limited JSON file storage with scalable database storage.
-
-Key Features:
-- Unlimited storage capacity (vs 1000 record limit)
-- Concurrent access from multiple agents
-- Full ACID guarantees for data integrity
-- Efficient querying and filtering
-- Proper versioning and history tracking
+PostgreSQL Tier - Long-term Structured Memory with Event Emission
+Implements Tier 2 of the three-tier memory system with WebSocket integration
 """
 
 import asyncio
 import json
-from datetime import datetime
-from typing import Dict, List, Optional, Any, Union
-import asyncpg
-from asyncpg.pool import Pool
 import logging
+import uuid
+from typing import Dict, List, Optional, Any, Union
+from datetime import datetime, timezone, timedelta
+from dataclasses import dataclass, asdict, field
+from enum import Enum
+import asyncpg
 
 logger = logging.getLogger(__name__)
 
 
-class PostgreSQLMemoryBackend:
+class MemoryType(Enum):
+    """Types of memory stored in the system"""
+    FACT = "fact"
+    ANALYSIS = "analysis"
+    RECOMMENDATION = "recommendation"
+    HYPOTHESIS = "hypothesis"
+    INSIGHT = "insight"
+    CONVERSATION = "conversation"
+    DECISION = "decision"
+    KNOWLEDGE = "knowledge"
+
+
+@dataclass
+class PostgresMemoryItem:
+    """Memory item for PostgreSQL storage"""
+    memory_id: str
+    agent_id: str
+    user_id: str
+    memory_type: MemoryType
+    content: Dict[str, Any]
+    confidence: float
+    created_at: datetime
+    updated_at: datetime
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    source_event_id: Optional[str] = None
+    expires_at: Optional[datetime] = None
+    is_deleted: bool = False
+    embedding: Optional[List[float]] = None
+
+
+class EventType(Enum):
+    """Event types for audit trail"""
+    MEMORY_CREATED = "memory_created"
+    MEMORY_UPDATED = "memory_updated"
+    MEMORY_DELETED = "memory_deleted"
+    MEMORY_RETRIEVED = "memory_retrieved"
+    MEMORY_PROMOTED = "memory_promoted"
+    MEMORY_DEMOTED = "memory_demoted"
+
+
+class PostgreSQLTier:
     """
-    Scalable memory backend for specialist agents using PostgreSQL.
+    Tier 2: Structured Long-term Memory with Event Sourcing
     
-    This implementation supports:
-    - Unlimited hypothesis storage (vs 1000 record limit)
-    - Concurrent access from multiple agents
-    - Full ACID guarantees for data integrity
-    - Efficient querying and filtering
-    - Proper versioning and history tracking
-    
-    Example:
-        >>> backend = PostgreSQLMemoryBackend(pool, "neuroscientist", "user123")
-        >>> await backend.store("knowledge", {"insight": "test"}, 0.9)
-        >>> memories = await backend.retrieve(limit=10)
+    Features:
+    - ACID compliant storage
+    - Event sourcing for complete audit trail
+    - WebSocket event emission for real-time updates
+    - Automatic schema management
+    - Query optimization with indexes
     """
     
     def __init__(self, 
-                 pool: Pool,
-                 agent_type: str,
-                 user_id: Optional[str] = None):
-        """
-        Initialize the PostgreSQL memory backend.
-        
-        Args:
-            pool: asyncpg connection pool (shared across application)
-            agent_type: Type of specialist (neuroscientist, nutritionist, etc.)
-            user_id: Optional user ID for user-specific memory isolation
-        """
+                 pool: Optional[asyncpg.Pool] = None,
+                 database_url: Optional[str] = None,
+                 event_emitter=None):
         self.pool = pool
-        self.agent_type = agent_type
-        self.user_id = user_id
+        self.database_url = database_url or "postgresql://localhost/auren"
+        self.event_emitter = event_emitter
         self._initialized = False
     
     async def initialize(self):
-        """
-        Ensure database tables exist for this agent's memory.
-        This is idempotent - safe to call multiple times.
-        """
+        """Initialize database connection and schema"""
         if self._initialized:
             return
+        
+        try:
+            # Create connection pool if not provided
+            if not self.pool:
+                self.pool = await asyncpg.create_pool(
+                    self.database_url,
+                    min_size=10,
+                    max_size=50,
+                    command_timeout=30.0
+                )
             
-        async with self.pool.acquire() as conn:
-            # Create agent memory table
-            await conn.execute("""
-                CREATE TABLE IF NOT EXISTS agent_memory (
-                    id SERIAL PRIMARY KEY,
-                    agent_type VARCHAR(50) NOT NULL,
-                    user_id VARCHAR(255),
-                    memory_type VARCHAR(50) NOT NULL,
-                    content JSONB NOT NULL,
-                    confidence_score FLOAT DEFAULT 0.5,
-                    validation_status VARCHAR(20) DEFAULT 'pending',
-                    created_at TIMESTAMPTZ DEFAULT NOW(),
-                    updated_at TIMESTAMPTZ DEFAULT NOW(),
-                    version INTEGER DEFAULT 1,
-                    parent_id INTEGER REFERENCES agent_memory(id),
-                    metadata JSONB DEFAULT '{}'
-                );
-            """)
-            
-            # Create indexes
-            await conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_agent_user ON agent_memory (agent_type, user_id);
-                CREATE INDEX IF NOT EXISTS idx_memory_type ON agent_memory (memory_type);
-                CREATE INDEX IF NOT EXISTS idx_created_at ON agent_memory (created_at);
-                CREATE INDEX IF NOT EXISTS idx_validation_status ON agent_memory (validation_status);
-            """)
-            
-            # Create hypothesis tracking table
-            await conn.execute("""
-                CREATE TABLE IF NOT EXISTS agent_hypotheses (
-                    id SERIAL PRIMARY KEY,
-                    agent_type VARCHAR(50) NOT NULL,
-                    user_id VARCHAR(255),
-                    hypothesis_text TEXT NOT NULL,
-                    initial_confidence FLOAT NOT NULL,
-                    current_confidence FLOAT NOT NULL,
-                    evidence_for JSONB DEFAULT '[]',
-                    evidence_against JSONB DEFAULT '[]',
-                    status VARCHAR(20) DEFAULT 'active',
-                    created_at TIMESTAMPTZ DEFAULT NOW(),
-                    last_tested_at TIMESTAMPTZ,
-                    test_count INTEGER DEFAULT 0,
-                    validation_outcomes JSONB DEFAULT '[]'
-                );
-            """)
-            
-            # Create indexes for hypotheses
-            await conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_hypothesis_agent ON agent_hypotheses (agent_type, user_id);
-                CREATE INDEX IF NOT EXISTS idx_hypothesis_status ON agent_hypotheses (status);
-                CREATE INDEX IF NOT EXISTS idx_confidence_delta ON agent_hypotheses ((current_confidence - initial_confidence));
-            """)
+            # Create schema
+            await self._create_schema()
             
             self._initialized = True
-            logger.info(f"PostgreSQL memory backend initialized for {self.agent_type}")
+            logger.info("PostgreSQL tier initialized successfully")
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize PostgreSQL tier: {e}")
+            raise
     
-    async def store(self, 
-                   memory_type: str, 
-                   content: Dict[str, Any],
-                   confidence: float = 0.5,
-                   metadata: Optional[Dict[str, Any]] = None) -> int:
+    async def _create_schema(self):
+        """Create database schema if not exists"""
+        schema_sql = """
+        -- Enable UUID extension
+        CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+        
+        -- Global sequence for event ordering
+        CREATE SEQUENCE IF NOT EXISTS global_event_sequence;
+        
+        -- Core events table (immutable audit trail)
+        CREATE TABLE IF NOT EXISTS events (
+            sequence_id BIGINT PRIMARY KEY DEFAULT nextval('global_event_sequence'),
+            event_id UUID NOT NULL UNIQUE DEFAULT uuid_generate_v4(),
+            stream_id UUID NOT NULL,
+            event_type VARCHAR(255) NOT NULL,
+            version INTEGER NOT NULL DEFAULT 1,
+            payload JSONB NOT NULL,
+            metadata JSONB DEFAULT '{}',
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            
+            -- Optimistic concurrency control
+            CONSTRAINT unique_stream_version UNIQUE (stream_id, version)
+        );
+        
+        -- Agent memories table (projection)
+        CREATE TABLE IF NOT EXISTS agent_memories (
+            memory_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            agent_id VARCHAR(255) NOT NULL,
+            user_id UUID,
+            memory_type VARCHAR(100) NOT NULL,
+            content JSONB NOT NULL,
+            metadata JSONB DEFAULT '{}',
+            confidence FLOAT DEFAULT 1.0 CHECK (confidence >= 0 AND confidence <= 1),
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            updated_at TIMESTAMPTZ DEFAULT NOW(),
+            expires_at TIMESTAMPTZ,
+            is_deleted BOOLEAN DEFAULT FALSE,
+            source_event_id UUID REFERENCES events(event_id),
+            embedding VECTOR(1536)  -- For future semantic search
+        );
+        
+        -- Indexes for performance
+        CREATE INDEX IF NOT EXISTS idx_events_stream_id ON events(stream_id);
+        CREATE INDEX IF NOT EXISTS idx_events_type ON events(event_type);
+        CREATE INDEX IF NOT EXISTS idx_events_created_at ON events(created_at DESC);
+        
+        CREATE INDEX IF NOT EXISTS idx_memories_agent_user 
+            ON agent_memories(agent_id, user_id) WHERE NOT is_deleted;
+        CREATE INDEX IF NOT EXISTS idx_memories_type 
+            ON agent_memories(memory_type) WHERE NOT is_deleted;
+        CREATE INDEX IF NOT EXISTS idx_memories_created 
+            ON agent_memories(created_at DESC) WHERE NOT is_deleted;
+        CREATE INDEX IF NOT EXISTS idx_memories_content_gin 
+            ON agent_memories USING GIN(content);
+        
+        -- Trigger for updated_at
+        CREATE OR REPLACE FUNCTION update_updated_at_column()
+        RETURNS TRIGGER AS $$
+        BEGIN
+            NEW.updated_at = NOW();
+            RETURN NEW;
+        END;
+        $$ language 'plpgsql';
+        
+        CREATE TRIGGER update_memories_updated_at 
+            BEFORE UPDATE ON agent_memories
+            FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+        
+        -- Real-time notification function
+        CREATE OR REPLACE FUNCTION notify_memory_event()
+        RETURNS TRIGGER AS $$
+        BEGIN
+            PERFORM pg_notify('memory_events', 
+                json_build_object(
+                    'sequence_id', NEW.sequence_id,
+                    'event_id', NEW.event_id,
+                    'stream_id', NEW.stream_id,
+                    'event_type', NEW.event_type,
+                    'created_at', NEW.created_at
+                )::text
+            );
+            RETURN NEW;
+        END;
+        $$ LANGUAGE plpgsql;
+        
+        -- Trigger for real-time notifications
+        CREATE TRIGGER trigger_memory_event_notification
+            AFTER INSERT ON events
+            FOR EACH ROW
+            EXECUTE FUNCTION notify_memory_event();
         """
-        Store a new memory entry for this agent.
+        
+        async with self.pool.acquire() as conn:
+            await conn.execute(schema_sql)
+    
+    async def store_memory(self,
+                          memory_id: Optional[str] = None,
+                          agent_id: str = None,
+                          user_id: str = None,
+                          memory_type: Union[str, MemoryType] = None,
+                          content: Dict[str, Any] = None,
+                          confidence: float = 1.0,
+                          metadata: Optional[Dict[str, Any]] = None,
+                          expires_at: Optional[datetime] = None) -> str:
+        """
+        Store memory with event sourcing
         
         Args:
-            memory_type: Type of memory (observation, insight, pattern, etc.)
-            content: The actual memory content as a dictionary
-            confidence: Initial confidence score (0.0 to 1.0)
-            metadata: Additional metadata for the memory
+            memory_id: Optional memory ID (generated if not provided)
+            agent_id: Agent storing the memory
+            user_id: Associated user
+            memory_type: Type of memory
+            content: Memory content
+            confidence: Confidence score
+            metadata: Additional metadata
+            expires_at: Optional expiration
             
         Returns:
-            The ID of the created memory entry
+            Memory ID
         """
         if not self._initialized:
             await self.initialize()
+        
+        try:
+            memory_id = memory_id or str(uuid.uuid4())
+            stream_id = str(uuid.uuid4())
             
-        async with self.pool.acquire() as conn:
-            memory_id = await conn.fetchval("""
-                INSERT INTO agent_memory 
-                (agent_type, user_id, memory_type, content, confidence_score, metadata)
-                VALUES ($1, $2, $3, $4, $5, $6)
-                RETURNING id
-            """, self.agent_type, self.user_id, memory_type, 
-                json.dumps(content), confidence, json.dumps(metadata or {}))
+            if isinstance(memory_type, str):
+                memory_type = MemoryType(memory_type)
             
-            logger.debug(f"Stored memory {memory_id} for {self.agent_type}")
+            async with self.pool.acquire() as conn:
+                async with conn.transaction():
+                    # Create event for audit trail
+                    event_id = await self._append_event(
+                        conn=conn,
+                        stream_id=stream_id,
+                        event_type=EventType.MEMORY_CREATED,
+                        payload={
+                            'memory_id': memory_id,
+                            'agent_id': agent_id,
+                            'user_id': user_id,
+                            'memory_type': memory_type.value,
+                            'content': content,
+                            'confidence': confidence,
+                            'metadata': metadata,
+                            'expires_at': expires_at.isoformat() if expires_at else None
+                        }
+                    )
+                    
+                    # Store in projection table
+                    await conn.execute("""
+                        INSERT INTO agent_memories 
+                        (memory_id, agent_id, user_id, memory_type, content, 
+                         metadata, confidence, expires_at, source_event_id)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                    """, memory_id, agent_id, user_id, memory_type.value,
+                        json.dumps(content), json.dumps(metadata or {}),
+                        confidence, expires_at, event_id)
+            
+            # Emit WebSocket event
+            if self.event_emitter:
+                await self._emit_memory_event('memory_created', {
+                    'memory_id': memory_id,
+                    'agent_id': agent_id,
+                    'user_id': user_id,
+                    'memory_type': memory_type.value,
+                    'confidence': confidence
+                })
+            
+            logger.info(f"Stored memory {memory_id} in PostgreSQL tier")
             return memory_id
-    
-    async def retrieve(self,
-                      memory_type: Optional[str] = None,
-                      limit: int = 100,
-                      offset: int = 0,
-                      min_confidence: float = 0.0,
-                      order_by: str = "created_at") -> List[Dict[str, Any]]:
-        """
-        Retrieve memories for this agent with filtering options.
-        
-        Args:
-            memory_type: Filter by memory type
-            limit: Maximum number of records to return
-            offset: Number of records to skip
-            min_confidence: Minimum confidence score
-            order_by: Field to order by
             
-        Returns:
-            List of memory dictionaries
-        """
+        except Exception as e:
+            logger.error(f"Failed to store memory: {e}")
+            raise
+    
+    async def retrieve_memory(self, memory_id: str) -> Optional[PostgresMemoryItem]:
+        """Retrieve a specific memory"""
         if not self._initialized:
             await self.initialize()
-            
-        query = """
-            SELECT id, memory_type, content, confidence_score, 
-                   validation_status, created_at, updated_at, metadata
-            FROM agent_memory
-            WHERE agent_type = $1
-              AND ($2::VARCHAR IS NULL OR user_id = $2)
-              AND ($3::VARCHAR IS NULL OR memory_type = $3)
-              AND confidence_score >= $4
-            ORDER BY created_at DESC
-            LIMIT $5 OFFSET $6
-        """
         
-        async with self.pool.acquire() as conn:
-            rows = await conn.fetch(
-                query, self.agent_type, self.user_id, 
-                memory_type, min_confidence, limit, offset
-            )
-            
-            memories = []
-            for row in rows:
-                memory = dict(row)
-                memory['content'] = json.loads(memory['content']) if isinstance(memory['content'], str) else memory['content']
-                memory['metadata'] = json.loads(memory['metadata']) if isinstance(memory['metadata'], str) else memory['metadata']
-                memories.append(memory)
-            
-            return memories
+        try:
+            async with self.pool.acquire() as conn:
+                row = await conn.fetchrow("""
+                    SELECT memory_id, agent_id, user_id, memory_type, content,
+                           metadata, confidence, created_at, updated_at, 
+                           expires_at, is_deleted, source_event_id
+                    FROM agent_memories
+                    WHERE memory_id = $1 AND NOT is_deleted
+                """, memory_id)
+                
+                if not row:
+                    return None
+                
+                # Record retrieval event
+                await self._append_event(
+                    conn=conn,
+                    stream_id=str(uuid.uuid4()),
+                    event_type=EventType.MEMORY_RETRIEVED,
+                    payload={'memory_id': memory_id}
+                )
+                
+                return PostgresMemoryItem(
+                    memory_id=row['memory_id'],
+                    agent_id=row['agent_id'],
+                    user_id=row['user_id'],
+                    memory_type=MemoryType(row['memory_type']),
+                    content=json.loads(row['content']),
+                    confidence=row['confidence'],
+                    created_at=row['created_at'],
+                    updated_at=row['updated_at'],
+                    metadata=json.loads(row['metadata']),
+                    source_event_id=row['source_event_id'],
+                    expires_at=row['expires_at'],
+                    is_deleted=row['is_deleted']
+                )
+                
+        except Exception as e:
+            logger.error(f"Failed to retrieve memory {memory_id}: {e}")
+            return None
     
-    async def store_hypothesis(self,
-                             hypothesis: str,
-                             initial_confidence: float,
-                             metadata: Optional[Dict[str, Any]] = None) -> int:
-        """
-        Create a new hypothesis that the agent will track and validate.
-        
-        Args:
-            hypothesis: The hypothesis text
-            initial_confidence: Initial confidence in the hypothesis (0-1)
-            metadata: Additional context for the hypothesis
-            
-        Returns:
-            The ID of the created hypothesis
-        """
+    async def get_user_memories(self,
+                               user_id: str,
+                               agent_id: Optional[str] = None,
+                               memory_type: Optional[Union[str, MemoryType]] = None,
+                               limit: int = 100,
+                               offset: int = 0,
+                               include_expired: bool = False) -> List[PostgresMemoryItem]:
+        """Get memories for a user with filtering"""
         if not self._initialized:
             await self.initialize()
-            
-        async with self.pool.acquire() as conn:
-            hypothesis_id = await conn.fetchval("""
-                INSERT INTO agent_hypotheses
-                (agent_type, user_id, hypothesis_text, 
-                 initial_confidence, current_confidence, metadata)
-                VALUES ($1, $2, $3, $4, $4, $5)
-                RETURNING id
-            """, self.agent_type, self.user_id, hypothesis, initial_confidence,
-                json.dumps(metadata or {}))
-            
-            logger.debug(f"Created hypothesis {hypothesis_id}: {hypothesis[:50]}...")
-            return hypothesis_id
-    
-    async def update_hypothesis(self,
-                              hypothesis_id: int,
-                              new_confidence: float,
-                              evidence: Optional[Dict[str, Any]] = None):
-        """
-        Update a hypothesis based on new evidence.
         
-        Args:
-            hypothesis_id: ID of the hypothesis to update
-            new_confidence: Updated confidence score
-            evidence: New evidence supporting or contradicting the hypothesis
-        """
-        async with self.pool.acquire() as conn:
-            await conn.execute("""
-                UPDATE agent_hypotheses
-                SET current_confidence = $1,
-                    last_tested_at = NOW(),
-                    test_count = test_count + 1,
-                    status = CASE 
-                        WHEN $1 < 0.2 THEN 'rejected'
-                        WHEN $1 > 0.8 THEN 'validated'
-                        ELSE 'active'
-                    END
-                WHERE id = $2 AND agent_type = $3
-            """, new_confidence, hypothesis_id, self.agent_type)
+        try:
+            conditions = ["user_id = $1", "NOT is_deleted"]
+            params = [user_id]
+            param_count = 1
+            
+            if agent_id:
+                param_count += 1
+                conditions.append(f"agent_id = ${param_count}")
+                params.append(agent_id)
+            
+            if memory_type:
+                param_count += 1
+                if isinstance(memory_type, MemoryType):
+                    memory_type = memory_type.value
+                conditions.append(f"memory_type = ${param_count}")
+                params.append(memory_type)
+            
+            if not include_expired:
+                conditions.append("(expires_at IS NULL OR expires_at > NOW())")
+            
+            query = f"""
+                SELECT memory_id, agent_id, user_id, memory_type, content,
+                       metadata, confidence, created_at, updated_at,
+                       expires_at, is_deleted, source_event_id
+                FROM agent_memories
+                WHERE {' AND '.join(conditions)}
+                ORDER BY created_at DESC
+                LIMIT ${param_count + 1} OFFSET ${param_count + 2}
+            """
+            params.extend([limit, offset])
+            
+            async with self.pool.acquire() as conn:
+                rows = await conn.fetch(query, *params)
+                
+                memories = []
+                for row in rows:
+                    memories.append(PostgresMemoryItem(
+                        memory_id=row['memory_id'],
+                        agent_id=row['agent_id'],
+                        user_id=row['user_id'],
+                        memory_type=MemoryType(row['memory_type']),
+                        content=json.loads(row['content']),
+                        confidence=row['confidence'],
+                        created_at=row['created_at'],
+                        updated_at=row['updated_at'],
+                        metadata=json.loads(row['metadata']),
+                        source_event_id=row['source_event_id'],
+                        expires_at=row['expires_at'],
+                        is_deleted=row['is_deleted']
+                    ))
+                
+                return memories
+                
+        except Exception as e:
+            logger.error(f"Failed to get user memories: {e}")
+            return []
     
-    async def get_statistics(self) -> Dict[str, Any]:
-        """
-        Get memory statistics for this agent.
-        
-        Returns:
-            Dictionary with memory statistics
-        """
+    async def update_memory(self,
+                           memory_id: str,
+                           content: Optional[Dict[str, Any]] = None,
+                           metadata: Optional[Dict[str, Any]] = None,
+                           confidence: Optional[float] = None) -> bool:
+        """Update existing memory with event recording"""
         if not self._initialized:
             await self.initialize()
+        
+        try:
+            updates = []
+            params = []
+            param_count = 0
             
-        async with self.pool.acquire() as conn:
-            stats = await conn.fetchrow("""
+            if content is not None:
+                param_count += 1
+                updates.append(f"content = ${param_count}")
+                params.append(json.dumps(content))
+            
+            if metadata is not None:
+                param_count += 1
+                updates.append(f"metadata = ${param_count}")
+                params.append(json.dumps(metadata))
+            
+            if confidence is not None:
+                param_count += 1
+                updates.append(f"confidence = ${param_count}")
+                params.append(confidence)
+            
+            if not updates:
+                return False
+            
+            param_count += 1
+            query = f"""
+                UPDATE agent_memories
+                SET {', '.join(updates)}, updated_at = NOW()
+                WHERE memory_id = ${param_count} AND NOT is_deleted
+                RETURNING agent_id, user_id
+            """
+            params.append(memory_id)
+            
+            async with self.pool.acquire() as conn:
+                async with conn.transaction():
+                    row = await conn.fetchrow(query, *params)
+                    
+                    if not row:
+                        return False
+                    
+                    # Record update event
+                    await self._append_event(
+                        conn=conn,
+                        stream_id=str(uuid.uuid4()),
+                        event_type=EventType.MEMORY_UPDATED,
+                        payload={
+                            'memory_id': memory_id,
+                            'updates': {
+                                'content': content,
+                                'metadata': metadata,
+                                'confidence': confidence
+                            }
+                        }
+                    )
+            
+            # Emit WebSocket event
+            if self.event_emitter:
+                await self._emit_memory_event('memory_updated', {
+                    'memory_id': memory_id,
+                    'agent_id': row['agent_id'],
+                    'user_id': row['user_id']
+                })
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to update memory {memory_id}: {e}")
+            return False
+    
+    async def delete_memory(self, memory_id: str) -> bool:
+        """Soft delete memory"""
+        if not self._initialized:
+            await self.initialize()
+        
+        try:
+            async with self.pool.acquire() as conn:
+                async with conn.transaction():
+                    row = await conn.fetchrow("""
+                        UPDATE agent_memories
+                        SET is_deleted = TRUE, updated_at = NOW()
+                        WHERE memory_id = $1 AND NOT is_deleted
+                        RETURNING agent_id, user_id
+                    """, memory_id)
+                    
+                    if not row:
+                        return False
+                    
+                    # Record deletion event
+                    await self._append_event(
+                        conn=conn,
+                        stream_id=str(uuid.uuid4()),
+                        event_type=EventType.MEMORY_DELETED,
+                        payload={'memory_id': memory_id}
+                    )
+            
+            # Emit WebSocket event
+            if self.event_emitter:
+                await self._emit_memory_event('memory_deleted', {
+                    'memory_id': memory_id,
+                    'agent_id': row['agent_id'],
+                    'user_id': row['user_id']
+                })
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to delete memory {memory_id}: {e}")
+            return False
+    
+    async def search_memories(self,
+                             query: str,
+                             user_id: Optional[str] = None,
+                             agent_id: Optional[str] = None,
+                             limit: int = 50) -> List[PostgresMemoryItem]:
+        """Full-text search across memories"""
+        if not self._initialized:
+            await self.initialize()
+        
+        try:
+            conditions = ["NOT is_deleted"]
+            params = [query]
+            param_count = 1
+            
+            if user_id:
+                param_count += 1
+                conditions.append(f"user_id = ${param_count}")
+                params.append(user_id)
+            
+            if agent_id:
+                param_count += 1
+                conditions.append(f"agent_id = ${param_count}")
+                params.append(agent_id)
+            
+            # Use PostgreSQL full-text search
+            search_query = f"""
+                SELECT memory_id, agent_id, user_id, memory_type, content,
+                       metadata, confidence, created_at, updated_at,
+                       expires_at, is_deleted, source_event_id,
+                       ts_rank(to_tsvector('english', content::text), 
+                              plainto_tsquery('english', $1)) as relevance
+                FROM agent_memories
+                WHERE {' AND '.join(conditions)}
+                AND to_tsvector('english', content::text) @@ plainto_tsquery('english', $1)
+                ORDER BY relevance DESC, created_at DESC
+                LIMIT ${param_count + 1}
+            """
+            params.append(limit)
+            
+            async with self.pool.acquire() as conn:
+                rows = await conn.fetch(search_query, *params)
+                
+                memories = []
+                for row in rows:
+                    memory = PostgresMemoryItem(
+                        memory_id=row['memory_id'],
+                        agent_id=row['agent_id'],
+                        user_id=row['user_id'],
+                        memory_type=MemoryType(row['memory_type']),
+                        content=json.loads(row['content']),
+                        confidence=row['confidence'],
+                        created_at=row['created_at'],
+                        updated_at=row['updated_at'],
+                        metadata=json.loads(row['metadata']),
+                        source_event_id=row['source_event_id'],
+                        expires_at=row['expires_at'],
+                        is_deleted=row['is_deleted']
+                    )
+                    # Add relevance score to metadata
+                    memory.metadata['search_relevance'] = float(row['relevance'])
+                    memories.append(memory)
+                
+                return memories
+                
+        except Exception as e:
+            logger.error(f"Failed to search memories: {e}")
+            return []
+    
+    async def get_memory_stats(self, 
+                              user_id: Optional[str] = None,
+                              agent_id: Optional[str] = None) -> Dict[str, Any]:
+        """Get memory statistics"""
+        if not self._initialized:
+            await self.initialize()
+        
+        try:
+            conditions = ["NOT is_deleted"]
+            params = []
+            param_count = 0
+            
+            if user_id:
+                param_count += 1
+                conditions.append(f"user_id = ${param_count}")
+                params.append(user_id)
+            
+            if agent_id:
+                param_count += 1
+                conditions.append(f"agent_id = ${param_count}")
+                params.append(agent_id)
+            
+            where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+            
+            query = f"""
                 SELECT 
                     COUNT(*) as total_memories,
-                    AVG(confidence_score) as avg_confidence,
-                    COUNT(DISTINCT memory_type) as memory_types,
-                    MIN(created_at) as earliest_memory,
-                    MAX(created_at) as latest_memory,
-                    COUNT(*) FILTER (WHERE validation_status = 'validated') as validated_memories
-                FROM agent_memory
-                WHERE agent_type = $1
-                  AND ($2::VARCHAR IS NULL OR user_id = $2)
-            """, self.agent_type, self.user_id)
+                    COUNT(DISTINCT user_id) as unique_users,
+                    COUNT(DISTINCT agent_id) as unique_agents,
+                    COUNT(*) FILTER (WHERE memory_type = 'fact') as facts,
+                    COUNT(*) FILTER (WHERE memory_type = 'analysis') as analyses,
+                    COUNT(*) FILTER (WHERE memory_type = 'recommendation') as recommendations,
+                    AVG(confidence) as avg_confidence,
+                    MAX(created_at) as latest_memory
+                FROM agent_memories
+                {where_clause}
+            """
             
-            return dict(stats) if stats else {}
-
-
-def create_memory_backend(pool: Pool, agent_type: str, user_id: Optional[str] = None) -> PostgreSQLMemoryBackend:
-    """
-    Factory function to create a PostgreSQLMemoryBackend instance.
+            async with self.pool.acquire() as conn:
+                stats = await conn.fetchrow(query, *params)
+                
+                return {
+                    'total_memories': stats['total_memories'],
+                    'unique_users': stats['unique_users'],
+                    'unique_agents': stats['unique_agents'],
+                    'memory_breakdown': {
+                        'facts': stats['facts'],
+                        'analyses': stats['analyses'],
+                        'recommendations': stats['recommendations']
+                    },
+                    'average_confidence': float(stats['avg_confidence'] or 0),
+                    'latest_memory': stats['latest_memory'].isoformat() if stats['latest_memory'] else None,
+                    'user_id': user_id,
+                    'agent_id': agent_id
+                }
+                
+        except Exception as e:
+            logger.error(f"Failed to get memory stats: {e}")
+            return {}
     
-    Args:
-        pool: Database connection pool
-        agent_type: Type of agent
-        user_id: Optional user ID
+    async def promote_from_redis(self, memory_data: Dict[str, Any]) -> str:
+        """Promote memory from Redis tier to PostgreSQL"""
+        if not self._initialized:
+            await self.initialize()
         
-    Returns:
-        Configured PostgreSQLMemoryBackend instance
-    """
-    return PostgreSQLMemoryBackend(pool, agent_type, user_id)
+        try:
+            # Extract data from Redis format
+            memory_id = await self.store_memory(
+                memory_id=memory_data.get('memory_id'),
+                agent_id=memory_data['agent_id'],
+                user_id=memory_data['user_id'],
+                memory_type=memory_data['memory_type'],
+                content=memory_data['content'],
+                confidence=memory_data.get('confidence', 1.0),
+                metadata={
+                    **memory_data.get('metadata', {}),
+                    'promoted_from': 'redis',
+                    'original_created_at': memory_data.get('created_at'),
+                    'access_count': memory_data.get('access_count', 0)
+                }
+            )
+            
+            # Record promotion event
+            async with self.pool.acquire() as conn:
+                await self._append_event(
+                    conn=conn,
+                    stream_id=str(uuid.uuid4()),
+                    event_type=EventType.MEMORY_PROMOTED,
+                    payload={
+                        'memory_id': memory_id,
+                        'from_tier': 'redis',
+                        'to_tier': 'postgresql'
+                    }
+                )
+            
+            logger.info(f"Promoted memory {memory_id} from Redis to PostgreSQL")
+            return memory_id
+            
+        except Exception as e:
+            logger.error(f"Failed to promote memory from Redis: {e}")
+            raise
+    
+    async def _append_event(self,
+                           conn: asyncpg.Connection,
+                           stream_id: str,
+                           event_type: EventType,
+                           payload: Dict[str, Any],
+                           metadata: Optional[Dict[str, Any]] = None) -> str:
+        """Append event to event store"""
+        try:
+            event_id = str(uuid.uuid4())
+            metadata = metadata or {}
+            metadata['timestamp'] = datetime.now(timezone.utc).isoformat()
+            
+            # Get current version for stream
+            current_version = await conn.fetchval(
+                "SELECT COALESCE(MAX(version), 0) FROM events WHERE stream_id = $1",
+                stream_id
+            ) or 0
+            
+            new_version = current_version + 1
+            
+            # Insert event
+            await conn.execute("""
+                INSERT INTO events 
+                (event_id, stream_id, event_type, version, payload, metadata)
+                VALUES ($1, $2, $3, $4, $5, $6)
+            """, event_id, stream_id, event_type.value, new_version,
+                json.dumps(payload), json.dumps(metadata))
+            
+            return event_id
+            
+        except Exception as e:
+            logger.error(f"Failed to append event: {e}")
+            raise
+    
+    async def _emit_memory_event(self, event_type: str, data: Dict[str, Any]):
+        """Emit memory event for dashboard"""
+        if self.event_emitter:
+            try:
+                await self.event_emitter.emit({
+                    'type': f'postgres_tier_{event_type}',
+                    'timestamp': datetime.now(timezone.utc).isoformat(),
+                    'data': data
+                })
+            except Exception as e:
+                logger.error(f"Failed to emit event: {e}")
+    
+    async def cleanup_expired(self) -> int:
+        """Clean up expired memories"""
+        if not self._initialized:
+            await self.initialize()
+        
+        try:
+            async with self.pool.acquire() as conn:
+                result = await conn.execute("""
+                    UPDATE agent_memories
+                    SET is_deleted = TRUE, updated_at = NOW()
+                    WHERE expires_at < NOW() AND NOT is_deleted
+                """)
+                
+                deleted_count = int(result.split()[-1])
+                
+                if deleted_count > 0:
+                    logger.info(f"Cleaned up {deleted_count} expired memories")
+                
+                return deleted_count
+                
+        except Exception as e:
+            logger.error(f"Failed to cleanup expired memories: {e}")
+            return 0
+    
+    async def close(self):
+        """Close database connections"""
+        if self.pool:
+            await self.pool.close()
+            logger.info("PostgreSQL tier connection closed")

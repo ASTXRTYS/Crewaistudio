@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AUPEX Consciousness Monitor</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <style>
+        /* Base styles for immediate loading appearance */
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #0a0e1a;
+            color: #e7e9ea;
+            overflow-x: hidden;
+        }
+        
+        #root {
+            min-height: 100vh;
+        }
+        
+        /* Loading indicator */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-size: 18px;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div class="loading">Initializing AUPEX Consciousness Monitor...</div>
+    </div>
+    <script type="module" src="/src/index.jsx"></script>
+</body>
+</html> 

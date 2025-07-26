@@ -14,6 +14,7 @@ import os
 from datetime import datetime, timezone
 import redis.asyncio as redis
 import logging
+from pathlib import Path
 
 # Import the visualizers you built
 from auren.realtime.dashboard_backends import (
@@ -22,17 +23,60 @@ from auren.realtime.dashboard_backends import (
     LearningSystemVisualizer
 )
 
+# Import memory system
+from auren.core.memory import UnifiedMemorySystem
+from auren.config.production_settings import settings
+from auren.core.anomaly.htm_detector import HTMAnomalyDetector, HTMConfig
+import asyncpg
+
 logger = logging.getLogger(__name__)
 
 # Global instances
 visualizers = {}
 active_connections: List[WebSocket] = []
+memory_system: Optional[UnifiedMemorySystem] = None
+db_pool: Optional[asyncpg.Pool] = None
+anomaly_detector: Optional[HTMAnomalyDetector] = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize resources on startup, cleanup on shutdown"""
+    global memory_system, db_pool, anomaly_detector
+    
     # Startup
     redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+    
+    # Initialize database pool
+    db_pool = await asyncpg.create_pool(
+        settings.database_url,
+        min_size=5,
+        max_size=20,
+        timeout=30.0,
+        command_timeout=10.0
+    )
+    
+    # Initialize memory system
+    memory_system = UnifiedMemorySystem(
+        redis_url=settings.redis_url,
+        postgresql_pool=db_pool,
+        chromadb_host=settings.chromadb_host,
+        chromadb_port=settings.chromadb_port
+    )
+    await memory_system.initialize()
+    
+    # Initialize HTM anomaly detector if enabled
+    if settings.enable_htm_anomaly_detection:
+        htm_config = HTMConfig(
+            column_dimensions=settings.htm_columns,
+            cells_per_column=settings.htm_cells_per_column,
+            activation_threshold=settings.htm_activation_threshold
+        )
+        anomaly_detector = HTMAnomalyDetector(
+            redis_url=redis_url,
+            config=htm_config
+        )
+        await anomaly_detector.initialize()
+        logger.info("HTM Anomaly Detector initialized")
     
     # Initialize visualizers
     visualizers["reasoning"] = ReasoningChainVisualizer(redis_url=redis_url)
@@ -93,6 +137,24 @@ async def health_check():
         health_status["components"]["redis"] = "healthy"
     except Exception as e:
         health_status["components"]["redis"] = f"unhealthy: {str(e)}"
+        health_status["status"] = "degraded"
+    
+    # Check PostgreSQL connectivity
+    try:
+        async with db_pool.acquire() as conn:
+            await conn.fetchval("SELECT 1")
+        health_status["components"]["postgres"] = "healthy"
+    except Exception as e:
+        health_status["components"]["postgres"] = f"unhealthy: {str(e)}"
+        health_status["status"] = "degraded"
+    
+    # Check ChromaDB connectivity
+    try:
+        if memory_system and memory_system.chromadb_tier:
+            stats = await memory_system.chromadb_tier.get_memory_stats()
+            health_status["components"]["chromadb"] = "healthy"
+    except Exception as e:
+        health_status["components"]["chromadb"] = f"unhealthy: {str(e)}"
         health_status["status"] = "degraded"
     
     # Check visualizer health
@@ -205,6 +267,254 @@ async def get_system_metrics():
         }
     except Exception as e:
         logger.error(f"Error getting system metrics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Memory Statistics Endpoints
+@app.get("/api/memory/stats")
+async def get_memory_stats():
+    """Get comprehensive memory system statistics"""
+    if not memory_system:
+        raise HTTPException(status_code=503, detail="Memory system not initialized")
+    
+    try:
+        stats = await memory_system.get_system_stats()
+        
+        # Enrich with real-time metrics
+        return {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "overview": {
+                "total_memories": sum([
+                    stats.get("redis", {}).get("total_memories", 0),
+                    stats.get("postgres", {}).get("total_memories", 0),
+                    stats.get("chromadb", {}).get("total_memories", 0)
+                ]),
+                "active_agents": stats.get("active_agents", 0),
+                "memory_operations_per_second": stats.get("ops_per_second", 0)
+            },
+            "tiers": {
+                "hot": {
+                    "name": "Redis (Hot Tier)",
+                    "memories": stats.get("redis", {}).get("total_memories", 0),
+                    "memory_usage_mb": stats.get("redis", {}).get("memory_usage_mb", 0),
+                    "hit_rate": stats.get("redis", {}).get("hit_rate", 0),
+                    "avg_ttl_seconds": stats.get("redis", {}).get("avg_ttl", 0),
+                    "operations": {
+                        "reads_per_sec": stats.get("redis", {}).get("reads_per_sec", 0),
+                        "writes_per_sec": stats.get("redis", {}).get("writes_per_sec", 0)
+                    }
+                },
+                "warm": {
+                    "name": "PostgreSQL (Warm Tier)",
+                    "memories": stats.get("postgres", {}).get("total_memories", 0),
+                    "events": stats.get("postgres", {}).get("total_events", 0),
+                    "agents": stats.get("postgres", {}).get("unique_agents", 0),
+                    "avg_query_time_ms": stats.get("postgres", {}).get("avg_query_time_ms", 0),
+                    "operations": {
+                        "queries_per_sec": stats.get("postgres", {}).get("queries_per_sec", 0),
+                        "events_per_sec": stats.get("postgres", {}).get("events_per_sec", 0)
+                    }
+                },
+                "cold": {
+                    "name": "ChromaDB (Cold Tier)",
+                    "memories": stats.get("chromadb", {}).get("total_memories", 0),
+                    "collections": stats.get("chromadb", {}).get("collections", 0),
+                    "embeddings": stats.get("chromadb", {}).get("total_embeddings", 0),
+                    "storage_gb": stats.get("chromadb", {}).get("storage_gb", 0),
+                    "operations": {
+                        "searches_per_sec": stats.get("chromadb", {}).get("searches_per_sec", 0),
+                        "avg_search_time_ms": stats.get("chromadb", {}).get("avg_search_time_ms", 0)
+                    }
+                }
+            },
+            "memory_flow": {
+                "redis_to_postgres": stats.get("tier_transitions", {}).get("hot_to_warm", 0),
+                "postgres_to_chromadb": stats.get("tier_transitions", {}).get("warm_to_cold", 0),
+                "promotions": stats.get("tier_transitions", {}).get("promotions", 0)
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error fetching memory stats: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/memory/agent/{agent_id}/stats")
+async def get_agent_memory_stats(agent_id: str):
+    """Get memory statistics for a specific agent"""
+    if not memory_system:
+        raise HTTPException(status_code=503, detail="Memory system not initialized")
+    
+    try:
+        # Get agent-specific stats from each tier
+        redis_stats = await memory_system.redis_tier.get_memory_stats(agent_id)
+        postgres_stats = await memory_system.postgres_tier.get_memory_stats(agent_id)
+        chromadb_stats = await memory_system.chromadb_tier.get_memory_stats(agent_id)
+        
+        return {
+            "agent_id": agent_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "memory_count": {
+                "hot": redis_stats.get("memory_count", 0),
+                "warm": postgres_stats.get("memory_count", 0),
+                "cold": chromadb_stats.get("memory_count", 0),
+                "total": sum([
+                    redis_stats.get("memory_count", 0),
+                    postgres_stats.get("memory_count", 0),
+                    chromadb_stats.get("memory_count", 0)
+                ])
+            },
+            "memory_types": postgres_stats.get("memory_types", {}),
+            "recent_activity": {
+                "last_store": redis_stats.get("last_store_time"),
+                "last_recall": redis_stats.get("last_recall_time"),
+                "stores_last_hour": redis_stats.get("stores_last_hour", 0),
+                "recalls_last_hour": redis_stats.get("recalls_last_hour", 0)
+            },
+            "performance": {
+                "avg_recall_time_ms": postgres_stats.get("avg_recall_time_ms", 0),
+                "cache_hit_rate": redis_stats.get("hit_rate", 0),
+                "semantic_search_accuracy": chromadb_stats.get("avg_confidence", 0)
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error fetching agent memory stats: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/memory/recent")
+async def get_recent_memories(limit: int = 10, agent_id: Optional[str] = None):
+    """Get recent memory operations across all tiers"""
+    if not memory_system:
+        raise HTTPException(status_code=503, detail="Memory system not initialized")
+    
+    try:
+        # Query recent memories from PostgreSQL (event store)
+        async with db_pool.acquire() as conn:
+            query = """
+                SELECT 
+                    e.event_id,
+                    e.event_type,
+                    e.payload,
+                    e.metadata,
+                    e.created_at,
+                    am.agent_id,
+                    am.memory_type,
+                    am.importance
+                FROM events e
+                LEFT JOIN agent_memories am ON e.stream_id = am.memory_id
+                WHERE e.event_type IN ('memory_stored', 'memory_retrieved', 'memory_updated')
+                {}
+                ORDER BY e.created_at DESC
+                LIMIT $1
+            """.format("AND am.agent_id = $2" if agent_id else "")
+            
+            if agent_id:
+                rows = await conn.fetch(query, limit, agent_id)
+            else:
+                rows = await conn.fetch(query, limit)
+        
+        recent_memories = []
+        for row in rows:
+            recent_memories.append({
+                "event_id": str(row["event_id"]),
+                "event_type": row["event_type"],
+                "agent_id": row["agent_id"],
+                "memory_type": row["memory_type"],
+                "importance": float(row["importance"]) if row["importance"] else 0,
+                "timestamp": row["created_at"].isoformat(),
+                "content_preview": row["payload"].get("content", "")[:100] + "..."
+            })
+        
+        return {
+            "memories": recent_memories,
+            "count": len(recent_memories),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error fetching recent memories: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Anomaly Detection Endpoints
+@app.post("/api/anomaly/detect")
+async def detect_anomaly(
+    agent_id: str,
+    metric_name: str,
+    value: float,
+    context: Optional[Dict[str, Any]] = None
+):
+    """Detect anomaly in real-time using HTM"""
+    if not anomaly_detector:
+        raise HTTPException(
+            status_code=503,
+            detail="Anomaly detection not enabled. Set ENABLE_HTM_ANOMALY_DETECTION=true"
+        )
+    
+    try:
+        result = await anomaly_detector.detect_anomaly(
+            agent_id=agent_id,
+            metric_name=metric_name,
+            value=value,
+            context=context
+        )
+        
+        return {
+            "timestamp": result.timestamp.isoformat(),
+            "is_anomaly": result.is_anomaly,
+            "anomaly_score": result.anomaly_score,
+            "confidence": result.confidence,
+            "explanation": result.explanation,
+            "compute_time_us": result.context.get("compute_time_us", 0),
+            "threshold": result.context.get("threshold", 0)
+        }
+    except Exception as e:
+        logger.error(f"Error detecting anomaly: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/anomaly/detect-batch")
+async def detect_anomaly_batch(
+    agent_id: str,
+    metrics: List[Dict[str, Any]]
+):
+    """Detect anomalies in a batch of metrics"""
+    if not anomaly_detector:
+        raise HTTPException(
+            status_code=503,
+            detail="Anomaly detection not enabled"
+        )
+    
+    try:
+        results = await anomaly_detector.detect_batch(agent_id, metrics)
+        
+        return {
+            "agent_id": agent_id,
+            "results": [
+                {
+                    "metric": r.metric_name,
+                    "value": r.raw_value,
+                    "is_anomaly": r.is_anomaly,
+                    "score": r.anomaly_score,
+                    "explanation": r.explanation
+                }
+                for r in results
+            ],
+            "anomalies_found": sum(1 for r in results if r.is_anomaly),
+            "total_metrics": len(results)
+        }
+    except Exception as e:
+        logger.error(f"Error in batch anomaly detection: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/anomaly/agent/{agent_id}/summary")
+async def get_agent_anomaly_summary(agent_id: str):
+    """Get anomaly detection summary for an agent"""
+    if not anomaly_detector:
+        raise HTTPException(
+            status_code=503,
+            detail="Anomaly detection not enabled"
+        )
+    
+    try:
+        summary = await anomaly_detector.get_agent_anomaly_summary(agent_id)
+        return summary
+    except Exception as e:
+        logger.error(f"Error fetching anomaly summary: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # WebSocket endpoint for real-time updates
@@ -321,6 +631,38 @@ async def dashboard_websocket(websocket: WebSocket, user_id: str):
     finally:
         active_connections.remove(websocket)
         logger.info(f"WebSocket disconnected for user: {user_id}")
+
+# WebSocket endpoint for real-time anomaly alerts
+@app.websocket("/ws/anomaly/{agent_id}")
+async def anomaly_websocket(websocket: WebSocket, agent_id: str):
+    """WebSocket endpoint for real-time anomaly alerts"""
+    await websocket.accept()
+    
+    # Subscribe to anomaly events for this agent
+    redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379"))
+    pubsub = redis_client.pubsub()
+    await pubsub.subscribe(f"anomaly:{agent_id}")
+    
+    try:
+        while True:
+            # Listen for anomaly events
+            message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
+            
+            if message and message['type'] == 'message':
+                # Send anomaly to client
+                await websocket.send_text(message['data'].decode())
+            
+            # Keep connection alive
+            await asyncio.sleep(0.1)
+    
+    except WebSocketDisconnect:
+        logger.info(f"Anomaly WebSocket disconnected for agent {agent_id}")
+    except Exception as e:
+        logger.error(f"Error in anomaly WebSocket: {e}")
+    finally:
+        await pubsub.unsubscribe()
+        await pubsub.close()
+        await redis_client.close()
 
 # Serve the dashboard HTML (for development)
 @app.get("/")

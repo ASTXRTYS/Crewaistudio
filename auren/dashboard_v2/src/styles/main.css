@@ -27,8 +27,8 @@
 
 /* Dark Theme Base */
 body {
-  background: var(--space-gradient);
-  color: #e0e0e0;
+  background: #000000;
+  color: #FFFFFF;
   font-family: 'Inter', -apple-system, system-ui, sans-serif;
   overflow-x: hidden;
 }
@@ -435,6 +435,7 @@ html, body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: linear-gradient(to bottom, #000000, #121212);
 }
 
 /* Header */
@@ -492,6 +493,8 @@ html, body {
   height: 8px;
   border-radius: 50%;
   transition: background-color var(--transition-fast);
+  background: #00FFFF;
+  box-shadow: 0 0 10px #00FFFF;
 }
 
 .connection-status.connected .status-indicator {

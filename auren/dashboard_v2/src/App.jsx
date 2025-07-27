@@ -19,6 +19,8 @@ export default function App() {
   const eventProcessor = new EventProcessor();
   const [connectionStatus, setConnectionStatus] = createSignal('disconnected');
   const [wsUrl] = createSignal('ws://${window.location.host}/ws');
+  const [activeTab, setActiveTab] = createSignal('overview');
+  const [agentId, setAgentId] = createSignal('neuroscientist');
   
   // Throttle function for 100ms updates
   const throttle = (func, delay) => {
@@ -235,57 +237,38 @@ export default function App() {
           </div>
         </div>
       </header>
-      
-      <main class="dashboard-grid">
-        <section class="panel agent-status-panel">
-          <div class="panel-header">
-            <h2>Agent Status</h2>
-            <span class="panel-badge">Live</span>
+
+      <nav class="dashboard-tabs">
+        <button class={activeTab() === 'overview' ? 'active' : ''} onClick={() => setActiveTab('overview')}>Overview</button>
+        <button class={activeTab() === 'agents' ? 'active' : ''} onClick={() => setActiveTab('agents')}>Agents</button>
+        <button class={activeTab() === 'knowledge' ? 'active' : ''} onClick={() => setActiveTab('knowledge')}>Knowledge</button>
+        <button class={activeTab() === 'events' ? 'active' : ''} onClick={() => setActiveTab('events')}>Events</button>
+      </nav>
+
+      <main class="dashboard-content">
+        {activeTab() === 'overview' && (
+          <div class="overview-panel">
+            {/* Add gauges and metrics here (to be implemented) */}
           </div>
-          <div class="panel-content">
+        )}
+
+        {activeTab() === 'agents' && (
+          <div class="agents-panel">
+            <select onChange={(e) => setAgentId(e.target.value)}>
+              <option value="neuroscientist">Neuroscientist</option>
+              {/* Add more agents */}
+            </select>
             <AgentStatus />
           </div>
-        </section>
-        
-        <section class="panel knowledge-graph-panel">
-          <div class="panel-header">
-            <h2>Live Knowledge Graph</h2>
-            <span class="panel-info">GPU Accelerated</span>
-          </div>
-          <div class="panel-content">
-            <KnowledgeGraph />
-          </div>
-        </section>
-        
-        <section class="panel breakthrough-panel">
-          <div class="panel-header">
-            <h2>Breakthrough Detection</h2>
-            <span class="panel-badge pulse">HTM Active</span>
-          </div>
-          <div class="panel-content">
-            <BreakthroughMonitor />
-          </div>
-        </section>
-        
-        <section class="panel metrics-panel">
-          <div class="panel-header">
-            <h2>Performance Metrics</h2>
-            <span class="panel-info">WASM Powered</span>
-          </div>
-          <div class="panel-content">
-            <PerformanceMetrics />
-          </div>
-        </section>
-        
-        <section class="panel events-panel">
-          <div class="panel-header">
-            <h2>Event Stream</h2>
-            <span class="panel-info">100ms Latency</span>
-          </div>
-          <div class="panel-content">
-            <EventStream />
-          </div>
-        </section>
+        )}
+
+        {activeTab() === 'knowledge' && (
+          <KnowledgeGraph />
+        )}
+
+        {activeTab() === 'events' && (
+          <EventStream />
+        )}
       </main>
       
       <footer class="dashboard-footer">

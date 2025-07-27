@@ -1,6 +1,6 @@
 import { createSignal, onMount, onCleanup } from 'solid-js';
 import * as d3 from 'd3';
-import particlesJS from 'particles.js';
+// import particlesJS from 'particles.js'; // TODO: Install particles.js first
 
 export function KnowledgeGraph() {
   let canvasRef;
@@ -234,20 +234,21 @@ export function KnowledgeGraph() {
         }
       });
     
-    d3.select(canvas).call(zoom);
-
-    particlesJS('knowledge-graph-container', {
-      particles: {
-        number: { value: 80, density: { enable: true, value_area: 800 } },
-        color: { value: '#ffffff' },
-        shape: { type: 'circle' },
-        opacity: { value: 0.5 },
-        size: { value: 3, random: true },
-        line_linked: { enable: false },
-        move: { enable: true, speed: 1, direction: 'none', random: true }
-      },
-      interactivity: { detect_on: 'canvas', events: { onhover: { enable: false } } }
-    });
+        d3.select(canvas).call(zoom);
+ 
+    // TODO: Add particles.js after installation
+    // particlesJS('knowledge-graph-container', {
+    //   particles: {
+    //     number: { value: 80, density: { enable: true, value_area: 800 } },
+    //     color: { value: '#ffffff' },
+    //     shape: { type: 'circle' },
+    //     opacity: { value: 0.5 },
+    //     size: { value: 3, random: true },
+    //     line_linked: { enable: false },
+    //     move: { enable: true, speed: 1, direction: 'none', random: true }
+    //   },
+    //   interactivity: { detect_on: 'canvas', events: { onhover: { enable: false } } }
+    // });
     
     // Handle resize
     const handleResize = () => {

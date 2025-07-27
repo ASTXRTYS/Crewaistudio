@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neuroscientist - AUREN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/neuroscientist.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="main-nav">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-text">AUREN</span>
+            </div>
+            <div class="nav-links">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/agents" class="nav-link active">Agents</a>
+                <a href="/technology" class="nav-link">Technology</a>
+                <a href="/insights" class="nav-link">Insights</a>
+                <a href="/api" class="nav-link">API</a>
+                <a href="/about" class="nav-link">About</a>
+            </div>
+            <button class="nav-cta">Get Started</button>
+        </div>
+    </nav>
+
+    <!-- Agent Header -->
+    <section class="agent-header">
+        <div class="container">
+            <div class="agent-intro">
+                <div class="agent-avatar">
+                    <canvas id="avatar-3d"></canvas>
+                </div>
+                <div class="agent-info">
+                    <h1>Neuroscientist</h1>
+                    <p class="agent-tagline">CNS Optimization Specialist</p>
+                    <div class="agent-stats">
+                        <div class="stat-item">
+                            <span class="stat-value">92%</span>
+                            <span class="stat-label">Accuracy</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">8.3ms</span>
+                            <span class="stat-label">Response Time</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">47</span>
+                            <span class="stat-label">Tasks Today</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value live" id="status">ACTIVE</span>
+                            <span class="stat-label">Status</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Dashboard -->
+    <section class="agent-dashboard">
+        <div class="container">
+            <div class="dashboard-grid">
+                <!-- Real-time Metrics -->
+                <div class="dashboard-card metrics-card">
+                    <h3>Real-time Biometrics</h3>
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <canvas id="hrv-chart"></canvas>
+                            <div class="metric-info">
+                                <span class="metric-label">HRV</span>
+                                <span class="metric-value">62ms</span>
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <canvas id="stress-chart"></canvas>
+                            <div class="metric-info">
+                                <span class="metric-label">Stress Level</span>
+                                <span class="metric-value">Low</span>
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <canvas id="fatigue-chart"></canvas>
+                            <div class="metric-info">
+                                <span class="metric-label">Neural Fatigue</span>
+                                <span class="metric-value">23%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Knowledge Graph -->
+                <div class="dashboard-card knowledge-card">
+                    <h3>Knowledge Graph</h3>
+                    <div class="knowledge-controls">
+                        <button class="control-btn active">3D View</button>
+                        <button class="control-btn">2D View</button>
+                        <button class="control-btn">Timeline</button>
+                    </div>
+                    <div id="knowledge-graph"></div>
+                    <div class="knowledge-stats">
+                        <span>Nodes: <strong id="node-count">1,247</strong></span>
+                        <span>Links: <strong id="link-count">3,892</strong></span>
+                        <span>Clusters: <strong>12</strong></span>
+                    </div>
+                </div>
+
+                <!-- Hypothesis Tracking -->
+                <div class="dashboard-card hypothesis-card">
+                    <h3>Active Hypotheses</h3>
+                    <div class="hypothesis-list">
+                        <div class="hypothesis-item active">
+                            <div class="hypothesis-header">
+                                <h4>HRV Correlation with Recovery</h4>
+                                <span class="confidence">87%</span>
+                            </div>
+                            <div class="hypothesis-progress">
+                                <div class="progress-bar" style="width: 87%"></div>
+                            </div>
+                            <p>Analyzing correlation between HRV patterns and recovery protocols</p>
+                        </div>
+                        <div class="hypothesis-item">
+                            <div class="hypothesis-header">
+                                <h4>Stress Response Optimization</h4>
+                                <span class="confidence">62%</span>
+                            </div>
+                            <div class="hypothesis-progress">
+                                <div class="progress-bar" style="width: 62%"></div>
+                            </div>
+                            <p>Testing adaptive stress response protocols</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Insights -->
+                <div class="dashboard-card insights-card">
+                    <h3>Recent Insights</h3>
+                    <div class="insights-feed">
+                        <div class="insight-item">
+                            <div class="insight-time">2 min ago</div>
+                            <h4>Optimal Recovery Window Detected</h4>
+                            <p>Based on current HRV patterns, recommend 20-minute recovery protocol</p>
+                        </div>
+                        <div class="insight-item">
+                            <div class="insight-time">15 min ago</div>
+                            <h4>Stress Pattern Identified</h4>
+                            <p>Recurring stress response at 14:00-15:00 daily</p>
+                        </div>
+                        <div class="insight-item">
+                            <div class="insight-time">1 hour ago</div>
+                            <h4>Neural Efficiency Improved</h4>
+                            <p>12% improvement in cognitive processing speed</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="../js/neuroscientist.js"></script>
+</body>
+</html> 

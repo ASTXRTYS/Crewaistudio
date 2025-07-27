@@ -1,0 +1,17 @@
+#!/usr/bin/expect -f
+
+# Automated deployment script
+set timeout 300
+set password ".HvddX+@6dArsKd"
+
+spawn ./deploy_dashboard_enhancements.sh
+
+expect {
+    "password:" {
+        send "$password\r"
+        exp_continue
+    }
+    eof
+}
+
+wait 

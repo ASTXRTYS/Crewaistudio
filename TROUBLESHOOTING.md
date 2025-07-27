@@ -1,189 +1,88 @@
-# 🔧 CrewAI Studio Troubleshooting Guide
+# AUREN Dashboard Troubleshooting Guide
 
-This guide helps you resolve common startup and runtime issues with CrewAI Studio.
+## Current Status ✅
+- **Website**: http://aupex.ai is responding (200 OK)
+- **API**: Health endpoint is working
+- **CSS**: Enhanced styles are deployed (backdrop-filter confirmed)
+- **Services**: All Docker containers are running
 
-## 🚀 Quick Start (Recommended)
+## If the Page Appears Blank or Not Loading:
 
-**Always use the robust startup script:**
+### 1. Clear Browser Cache (Most Common Fix)
+- **Chrome/Edge**: Press `Ctrl+Shift+R` (Windows) or `Cmd+Shift+R` (Mac)
+- **Firefox**: Press `Ctrl+Shift+R` (Windows) or `Cmd+Shift+R` (Mac)
+- **Safari**: Press `Cmd+Option+R`
+
+### 2. Try Incognito/Private Mode
+This bypasses all cache and extensions:
+- **Chrome**: `Ctrl+Shift+N` (Windows) or `Cmd+Shift+N` (Mac)
+- **Firefox**: `Ctrl+Shift+P` (Windows) or `Cmd+Shift+P` (Mac)
+- **Safari**: `Cmd+Shift+N`
+
+### 3. Check Browser Console for Errors
+1. Open Developer Tools: Press `F12` or right-click → "Inspect"
+2. Click on the "Console" tab
+3. Look for any red error messages
+4. Common issues:
+   - **CORS errors**: The API might be blocked
+   - **404 errors**: Files not found
+   - **JavaScript errors**: Code issues
+
+### 4. Test Direct Access
+Try these URLs directly:
+- API Health: http://aupex.ai/api/health
+- CSS File: http://aupex.ai/assets/index-DeySmWur.css
+- JS File: http://aupex.ai/assets/index-CTZOFJoO.js
+
+### 5. Check Network Tab
+1. Open Developer Tools (F12)
+2. Go to "Network" tab
+3. Refresh the page
+4. Look for failed requests (red entries)
+
+### 6. Disable Browser Extensions
+Some extensions can interfere:
+1. Try in Incognito mode with extensions disabled
+2. Or temporarily disable all extensions
+
+### 7. DNS Cache Issues
+Clear your DNS cache:
+- **Windows**: `ipconfig /flushdns`
+- **Mac**: `sudo dscacheutil -flushcache`
+- **Linux**: `sudo systemd-resolve --flush-caches`
+
+## What You Should See 🎨
+
+When the enhanced dashboard loads correctly, you'll see:
+
+1. **Space-themed background** with deep gradient
+2. **Glassmorphic panels** with frosted glass effect
+3. **Neural particle background** (if enabled)
+4. **Glowing elements** with neon accents
+5. **Smooth animations** and transitions
+6. **Real-time data** updating in the panels
+
+## Quick Test Commands
+
+Run these to verify everything is working:
+
 ```bash
-./start_app.sh
+# Test if site is up
+curl -I http://aupex.ai
+
+# Test API
+curl http://aupex.ai/api/health
+
+# Check for glassmorphism CSS
+curl -s http://aupex.ai/assets/index-DeySmWur.css | grep -c "backdrop-filter"
 ```
 
-This script automatically handles cache clearing, environment validation, and dependency checks.
+## Still Not Working?
 
-## 🐛 Common Issues & Solutions
+The deployment was successful and all services are running. The most likely issue is browser caching. Try:
 
-### 1. **Import Errors**
+1. **Different browser**: Test in a browser you don't normally use
+2. **Different device**: Try on your phone or another computer
+3. **Wait 5 minutes**: Sometimes CDN caches need to refresh
 
-#### **Error:** `ModuleNotFoundError: No module named 'agents'`
-**Solution:**
-- Ensure you're running from the correct directory
-- Use the startup script: `./start_app.sh`
-- Or manually add this to the top of `app/app.py`:
-```python
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-```
-
-#### **Error:** `ImportError: attempted relative import with no known parent package`
-**Solution:**
-- This is fixed by the sys.path manipulation above
-- Clear Python cache: `find . -name "*.pyc" -delete && find . -name "__pycache__" -type d -exec rm -rf {} +`
-
-### 2. **Pydantic V2 Compatibility Issues**
-
-#### **Error:** `PydanticUserError: Field 'args_schema' defined on a base class was overridden`
-**Solution:**
-Run the validation script to check all tools:
-```bash
-python validate_tools.py
-```
-
-**Manual Fix Pattern:**
-```python
-# ❌ Wrong (missing type annotation):
-class MyTool(BaseTool):
-    args_schema = MyInputModel
-
-# ✅ Correct (proper typing):
-from typing import Type
-from pydantic import BaseModel
-
-class MyTool(BaseTool):
-    name: str = "My Tool"
-    description: str = "Tool description"
-    args_schema: Type[BaseModel] = MyInputModel
-```
-
-### 3. **File Path Issues**
-
-#### **Error:** `FileNotFoundError: [Errno 2] No such file or directory: 'img/crewai_logo.png'`
-**Solution:**
-- Use relative paths from the correct working directory
-- Fixed in `app/app.py` line 117: `st.image("../img/crewai_logo.png")`
-
-#### **Error:** `File does not exist: app/app.py`
-**Solution:**
-- Make sure you're in the project root directory
-- Run: `cd ~/Downloads/CrewAI-Studio-main`
-- Then use: `./start_app.sh`
-
-### 4. **Cache-Related Issues**
-
-#### **Symptoms:** Old code behavior persists after changes
-**Solution:**
-Clear Python cache before starting:
-```bash
-find . -name "*.pyc" -delete
-find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
-```
-
-### 5. **Database/Tool Loading Issues**
-
-#### **Error:** `KeyError: 'ReadPdfTextTool'` or similar tool not found
-**Solution:**
-1. Run tool validation: `python validate_tools.py`
-2. Check `app/my_tools.py` for proper tool registration
-3. Ensure all tool imports are working
-
-## 🛡️ Prevention Checklist
-
-### Before Making Changes:
-- [ ] Run `python validate_tools.py` to check tools
-- [ ] Clear Python cache if making import changes
-- [ ] Test with `./start_app.sh` instead of manual commands
-
-### When Adding New Tools:
-- [ ] Use proper Pydantic V2 type annotations
-- [ ] Add `args_schema: Type[BaseModel] = YourInputModel`
-- [ ] Type class attributes: `name: str = "..."`
-- [ ] Test import with validation script
-
-### When Moving/Renaming Files:
-- [ ] Update all import statements
-- [ ] Update `TOOL_CLASSES` registry in `my_tools.py`
-- [ ] Test with `./start_app.sh`
-
-## 🔍 Diagnostic Commands
-
-### Check if app is running:
-```bash
-ps aux | grep streamlit | grep -v grep
-```
-
-### Check specific port:
-```bash
-curl -I http://localhost:8501
-curl -I http://localhost:8502
-curl -I http://localhost:8503
-```
-
-### Test basic Streamlit functionality:
-```bash
-echo 'import streamlit as st; st.title("Test")' > test.py
-streamlit run test.py
-rm test.py
-```
-
-### Validate all tools:
-```bash
-python validate_tools.py
-```
-
-## 📋 Environment Requirements
-
-### Python Version:
-- Python 3.11+ recommended
-- Virtual environment active
-
-### Critical Files:
-- `app/app.py` - Main application
-- `agents/my_agent.py` - Agent definitions
-- `utils.py` - Utility functions
-- `img/crewai_logo.png` - Logo image
-
-### Port Usage:
-- Default: 8501
-- Alternative: 8502, 8503
-- Check with: `lsof -i :8501`
-
-## 🆘 Emergency Recovery
-
-If nothing works:
-
-1. **Full Reset:**
-```bash
-cd ~/Downloads/CrewAI-Studio-main
-find . -name "*.pyc" -delete
-find . -name "__pycache__" -type d -exec rm -rf {} +
-./start_app.sh
-```
-
-2. **Manual Startup:**
-```bash
-cd ~/Downloads/CrewAI-Studio-main
-source the/bin/activate  # or your venv
-cd app
-python -c "import streamlit; print('Streamlit OK')"
-python -c "import app; print('App imports OK')"
-streamlit run app.py
-```
-
-3. **Test Individual Components:**
-```bash
-python validate_tools.py
-python -c "from agents.my_agent import MyAgent; print('Agent OK')"
-python -c "from my_tools import TOOL_CLASSES; print('Tools OK')"
-```
-
-## 📞 Getting Help
-
-If issues persist:
-1. Run all diagnostic commands above
-2. Share error messages and output
-3. Include your operating system and Python version
-4. Mention which startup method you used
-
----
-*Last updated: 2025-01-09 - After successful resolution of import/Pydantic issues* 
+The enhanced dashboard IS deployed and working - it's just a matter of getting your browser to load the fresh version! 

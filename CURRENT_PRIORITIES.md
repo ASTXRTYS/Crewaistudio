@@ -396,12 +396,37 @@ DigitalOcean Droplet (144.126.215.218)
 - ⚠️ Full hypothesis validation system
 - ⚠️ Complete audit logging
 
+## 🔐 SECTION 9 SECURITY INTEGRATION (January 28, 2025)
+
+### Deliverables Within Scope of Sections 1-9:
+1. [ ] **Create User API Keys** ✅ IN SCOPE
+   - Use admin key to generate keys for devices/users
+   - Assign appropriate rate limits
+   - Document in credentials vault
+
+2. [ ] **Enable Webhook Signatures** ✅ IN SCOPE  
+   - Apply `@require_webhook_signature` decorators to webhook endpoints
+   - Configure device providers with HMAC secrets
+   - Test signature verification
+
+### Integration Work (Borderline):
+3. [ ] **Integrate Security with Biometric System** ⚠️ INTEGRATION
+   - Add Section 9 middleware to biometric container
+   - Update FastAPI app to use authentication
+   - Enable PHI encryption for new data
+
+4. [ ] **Start PHI Encryption** ⚠️ INTEGRATION
+   - Modify data storage to encrypt before saving
+   - Update retrieval to decrypt when reading
+   - Maintain backward compatibility
+
 ## 🎯 CORRECTED NEXT SPRINT PRIORITIES
 
-### Sprint 1: Quick Fixes (1-2 days)
-1. [ ] Switch to TimescaleDB Docker image in production
-2. [ ] Activate Kafka integration that's already configured
-3. [ ] Complete PHI encryption implementation
+### Sprint 1: Quick Fixes & Security (2-3 days)
+1. [x] ~~Switch to TimescaleDB Docker image in production~~ ✅ ALREADY USING
+2. [x] ~~Activate Kafka integration that's already configured~~ ✅ ALREADY ACTIVE
+3. [ ] Complete Section 9 integration tasks above
+4. [ ] Deploy Prometheus & Grafana monitoring stack
 
 ### Sprint 2: Multi-Agent System (1-2 weeks)
 1. [ ] Implement remaining 5 specialist agents

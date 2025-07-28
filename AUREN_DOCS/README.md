@@ -21,6 +21,7 @@
 - ❌ Website Deployment - **COMING SOON**
 
 ### 🔧 Operations
+- ✅ [Service Access Guide](03_OPERATIONS/SERVICE_ACCESS_GUIDE.md) - All DevOps tools & dashboards
 - ✅ [Nginx Configuration](03_OPERATIONS/NGINX_CONFIGURATION.md) - Critical deployment info
 - ❌ Daily Checklist - **COMING SOON**
 - ❌ Troubleshooting - **COMING SOON**

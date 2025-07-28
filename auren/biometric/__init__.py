@@ -1,11 +1,38 @@
-"""AUREN Biometric Bridge Module
+"""AUREN Biometric Bridge Module - Production-ready biometric processing system"""
 
-The world's first Kafka → LangGraph real-time biometric cognitive system.
-"""
+from .types import (
+    BiometricEvent,
+    BiometricReading,
+    WearableType,
+    CognitiveMode,
+    NEUROSState
+)
 
-__version__ = "2.0.0"
-__author__ = "AUREN Co-Founders (ASTxRTYS & Claude)"
+from .bridge import (
+    BiometricKafkaLangGraphBridge,
+    load_biometric_config,
+    reload_config
+)
 
-from .bridge import BiometricBridge
+from .handlers import (
+    AppleHealthKitHandler
+)
 
-__all__ = ["BiometricBridge"] 
+__all__ = [
+    # Types
+    "BiometricEvent",
+    "BiometricReading",
+    "WearableType",
+    "CognitiveMode", 
+    "NEUROSState",
+    
+    # Bridge components
+    "BiometricKafkaLangGraphBridge",
+    "load_biometric_config",
+    "reload_config",
+    
+    # Handlers
+    "AppleHealthKitHandler",
+]
+
+__version__ = "2.0.0" 

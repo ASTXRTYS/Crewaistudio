@@ -1,30 +1,37 @@
 # AUREN Biometric Bridge Requirements
+# Production-ready dependencies with pinned versions
 
-# Core async and performance
-uvloop==0.17.0
-aiohttp==3.9.1
-
-# Kafka
+# Core async dependencies
+uvloop==0.19.0
+aiohttp==3.9.3
 aiokafka==0.10.0
-
-# Database
+aioredis==2.0.1
 asyncpg==0.29.0
-redis==5.0.1
 
-# LangGraph and LangChain
-langgraph==0.0.26
-langchain-core==0.1.23
-langgraph-checkpoint==0.0.26
-
-# Configuration
+# Data validation and settings
 pydantic==2.5.3
 python-dotenv==1.0.0
 
 # Monitoring
 prometheus-client==0.19.0
 
-# Data handling
-pyyaml==6.0.1
+# Development & Testing
+pytest==8.0.0
+pytest-asyncio==0.23.3
+pytest-mock==3.12.0
+locust==2.20.1
+black==23.12.1
+ruff==0.1.11
+mypy==1.8.0
 
-# CrewAI (for NEUROS integration)
-crewai==0.28.0 
+# Database migrations
+alembic==1.13.1
+
+# Date handling
+python-dateutil==2.8.2
+
+# Security (for OAuth)
+cryptography==42.0.0 
+# API Dependencies
+fastapi==0.109.0
+uvicorn[standard]==0.27.0

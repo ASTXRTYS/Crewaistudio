@@ -1,11 +1,5 @@
-"""Biometric device handlers for various wearables"""
+"""Biometric device webhook handlers"""
 
-from .oura import OuraWebhookHandler
-from .whoop import WhoopWebhookHandler
-from .healthkit import HealthKitHandler
+from ..handlers import AppleHealthKitHandler
 
-__all__ = [
-    "OuraWebhookHandler",
-    "WhoopWebhookHandler", 
-    "HealthKitHandler"
-] 
+__all__ = ["AppleHealthKitHandler"] 

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AUREN - Neural Optimization Intelligence</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/main.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="main-nav">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-text">AUREN</span>
+            </div>
+            <div class="nav-links">
+                <a href="/" class="nav-link active">Home</a>
+                <a href="/agents" class="nav-link">Agents</a>
+                <a href="/technology" class="nav-link">Technology</a>
+                <a href="/insights" class="nav-link">Insights</a>
+                <a href="/api" class="nav-link">API</a>
+                <a href="/about" class="nav-link">About</a>
+            </div>
+            <button class="nav-cta">Get Started</button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-background" id="hero-3d"></div>
+        <div class="hero-content">
+            <div class="hero-tag">[ OUR MISSION ]</div>
+            <h1 class="hero-title">
+                Understand the<br>
+                <span class="gradient-text">Universe Within</span>
+            </h1>
+            <p class="hero-subtitle">
+                AI's knowledge should be all-encompassing and as far-reaching as possible.<br>
+                We build AI specifically to advance human neural optimization and capabilities.
+            </p>
+            <div class="hero-actions">
+                <button class="btn-primary">
+                    <span>Join Us</span>
+                    <svg class="btn-arrow" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M5 10H15M15 10L10 5M15 10L10 15" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                </button>
+                <button class="btn-secondary">Learn More</button>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <div class="mouse"></div>
+            <span>Scroll to explore</span>
+        </div>
+    </section>
+
+    <!-- Features Grid -->
+    <section class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Our AI Agents</h2>
+                <p>Specialized intelligence for human optimization</p>
+            </div>
+            <div class="features-grid">
+                <a href="/agents/neuroscientist" class="feature-card">
+                    <div class="card-glow"></div>
+                    <div class="card-icon">
+                        <div class="icon-3d" id="neuro-icon"></div>
+                    </div>
+                    <h3>Neuroscientist</h3>
+                    <p>CNS optimization specialist analyzing HRV, neural fatigue, and stress response patterns</p>
+                    <div class="card-stats">
+                        <span class="stat">
+                            <span class="stat-value">92%</span>
+                            <span class="stat-label">Accuracy</span>
+                        </span>
+                        <span class="stat">
+                            <span class="stat-value">8.3ms</span>
+                            <span class="stat-label">Response</span>
+                        </span>
+                    </div>
+                </a>
+                
+                <div class="feature-card coming-soon">
+                    <div class="card-icon">
+                        <div class="icon-placeholder"></div>
+                    </div>
+                    <h3>Nutritionist</h3>
+                    <p>Coming Soon</p>
+                </div>
+                
+                <div class="feature-card coming-soon">
+                    <div class="card-icon">
+                        <div class="icon-placeholder"></div>
+                    </div>
+                    <h3>Performance Coach</h3>
+                    <p>Coming Soon</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technology Preview -->
+    <section class="tech-preview">
+        <div class="container">
+            <div class="tech-content">
+                <div class="tech-text">
+                    <h2>Advanced Neural Architecture</h2>
+                    <p>Our proprietary 3-tier memory system processes millions of biometric events in real-time, enabling unprecedented insights into human optimization.</p>
+                    <ul class="tech-features">
+                        <li>
+                            <span class="feature-icon">⚡</span>
+                            <span>Real-time event processing</span>
+                        </li>
+                        <li>
+                            <span class="feature-icon">🧠</span>
+                            <span>Adaptive learning protocols</span>
+                        </li>
+                        <li>
+                            <span class="feature-icon">🔒</span>
+                            <span>HIPAA-compliant encryption</span>
+                        </li>
+                    </ul>
+                    <a href="/technology" class="link-arrow">
+                        Explore our technology
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M5 10H15M15 10L10 5M15 10L10 15" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                    </a>
+                </div>
+                <div class="tech-visual">
+                    <canvas id="tech-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="js/main.js"></script>
+</body>
+</html> 

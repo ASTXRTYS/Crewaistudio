@@ -1,0 +1,45 @@
+# Unified Biometric Service - All Sections 1-8
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    postgresql-client \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy all requirements
+COPY requirements.txt biometric-requirements.txt
+COPY ../agents/neuros/requirements.txt neuros-requirements.txt
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r biometric-requirements.txt
+RUN pip install --no-cache-dir -r neuros-requirements.txt
+
+# Copy all source code
+COPY . /app/biometric/
+COPY ../agents/neuros/section_8_neuros_graph.py /app/agents/neuros/
+COPY ../agents/neuros/neuros_agent_profile.yaml /app/
+
+# Copy the unified service
+COPY unified_service.py /app/
+
+# Create necessary directories
+RUN mkdir -p /app/logs /app/data
+
+# Environment
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8000/health || exit 1
+
+# Expose port
+EXPOSE 8000
+
+# Run the unified service
+CMD ["python", "unified_service.py"] 

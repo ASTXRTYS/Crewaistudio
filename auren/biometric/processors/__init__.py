@@ -1,5 +1,4 @@
-"""Cognitive processors for biometric data"""
+"""Biometric data processors"""
 
-from .cognitive import NEUROSCognitiveGraph
-
-__all__ = ["NEUROSCognitiveGraph"] 
+# Processor classes will be imported here once implemented
+__all__ = [] 

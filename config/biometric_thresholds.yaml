@@ -1,0 +1,33 @@
+# AUREN Biometric Bridge Configuration
+# Thresholds for cognitive mode switching
+
+thresholds:
+  # HRV thresholds
+  hrv_drop_ms: 25
+  hrv_drop_percentage: 30
+  
+  # Heart rate thresholds  
+  heart_rate_elevated: 100
+  heart_rate_elevation: 20
+  
+  # Stress thresholds
+  stress_level_high: 0.7
+  stress_level_critical: 0.85
+  
+  # Recovery thresholds
+  recovery_score_low: 40
+  recovery_score_moderate: 60
+  
+  # Mode switching
+  mode_switch_cooldown_seconds: 300
+  
+baselines:
+  hrv_default: 60
+  heart_rate_default: 70
+  recovery_score_default: 75
+  
+# Alert thresholds for monitoring
+alerts:
+  error_rate_threshold: 0.1  # 10% error rate
+  consumer_lag_threshold: 1000
+  checkpoint_latency_threshold: 5.0  # seconds 

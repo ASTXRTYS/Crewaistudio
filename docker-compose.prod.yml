@@ -143,6 +143,44 @@ services:
   #   container_name: auren-prometheus
   #   ...
 
+  # Biometric Bridge Service
+  biometric-bridge:
+    build: 
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: auren-biometric-bridge
+    environment:
+      - POSTGRES_URL=postgresql://auren_user:${POSTGRES_PASSWORD}@postgres:5432/auren
+      - CHECKPOINT_POSTGRES_URL=postgresql://auren_user:${POSTGRES_PASSWORD}@postgres:5432/auren
+      - REDIS_URL=redis://redis:6379
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - WEBSOCKET_URL=ws://auren-api:8080/ws
+      - PYTHONPATH=/app
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LOG_LEVEL=INFO
+      - PRODUCTION=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      auren-api:
+        condition: service_healthy
+    volumes:
+      - ./auren:/app/auren
+      - ./config:/app/config
+    command: python -m auren.biometric.bridge
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - default
+
 volumes:
   postgres_data:
   redis-data:

@@ -123,6 +123,13 @@
 2. **Webhook Counters** - Not yet tracking events per device type
 3. **NEUROS Integration** - Reasoning simulation only, not connected
 
+## 🔧 POST-CHECKPOINT FIXES
+
+### CI/CD Pipeline Fix (GitHub Actions)
+**Issue**: `assert-no-crewai` action failing due to invalid package `python-feature-flag==1.2.0`  
+**Solution**: Removed invalid package from `auren/requirements.txt`  
+**Impact**: Feature flags continue to work as they use environment variables, not an external library
+
 ---
 
 ## 🔐 ACCESS INFORMATION

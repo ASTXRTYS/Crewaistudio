@@ -53,6 +53,7 @@
 - ✅ [Grafana Query Library](03_OPERATIONS/GRAFANA_QUERY_LIBRARY.md) - Ready-to-use PromQL queries
 - ✅ [Observability Runbook](03_OPERATIONS/OBSERVABILITY_RUNBOOK.md) - Daily monitoring procedures
 - ✅ [Monitoring Stability Guide](03_OPERATIONS/MONITORING_STABILITY_GUIDE.md) - Prevention & recovery procedures
+- ✅ [Prometheus Configuration Fix](03_OPERATIONS/PROMETHEUS_CONFIGURATION_FIX.md) - Network configuration fix 🆕
 - ❌ Daily Checklist - **COMING SOON**
 - ❌ Troubleshooting - **COMING SOON**
 

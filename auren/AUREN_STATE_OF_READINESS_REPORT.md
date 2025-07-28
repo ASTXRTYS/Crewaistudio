@@ -717,4 +717,37 @@ All core services verified operational:
 - ⚠️ Integration pending - Module not yet connected to biometric system
 - ⚠️ Admin endpoints return 404 until integration complete
 
-*Last Updated: January 28, 2025 - Service verification and Section 9 status* 
+*Last Updated: January 28, 2025 - Service verification and Section 9 status*
+
+## 🚨 CRITICAL FINDINGS UPDATE: July 28, 2025
+
+### 1. Prometheus Monitoring Stack Issue
+- ✅ Prometheus and Grafana deployed (ports 9090, 3000)
+- ❌ All targets showing "down" - no metrics being collected
+- ❌ Biometric API has placeholder /metrics endpoint (returns 404)
+- 📝 Created `PROMETHEUS_ISSUE_FOR_EXECUTIVE_ENGINEER.md` for handoff
+- **Impact**: Cannot visualize memory tier operations or system performance
+
+### 2. NEUROS Memory Tier Awareness
+- ❌ NEUROS lacks full memory tier management capabilities
+- ❌ No Redis (hot tier) awareness in YAML configuration
+- ❌ Missing memory movement commands and optimization logic
+- 📝 Created `NEUROS_MEMORY_TIER_CAPABILITY_AUDIT.md` with required YAML additions
+- **Impact**: AI agent cannot actively manage memory tiers as designed
+
+### 3. Memory System Infrastructure
+- ✅ All three tiers operational (Redis, PostgreSQL, ChromaDB)
+- ✅ Memory tier dashboard exists (`auren/dashboard/memory_tier_dashboard.html`)
+- ❌ Dashboard needs Prometheus metrics backend to function
+- **Status**: Infrastructure ready, needs instrumentation and configuration
+
+### 4. Data Flow Clarifications
+- **Wearables**: Webhooks → Biometric API → Kafka → Multiple consumers (PostgreSQL, AI Agent, Redis)
+- **Voice/Audio**: WhatsApp → Transcription → Kafka → AI Agent
+- **Memory Tiers**: 
+  - Hot (Redis): Active working memory < 30 days
+  - Warm (PostgreSQL): Structured storage 30 days - 1 year
+  - Cold (ChromaDB): Semantic search > 1 year
+- **Level 1 Knowledge**: Stored in PostgreSQL (warm tier) as reference material
+
+*Last Updated: July 28, 2025 - Critical findings on monitoring and memory management* 

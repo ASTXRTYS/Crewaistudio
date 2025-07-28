@@ -133,7 +133,7 @@ def draw_sidebar():
             
 def main():
     favicon_path = asset_loader.get_image('favicon.ico')
-    st.set_page_config(page_title="CrewAI Studio", page_icon=favicon_path, layout="wide")
+    st.set_page_config(page_title="AUREN Studio", page_icon=favicon_path, layout="wide")
     load_dotenv()
     load_secrets_fron_env()
     # Register webhook verification route once the server has started.

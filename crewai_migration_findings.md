@@ -814,7 +814,7 @@ File: ./auren/config/agents/base_config.yaml
 File: ./auren/config/production_settings.py
 20-    chromadb_port: int = Field(default=8000, env="CHROMADB_PORT")
 21-    chromadb_path: str = Field(
-22:        default="/Users/Jason/Downloads/CrewAI-Studio-main/data/chromadb",
+22:        default="/Users/Jason/Downloads/AUREN-Studio-main/data/chromadb",
 23-        env="CHROMADB_PATH"
 24-    )
 ---
@@ -1015,7 +1015,7 @@ File: ./auren/scripts/test_redis_tracking.py
 File: ./auren/scripts/refactor_imports.py
 76-def refactor_all():
 77-    """Refactor all Python files in the project"""
-78:    root = Path('/Users/Jason/Downloads/CrewAI-Studio-main/auren')
+78:    root = Path('/Users/Jason/Downloads/AUREN-Studio-main/auren')
 79-    refactored_count = 0
 80-    
 ---
@@ -1432,28 +1432,28 @@ File: ./agents/my_agent.py
 File: ./validate_tools.py
 1-#!/usr/bin/env python3
 2-"""
-3:CrewAI Studio Tool Validation Script
+3:AUREN Studio Tool Validation Script
 4-Checks for common issues that cause startup failures
 5-"""
 --
 83-def main():
 84-    """Main validation function"""
-85:    print("🔧 CrewAI Studio Tool Validation")
+85:    print("🔧 AUREN Studio Tool Validation")
 86-    print("=" * 40)
 87-    
 ---
 File: ./.venv/bin/pdf2txt.py
-1:#!/Users/Jason/Downloads/CrewAI-Studio-main/.venv/bin/python3.11
+1:#!/Users/Jason/Downloads/AUREN-Studio-main/.venv/bin/python3.11
 2-"""A command line tool for extracting text and images from PDF and
 3-output it to plain text, html, xml or tags.
 ---
 File: ./.venv/bin/dumppdf.py
-1:#!/Users/Jason/Downloads/CrewAI-Studio-main/.venv/bin/python3.11
+1:#!/Users/Jason/Downloads/AUREN-Studio-main/.venv/bin/python3.11
 2-"""Extract pdf structure in XML format"""
 3-
 ---
 File: ./.venv/bin/jp.py
-1:#!/Users/Jason/Downloads/CrewAI-Studio-main/.venv/bin/python3.11
+1:#!/Users/Jason/Downloads/AUREN-Studio-main/.venv/bin/python3.11
 2-
 3-import sys
 ---
@@ -1861,20 +1861,20 @@ File: ./src/auren/app/app/my_tools.py
 File: ./src/auren/app/app/utils.py
 49-    <html>
 50-        <head>
-51:            <title>CrewAI-Studio result - {crew_name}</title>
+51:            <title>AUREN-Studio result - {crew_name}</title>
 52-            <style>
 53-                body {{
 --
 102-            </button>
 103-
-104:            <h1>CrewAI-Studio result</h1>
+104:            <h1>AUREN-Studio result</h1>
 105-            <div class="section">
 106-                <h2>Crew Information</h2>
 ---
 File: ./src/auren/app/app/app.py
 158-            
 159-def main():
-160:    st.set_page_config(page_title="CrewAI Studio", page_icon="img/favicon.ico", layout="wide")
+160:    st.set_page_config(page_title="AUREN Studio", page_icon="img/favicon.ico", layout="wide")
 161-    load_dotenv()
 162-    load_secrets_fron_env()
 ---
@@ -1900,20 +1900,20 @@ File: ./src/auren/app/my_tools.py
 File: ./src/auren/app/utils.py
 49-    <html>
 50-        <head>
-51:            <title>CrewAI-Studio result - {crew_name}</title>
+51:            <title>AUREN-Studio result - {crew_name}</title>
 52-            <style>
 53-                body {{
 --
 102-            </button>
 103-
-104:            <h1>CrewAI-Studio result</h1>
+104:            <h1>AUREN-Studio result</h1>
 105-            <div class="section">
 106-                <h2>Crew Information</h2>
 ---
 File: ./src/auren/app/app.py
 134-def main():
 135-    favicon_path = asset_loader.get_image('favicon.ico')
-136:    st.set_page_config(page_title="CrewAI Studio", page_icon=favicon_path, layout="wide")
+136:    st.set_page_config(page_title="AUREN Studio", page_icon=favicon_path, layout="wide")
 137-    load_dotenv()
 138-    load_secrets_fron_env()
 ---
@@ -2170,7 +2170,7 @@ fb5b18c feat: Add comprehensive token tracking system for AUREN
 c0274a7 Phase 3: Complete AUREN routing system implementation
 443ba90 Phase 3: Implement AUREN Routing Tools for specialist communication
 ad4b6e9 Major refactor: WhatsApp integration, RAG infra, static asset loader, legacy bridge, critical path tests, and end-to-end dev flow. See TROUBLESHOOTING.md for migration notes.
-c968b29 Initial CrewAI Studio setup with knowledge base
+c968b29 Initial AUREN Studio setup with knowledge base
 
 ### Deleted CrewAI Files:
  delete mode 100755 venv_new/bin/chroma
@@ -2262,7 +2262,7 @@ Found in documentation - 'CrewAI':
   ...
   File: ./training_data/rag_systems/README.md
 25-## Usage
-26:When discussing RAG systems in the CrewAI-Studio project, this training data will be referenced to provide:
+26:When discussing RAG systems in the AUREN-Studio project, this training data will be referenced to provide:
 27-- Accurate architectural guidance
   ...
   File: ./training_data/rag_systems/comprehensive_guides/RAG_System_Vol_01.md
@@ -2279,19 +2279,19 @@ Found in documentation - 'CrewAI':
 445-
   ...
   File: ./QUICK_SETUP.md
-1:# CrewAI Studio Quick Setup Guide
+1:# AUREN Studio Quick Setup Guide
 2-
 --
 12-git clone <YOUR_REPOSITORY_URL>
-13:cd CrewAI-Studio-main
+13:cd AUREN-Studio-main
 14-```
 --
 33-
-34:### Step 4: Run CrewAI Studio
+34:### Step 4: Run AUREN Studio
 35-```bash
 --
 42-## 📁 What's Included
-43:- ✅ Complete CrewAI Studio setup
+43:- ✅ Complete AUREN Studio setup
 44-- ✅ Custom knowledge base (knowledge_base.json)
   ...
   File: ./AUREN_5_MODULE_DEEP_DIVE_REPORT.md
@@ -2542,24 +2542,24 @@ Found in documentation - 'CrewAI':
   ...
   File: ./auren/scripts/README_KNOWLEDGE_LOADING.md
 71-```bash
-72:# From the project root (CrewAI-Studio-main)
+72:# From the project root (AUREN-Studio-main)
 73-pip install -r auren/requirements.txt
 --
 80-```bash
-81:# From the project root (CrewAI-Studio-main)
+81:# From the project root (AUREN-Studio-main)
 82-python auren/scripts/test_database_connection.py
 --
 92-```bash
-93:# From the project root (CrewAI-Studio-main)
+93:# From the project root (AUREN-Studio-main)
 94-python auren/scripts/load_knowledge_base.py
   ...
   File: ./HEALTH_TRACKING_SETUP.md
 3-## 🎯 Overview
-4:This guide shows you how to build an AI agent in CrewAI Studio that:
+4:This guide shows you how to build an AI agent in AUREN Studio that:
 5-1. Receives health data via Telegram
 --
 215-### Debug Steps:
-216:1. Check CrewAI Studio logs
+216:1. Check AUREN Studio logs
 217-2. Verify tool configurations
 --
 231-- [Telegram Bot API Documentation](https://core.telegram.org/bots/api)
@@ -2629,9 +2629,9 @@ Found in documentation - 'CrewAI':
   File: Pivot/03_Implementation_Examples/BIOMETRIC_BRIDGE_AFTER_ACTION_REPORT.md
   ...
   File: ./README.md
-1:# CrewAI Studio
+1:# AUREN Studio
 2-
-3:Welcome to CrewAI Studio! This application provides a user-friendly interface written in Streamlit for interacting with CrewAI, suitable even for those who don't want to write any code. Follow the steps below to install and run the application using Docker/docker-compose or Conda/venv.
+3:Welcome to AUREN Studio! This application provides a user-friendly interface written in Streamlit for interacting with CrewAI, suitable even for those who don't want to write any code. Follow the steps below to install and run the application using Docker/docker-compose or Conda/venv.
 4-
 --
 7-- **Multi-platform support**: Works on Windows, Linux and MacOS.
@@ -2643,12 +2643,12 @@ Found in documentation - 'CrewAI':
 13-- **Custom Tools** Custom tools for calling APIs, writing files, enhanced code interpreter, enhanced web scraper... More will be added soon
 --
 17-
-18:## Support CrewAI Studio
+18:## Support AUREN Studio
 19-
 --
 30-
-31:<img src="https://raw.githubusercontent.com/strnad/CrewAI-Studio/main/img/ss1.png" alt="crews definition" style="width:50%;"/><img src="https://raw.githubusercontent.com/strnad/CrewAI-Studio/main/img/ss2.png" alt="kickoff" style="width:50%;"/>
-32:<img src="https://raw.githubusercontent.com/strnad/CrewAI-Studio/main/img/ss3.png" alt="kickoff" style="width:50%;"/><img src="https://raw.githubusercontent.com/strnad/CrewAI-Studio/main/img/ss4.png" alt="kickoff" style="width:50%;"/>
+31:<img src="https://raw.githubusercontent.com/strnad/AUREN-Studio/main/img/ss1.png" alt="crews definition" style="width:50%;"/><img src="https://raw.githubusercontent.com/strnad/AUREN-Studio/main/img/ss2.png" alt="kickoff" style="width:50%;"/>
+32:<img src="https://raw.githubusercontent.com/strnad/AUREN-Studio/main/img/ss3.png" alt="kickoff" style="width:50%;"/><img src="https://raw.githubusercontent.com/strnad/AUREN-Studio/main/img/ss4.png" alt="kickoff" style="width:50%;"/>
   ...
   File: ./AUREN_FRAMEWORK_FIX_EXECUTIVE_REPORT.md
 33-**Dependencies Installed:**
@@ -2674,7 +2674,7 @@ Found in documentation - 'CrewAI':
   ...
   File: ./AUREN_DOCS/01_ARCHITECTURE/DOCUMENTATION_ORGANIZATION_GUIDE.md
 10-```
-11:CrewAI-Studio-main/
+11:AUREN-Studio-main/
 12-│
 --
 61-│
@@ -2765,7 +2765,7 @@ Found in documentation - 'CrewAI':
   ...
   File: ./DOCUMENTATION_ORGANIZATION_GUIDE.md
 10-```
-11:CrewAI-Studio-main/
+11:AUREN-Studio-main/
 12-│
   ...
   File: ./AUREN_100_PERCENT_IMPLEMENTATION_REPORT.md

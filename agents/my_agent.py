@@ -59,7 +59,7 @@ class MyAgent:
     def edit(self, value):
         ss[self.edit_key] = value
 
-    # --- CrewAI glue ---
+    # --- LangGraph integration ---
     def get_langgraph_agent(self) -> Agent:
         llm = create_llm(self.llm_provider_model, temperature=self.temperature)
         tools = [tool.create_tool() for tool in self.tools]

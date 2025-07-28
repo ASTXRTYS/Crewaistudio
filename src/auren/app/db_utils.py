@@ -31,7 +31,7 @@ DB_URL = os.getenv('DB_URL', DEFAULT_SQLITE_URL)
 # Create a SQLAlchemy Engine.
 # For example, DB_URL could be:
 #   "postgresql://username:password@hostname:5432/dbname"
-# or fallback to: "sqlite:///crewai.db"
+# or fallback to: "sqlite:///auren.db"
 engine = create_engine(DB_URL, echo=False)
 
 def get_db_connection():

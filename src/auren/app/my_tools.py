@@ -29,7 +29,7 @@ except ImportError:
         def __init__(self, file_path=None):
             self.file_path = file_path
 
-        def __call__(self, *args, **kwargs):  # Streamlit and CrewAI expect tools to be callable
+        def __call__(self, *args, **kwargs):  # Streamlit and LangGraph expect tools to be callable
             try:
                 import PyPDF2
                 if self.file_path and os.path.exists(self.file_path):
@@ -40,7 +40,7 @@ except ImportError:
             except Exception as e:
                 return f"[ReadPdfTextTool] Error reading PDF – {e}"
 
-        # CrewAI tools may look for a run() method – alias it to __call__ for safety
+        # LangGraph tools may look for a run() method – alias it to __call__ for safety
         run = __call__
 
     # Indicate to the rest of the module that a fallback is in use
@@ -505,7 +505,7 @@ class MyMCPServerAdapterTool(MyTool):
         super().__init__(
             tool_id,
             'MCPServerAdapter',
-            "Connect to an MCP server and expose its tools inside CrewAI.",
+            "Connect to an MCP server and expose its tools inside LangGraph.",
             parameters,
             server_url=server_url,
             transport=transport,

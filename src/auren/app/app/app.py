@@ -157,7 +157,7 @@ def draw_sidebar():
             st.rerun()
             
 def main():
-    st.set_page_config(page_title="CrewAI Studio", page_icon="img/favicon.ico", layout="wide")
+    st.set_page_config(page_title="AUREN Studio", page_icon="img/favicon.ico", layout="wide")
     load_dotenv()
     load_secrets_fron_env()
     # Register webhook verification route once the server has started.

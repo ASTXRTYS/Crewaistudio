@@ -17,7 +17,7 @@ import inspect
 from unittest.mock import patch, MagicMock
 
 from .gateway import AIGateway
-from .langgraph_gateway_adapter import CrewAIGatewayAdapter, AgentContext
+from .langgraph_gateway_adapter import LangGraphGatewayAdapter, AgentContext
 from .neuroscientist_integration_example import NeuroscientistSpecialist
 from ..monitoring.otel_config import init_telemetry
 
@@ -179,7 +179,7 @@ class NeuroscientistSecurityAuditor:
             mock_logger.return_value = logger_instance
             
             # Test adapter logging
-            adapter = CrewAIGatewayAdapter(
+            adapter = LangGraphGatewayAdapter(
                 ai_gateway=MagicMock(),
                 default_model="gpt-3.5-turbo"
             )
@@ -223,7 +223,7 @@ class NeuroscientistSecurityAuditor:
         mock_gateway = MagicMock()
         mock_gateway.complete.side_effect = Exception("Gateway error")
         
-        adapter = CrewAIGatewayAdapter(ai_gateway=mock_gateway)
+        adapter = LangGraphGatewayAdapter(ai_gateway=mock_gateway)
         
         for context_data in test_contexts:
             context = AgentContext(
@@ -282,7 +282,7 @@ class NeuroscientistSecurityAuditor:
         )
         
         # Test that contexts don't leak
-        adapter = CrewAIGatewayAdapter(ai_gateway=MagicMock())
+        adapter = LangGraphGatewayAdapter(ai_gateway=MagicMock())
         
         # Build prompts for both users
         prompt1 = await adapter._build_contextual_prompt(
@@ -314,7 +314,7 @@ class NeuroscientistSecurityAuditor:
         
         # Check that gateway requests include proper authentication
         mock_gateway = MagicMock()
-        adapter = CrewAIGatewayAdapter(ai_gateway=mock_gateway)
+        adapter = LangGraphGatewayAdapter(ai_gateway=mock_gateway)
         
         context = AgentContext(
             agent_name="Neuroscientist",
@@ -374,7 +374,7 @@ class NeuroscientistSecurityAuditor:
         
         try:
             # Create specialist with PHI in memory
-            adapter = CrewAIGatewayAdapter(ai_gateway=MagicMock())
+            adapter = LangGraphGatewayAdapter(ai_gateway=MagicMock())
             specialist = NeuroscientistSpecialist(
                 memory_path=memory_path,
                 gateway_adapter=adapter

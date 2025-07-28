@@ -11,7 +11,7 @@ from pathlib import Path
 
 # Import the AI Gateway components
 from .gateway import AIGateway
-from .langgraph_gateway_adapter import CrewAIGatewayAdapter, AgentContext
+from .langgraph_gateway_adapter import LangGraphGatewayAdapter, AgentContext
 
 # Import the BaseSpecialist framework
 from ..agents.specialists.base_specialist import (
@@ -37,7 +37,7 @@ class NeuroscientistSpecialist(BaseSpecialist):
     - Sleep optimization
     """
     
-    def __init__(self, memory_path: Path, gateway_adapter: CrewAIGatewayAdapter):
+    def __init__(self, memory_path: Path, gateway_adapter: LangGraphGatewayAdapter):
         """Initialize the Neuroscientist with gateway integration."""
         # Define the Neuroscientist's genesis configuration
         genesis = SpecialistGenesis(
@@ -279,7 +279,7 @@ async def demonstrate_integration():
     memory_profile = CognitiveTwinProfile(user_id="demo_user")
     
     # Create gateway adapter
-    adapter = CrewAIGatewayAdapter(
+    adapter = LangGraphGatewayAdapter(
         ai_gateway=gateway,
         memory_profile=memory_profile,
         default_model="gpt-3.5-turbo",

@@ -23,7 +23,7 @@ training_data/rag_systems/
 ```
 
 ## Usage
-When discussing RAG systems in the CrewAI-Studio project, this training data will be referenced to provide:
+When discussing RAG systems in the AUREN-Studio project, this training data will be referenced to provide:
 - Accurate architectural guidance
 - Best practice recommendations
 - Implementation patterns

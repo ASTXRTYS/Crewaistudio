@@ -75,7 +75,7 @@ def refactor_file(filepath: Path):
 
 def refactor_all():
     """Refactor all Python files in the project"""
-    root = Path('/Users/Jason/Downloads/CrewAI-Studio-main/auren')
+    root = Path('/Users/Jason/Downloads/AUREN-Studio-main/auren')
     refactored_count = 0
     
     for py_file in root.rglob('*.py'):

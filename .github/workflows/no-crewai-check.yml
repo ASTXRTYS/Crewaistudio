@@ -1,0 +1,57 @@
+name: Assert No CrewAI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  check-no-crewai:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install ripgrep
+      run: |
+        curl -LO https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep_14.1.0-1_amd64.deb
+        sudo dpkg -i ripgrep_14.1.0-1_amd64.deb
+    
+    - name: Assert repo is CrewAI-free
+      run: |
+        echo "Checking for CrewAI references..."
+        
+        # Check code for CrewAI references (excluding migration scripts)
+        disallowed=$(rg -i --hidden --no-ignore -e 'crew[ _-]?ai' \
+          --glob '!.github/**' \
+          --glob '!**/migration*.py' \
+          --glob '!**/*crewai*.py' \
+          --glob '!**/backup*/**' \
+          --glob '!.git/**' \
+          || true)
+        
+        if [[ -n "$disallowed" ]]; then
+          echo "::error::Found CrewAI references:"
+          echo "$disallowed"
+          exit 1
+        fi
+        
+        echo "✅ No CrewAI references found in code!"
+    
+    - name: Check Python dependencies
+      run: |
+        echo "Checking requirements files..."
+        
+        # Check for CrewAI in requirements (excluding comments)
+        if grep -i "^crewai" **/requirements*.txt 2>/dev/null; then
+          echo "::error::Found CrewAI in requirements files!"
+          exit 1
+        fi
+        
+        echo "✅ No CrewAI in requirements files!"
+    
+    - name: Summary
+      run: |
+        echo "🎉 Repository is CrewAI-free!"
+        echo "All checks passed - no CrewAI dependencies detected." 

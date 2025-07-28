@@ -47,7 +47,7 @@ class CrewAIToLangGraphMigrator:
              'from langchain.tools import Tool'),
             
             # Replace CrewAI gateway with LangGraph patterns
-            (r'from .*\.crewai_gateway_adapter import CrewAIGatewayAdapter',
+            (r'from auren.src.auren.ai.langgraph_gateway_adapter import LangGraphGatewayAdapter as LangGraphGatewayAdapter',
              'from langgraph.prebuilt import ToolExecutor'),
             
             (r'import crewai',
@@ -120,8 +120,8 @@ class CrewAIToLangGraphMigrator:
     def migrate_ui_references(self, content: str) -> str:
         """Update UI strings from CrewAI to AUREN"""
         replacements = [
-            ('CrewAI Studio', 'AUREN Studio'),
-            ('CrewAI-Studio', 'AUREN-Studio'),
+            ('AUREN Studio', 'AUREN Studio'),
+            ('AUREN-Studio', 'AUREN-Studio'),
             ('crewai', 'langgraph'),  # Only in strings/comments
         ]
         

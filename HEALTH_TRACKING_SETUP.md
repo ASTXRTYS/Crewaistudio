@@ -1,7 +1,7 @@
 # Health Tracking Agent Setup Guide
 
 ## 🎯 Overview
-This guide shows you how to build an AI agent in CrewAI Studio that:
+This guide shows you how to build an AI agent in AUREN Studio that:
 1. Receives health data via Telegram
 2. Parses structured health information
 3. Maintains a persistent PDF journal
@@ -213,7 +213,7 @@ OPENAI_API_KEY=your_openai_key_here
 4. **File not sending** - Ensure file paths are correct
 
 ### Debug Steps:
-1. Check CrewAI Studio logs
+1. Check AUREN Studio logs
 2. Verify tool configurations
 3. Test individual tools
 4. Check file permissions

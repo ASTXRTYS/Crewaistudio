@@ -1,6 +1,6 @@
 """
-CrewAI Integration for AUREN Intelligence System
-Provides seamless integration between CrewAI agents and the intelligence system
+LangGraph Integration for AUREN Intelligence System
+Provides seamless integration between LangGraph agents and the intelligence system
 """
 
 import asyncio
@@ -23,9 +23,9 @@ from intelligence.data_structures import (
 logger = logging.getLogger(__name__)
 
 
-class CrewAIIntelligenceAdapter:
+class LangGraphIntelligenceAdapter:
     """
-    Adapter for integrating CrewAI agents with AUREN intelligence system
+    Adapter for integrating LangGraph agents with AUREN intelligence system
     
     Features:
     - Automatic knowledge persistence

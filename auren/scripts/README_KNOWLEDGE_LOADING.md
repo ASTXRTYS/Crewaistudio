@@ -69,7 +69,7 @@ export DATABASE_URL=postgresql://user:password@host:port/dbname
 ### 4. Install Python dependencies
 
 ```bash
-# From the project root (CrewAI-Studio-main)
+# From the project root (AUREN-Studio-main)
 pip install -r auren/requirements.txt
 ```
 
@@ -78,7 +78,7 @@ pip install -r auren/requirements.txt
 ### Step 1: Test Database Connection
 
 ```bash
-# From the project root (CrewAI-Studio-main)
+# From the project root (AUREN-Studio-main)
 python auren/scripts/test_database_connection.py
 ```
 
@@ -90,7 +90,7 @@ This will verify:
 ### Step 2: Load Knowledge Base
 
 ```bash
-# From the project root (CrewAI-Studio-main)
+# From the project root (AUREN-Studio-main)
 python auren/scripts/load_knowledge_base.py
 ```
 

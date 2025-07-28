@@ -1,6 +1,6 @@
-# CrewAI Studio
+# AUREN Studio
 
-Welcome to CrewAI Studio! This application provides a user-friendly interface written in Streamlit for interacting with CrewAI, suitable even for those who don't want to write any code. Follow the steps below to install and run the application using Docker/docker-compose or Conda/venv.
+Welcome to AUREN Studio! This application provides a user-friendly interface written in Streamlit for interacting with CrewAI, suitable even for those who don't want to write any code. Follow the steps below to install and run the application using Docker/docker-compose or Conda/venv.
 
 ## Features
 
@@ -9,13 +9,13 @@ Welcome to CrewAI Studio! This application provides a user-friendly interface wr
 - **Conda and virtual environment support**: Choose between Conda and a Python virtual environment for installation.
 - **Results history**: You can view previous results.
 - **Knowledge sources**: You can add knowledge sources for your crews
-- **CrewAI tools** You can use crewai tools to interact with real world. ~~Crewai studio uses a forked version of crewai-tools with some bugfixes and enhancements (https://github.com/strnad/crewAI-tools)~~ (bugfixes already merged to crewai-tools)
+- **CrewAI tools** You can use crewai tools to interact with real world. ~~AUREN Studio uses a forked version of crewai-tools with some bugfixes and enhancements (https://github.com/strnad/crewAI-tools)~~ (bugfixes already merged to crewai-tools)
 - **Custom Tools** Custom tools for calling APIs, writing files, enhanced code interpreter, enhanced web scraper... More will be added soon
 - **LLM providers supported**: Currently OpenAI, Groq, Anthropic, ollama, Grok and LM Studio backends are supported. OpenAI key is probably still needed for embeddings in many tools. Don't forget to load an embedding model when using LM Studio.
 - **Single Page app export**: Feature to export crew as simple single page streamlit app.
 - **Threaded crew run**: Crews can run in background and can be stopped.
 
-## Support CrewAI Studio
+## Support AUREN Studio
 
 Your support helps fund the development and growth of our project. Every contribution is greatly appreciated!
 
@@ -28,9 +28,9 @@ Your support helps fund the development and growth of our project. Every contrib
 
 ## Screenshots
 
-<img src="https://raw.githubusercontent.com/strnad/CrewAI-Studio/main/img/ss1.png" alt="crews definition" style="width:50%;"/><img src="https://raw.githubusercontent.com/strnad/CrewAI-Studio/main/img/ss2.png" alt="kickoff" style="width:50%;"/>
-<img src="https://raw.githubusercontent.com/strnad/CrewAI-Studio/main/img/ss3.png" alt="kickoff" style="width:50%;"/><img src="https://raw.githubusercontent.com/strnad/CrewAI-Studio/main/img/ss4.png" alt="kickoff" style="width:50%;"/>
-<img src="https://raw.githubusercontent.com/strnad/CrewAI-Studio/main/img/ss5.png" alt="kickoff" style="width:50%;"/><img src="https://raw.githubusercontent.com/strnad/CrewAI-Studio/main/img/ss6.png" alt="kickoff" style="width:50%;"/>
+<img src="https://raw.githubusercontent.com/strnad/AUREN-Studio/main/img/ss1.png" alt="crews definition" style="width:50%;"/><img src="https://raw.githubusercontent.com/strnad/AUREN-Studio/main/img/ss2.png" alt="kickoff" style="width:50%;"/>
+<img src="https://raw.githubusercontent.com/strnad/AUREN-Studio/main/img/ss3.png" alt="kickoff" style="width:50%;"/><img src="https://raw.githubusercontent.com/strnad/AUREN-Studio/main/img/ss4.png" alt="kickoff" style="width:50%;"/>
+<img src="https://raw.githubusercontent.com/strnad/AUREN-Studio/main/img/ss5.png" alt="kickoff" style="width:50%;"/><img src="https://raw.githubusercontent.com/strnad/AUREN-Studio/main/img/ss6.png" alt="kickoff" style="width:50%;"/>
 
 ## Installation
 
@@ -43,8 +43,8 @@ Your support helps fund the development and growth of our project. Every contrib
 1. **Clone the repository (or use downloaded ZIP file)**:
 
    ```bash
-   git clone https://github.com/strnad/CrewAI-Studio.git
-   cd CrewAI-Studio
+   git clone https://github.com/strnad/AUREN-Studio.git
+   cd AUREN-Studio
    ```
 
 2. **Run the installation script**:
@@ -63,8 +63,8 @@ Your support helps fund the development and growth of our project. Every contrib
 1. **Clone the repository (or use downloaded ZIP file)**:
 
    ```powershell
-   git clone https://github.com/strnad/CrewAI-Studio.git
-   cd CrewAI-Studio
+   git clone https://github.com/strnad/AUREN-Studio.git
+   cd AUREN-Studio
    ```
 
 2. **Run the Conda installation script**:
@@ -87,8 +87,8 @@ Conda will be installed locally in the project folder. No need for a pre-existin
 1. **Clone the repository (or use downloaded ZIP file)**:
 
    ```bash
-   git clone https://github.com/strnad/CrewAI-Studio.git
-   cd CrewAI-Studio
+   git clone https://github.com/strnad/AUREN-Studio.git
+   cd AUREN-Studio
    ```
 
 2. **Run the Conda installation script**:
@@ -107,8 +107,8 @@ Conda will be installed locally in the project folder. No need for a pre-existin
 1. **Clone the repository (or use downloaded ZIP file)**:
 
    ```powershell
-   git clone https://github.com/strnad/CrewAI-Studio.git
-   cd CrewAI-Studio
+   git clone https://github.com/strnad/AUREN-Studio.git
+   cd AUREN-Studio
    ```
 
 2. **Run the Conda installation script**:
@@ -128,7 +128,7 @@ Conda will be installed locally in the project folder. No need for a pre-existin
 
 ## Running with Docker Compose
 
-To quickly set up and run CrewAI-Studio using Docker Compose, follow these steps:
+To quickly set up and run AUREN-Studio using Docker Compose, follow these steps:
 
 ### Prerequisites
 
@@ -138,8 +138,8 @@ To quickly set up and run CrewAI-Studio using Docker Compose, follow these steps
 
 1. Clone the repository:
 ```
-git clone https://github.com/strnad/CrewAI-Studio.git
-cd CrewAI-Studio
+git clone https://github.com/strnad/AUREN-Studio.git
+cd AUREN-Studio
 ```
 
 2. Create a .env file for configuration.  Edit for your own configuration:
@@ -160,21 +160,21 @@ Before running the application, ensure you update the `.env` file with your API 
 
 ## Troubleshooting
 In case of problems:
-- Delete the `venv/miniconda` folder and reinstall `crewai-studio`.
+- Delete the `venv/miniconda` folder and reinstall `AUREN Studio`.
 - Rename `crewai.db` (it contains your crews but sometimes new versions can break compatibility).
 - Raise an issue and I will help you.
 
 ## Video tutorial
-Video tutorial on CrewAI Studio made by Josh Poco
+Video tutorial on AUREN Studio made by Josh Poco
 
-[![FREE CrewAI Studio GUI EASY AI Agent Creation!🤖 Open Source AI Agent Orchestration Self Hosted](https://img.youtube.com/vi/3Uxdggt88pY/hqdefault.jpg)](https://www.youtube.com/watch?v=3Uxdggt88pY)
+[![FREE AUREN Studio GUI EASY AI Agent Creation!🤖 Open Source AI Agent Orchestration Self Hosted](https://img.youtube.com/vi/3Uxdggt88pY/hqdefault.jpg)](https://www.youtube.com/watch?v=3Uxdggt88pY)
 
 ## Star History
 
-<a href="https://star-history.com/#strnad/CrewAI-Studio&Date">
+<a href="https://star-history.com/#strnad/AUREN-Studio&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=strnad/CrewAI-Studio&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=strnad/CrewAI-Studio&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=strnad/CrewAI-Studio&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=strnad/AUREN-Studio&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=strnad/AUREN-Studio&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=strnad/AUREN-Studio&type=Date" />
  </picture>   
 </a>

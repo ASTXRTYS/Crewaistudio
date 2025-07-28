@@ -92,25 +92,25 @@ class LangGraphEventStreamer:
             
         return content
     
-    def migrate_crewai_integration_files(self, content: str, filepath: str) -> str:
-        """Special handling for files named crewai_integration.py"""
+    def migrate_langgraph_integration_files(self, content: str, filepath: str) -> str:
+        """Special handling for files named langgraph_integration.py"""
         
-        if 'crewai_integration' in filepath:
+        if 'langgraph_integration' in filepath:
             # These files are adapters - rename the class but keep the file
             content = re.sub(
-                r'class CrewAIIntelligenceAdapter',
+                r'class LangGraphIntelligenceAdapter',
                 'class LangGraphIntelligenceAdapter',
                 content
             )
             
             content = re.sub(
-                r'CrewAI Integration',
+                r'LangGraph Integration',
                 'LangGraph Integration',
                 content
             )
             
             content = re.sub(
-                r'CrewAI agents',
+                r'LangGraph agents',
                 'LangGraph agents',
                 content
             )
@@ -165,11 +165,11 @@ class LangGraphEventStreamer:
         return '\n'.join(new_lines)
     
     def migrate_gateway_adapter(self, content: str) -> str:
-        """Migrate CrewAI gateway adapter patterns"""
+        """Migrate LangGraph gateway adapter patterns"""
         
         # Replace class names
         content = re.sub(
-            r'CrewAIGatewayAdapter',
+            r'LangGraphGatewayAdapter',
             'LangGraphGatewayAdapter',
             content
         )
@@ -187,13 +187,13 @@ class LangGraphEventStreamer:
         
         # Replace in strings only
         content = re.sub(
-            r'(["\'`])CrewAI Studio(["\'`])',
+            r'(["\'`])AUREN Studio(["\'`])',
             r'\1AUREN Studio\2',
             content
         )
         
         content = re.sub(
-            r'(["\'`])CrewAI-Studio(["\'`])',
+            r'(["\'`])AUREN-Studio(["\'`])',
             r'\1AUREN-Studio\2',
             content
         )
@@ -225,7 +225,7 @@ class LangGraphEventStreamer:
             content = self.migrate_crewai_event_instrumentation(content)
             
             # 3. Handle integration files
-            content = self.migrate_crewai_integration_files(content, filepath)
+            content = self.migrate_langgraph_integration_files(content, filepath)
             
             # 4. Handle gateway adapters
             content = self.migrate_gateway_adapter(content)

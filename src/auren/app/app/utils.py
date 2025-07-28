@@ -48,7 +48,7 @@ def generate_printable_view(crew_name, result, inputs, formatted_result, created
     html_content = f"""
     <html>
         <head>
-            <title>CrewAI-Studio result - {crew_name}</title>
+            <title>AUREN-Studio result - {crew_name}</title>
             <style>
                 body {{
                     font-family: 'Arial', sans-serif;
@@ -101,7 +101,7 @@ def generate_printable_view(crew_name, result, inputs, formatted_result, created
                 Print
             </button>
 
-            <h1>CrewAI-Studio result</h1>
+            <h1>AUREN-Studio result</h1>
             <div class="section">
                 <h2>Crew Information</h2>
                 <p><strong>Crew Name:</strong> {crew_name}</p>

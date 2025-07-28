@@ -17,7 +17,7 @@ from pathlib import Path
 
 # Import our custom components
 from src.agents.specialists.base_specialist import BaseSpecialist
-from src.auren.ai.langgraph_gateway_adapter import CrewAIGatewayAdapter
+from src.auren.ai.langgraph_gateway_adapter import LangGraphGatewayAdapter
 from src.database.connection import DatabaseConnection
 from src.auren.monitoring.decorators import track_tokens
 from src.auren.monitoring.otel_config import otel_trace
@@ -40,7 +40,7 @@ class Neuroscientist(BaseSpecialist):
     recommendations that optimize recovery and performance.
     """
     
-    def __init__(self, gateway_adapter: CrewAIGatewayAdapter):
+    def __init__(self, gateway_adapter: LangGraphGatewayAdapter):
         """
         Initialize the Neuroscientist specialist
         
@@ -706,7 +706,7 @@ class Neuroscientist(BaseSpecialist):
 
 
 # Convenience function for creating Neuroscientist agent
-def create_neuroscientist(gateway_adapter: CrewAIGatewayAdapter) -> Neuroscientist:
+def create_neuroscientist(gateway_adapter: LangGraphGatewayAdapter) -> Neuroscientist:
     """
     Factory function to create a configured Neuroscientist agent
     
@@ -723,13 +723,13 @@ def create_neuroscientist(gateway_adapter: CrewAIGatewayAdapter) -> Neuroscienti
 if __name__ == "__main__":
     import asyncio
     from src.auren.ai.gateway import AIGateway
-    from src.auren.ai.langgraph_gateway_adapter import CrewAIGatewayAdapter
+    from src.auren.ai.langgraph_gateway_adapter import LangGraphGatewayAdapter
     
     async def test_neuroscientist():
         """Test the Neuroscientist agent"""
         # Initialize components
         gateway = AIGateway()
-        adapter = CrewAIGatewayAdapter(gateway)
+        adapter = LangGraphGatewayAdapter(gateway)
         
         # Create Neuroscientist
         neuroscientist = create_neuroscientist(adapter)

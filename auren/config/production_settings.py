@@ -19,7 +19,7 @@ class AURENSettings(BaseSettings):
     chromadb_host: str = Field(default="localhost", env="CHROMADB_HOST")
     chromadb_port: int = Field(default=8000, env="CHROMADB_PORT")
     chromadb_path: str = Field(
-        default="/Users/Jason/Downloads/CrewAI-Studio-main/data/chromadb",
+        default="/Users/Jason/Downloads/AUREN-Studio-main/data/chromadb",
         env="CHROMADB_PATH"
     )
     

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CrewAI Studio Tool Validation Script
+AUREN Studio Tool Validation Script
 Checks for common issues that cause startup failures
 """
 
@@ -82,7 +82,7 @@ def validate_tool_file(file_path):
 
 def main():
     """Main validation function"""
-    print("🔧 CrewAI Studio Tool Validation")
+    print("🔧 AUREN Studio Tool Validation")
     print("=" * 40)
     
     # Add project root to path

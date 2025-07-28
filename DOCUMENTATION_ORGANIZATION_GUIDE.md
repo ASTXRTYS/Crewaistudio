@@ -8,7 +8,7 @@
 ## 📁 RECOMMENDED DOCUMENTATION STRUCTURE
 
 ```
-CrewAI-Studio-main/
+AUREN-Studio-main/
 │
 ├── AUREN_DOCS/                    # Master documentation hub (NEW)
 │   ├── 00_QUICK_START/

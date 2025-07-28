@@ -28,7 +28,7 @@ webhook_payload = json.dumps({
                     "id": "mock_incoming_1",
                     "timestamp": "1720500000",
                     "type": "text",
-                    "text": {"body": "Hello, CrewAI!"}
+                    "text": {"body": "Hello, AUREN!"}
                 }]
             },
             "field": "messages"
@@ -40,7 +40,7 @@ webhook_payload = json.dumps({
 tool = WhatsAppWebhookTool(config=WhatsAppConfig(mode="development"), mock_api=mock_whatsapp)
 
 # Process the webhook
-result = tool._run(webhook_payload=webhook_payload, response_message="Hi! This is CrewAI responding.")
+result = tool._run(webhook_payload=webhook_payload, response_message="Hi! This is AUREN responding.")
 
 print("=== WhatsApp Webhook Tool Result ===")
 print(json.dumps(result.dict(), indent=2))

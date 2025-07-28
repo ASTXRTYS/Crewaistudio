@@ -21,7 +21,7 @@ from auren.src.database.connection import DatabaseConnection, init_db, close_db
 from auren.src.agents.specialists.neuroscientist import Neuroscientist, create_neuroscientist
 from auren.src.cep.hrv_rules import HRVRuleEngine, BiometricEvent, HRVMonitoringService
 from auren.ai.gateway import AIGateway
-from auren.ai.langgraph_gateway_adapter import CrewAIGatewayAdapter
+from auren.ai.langgraph_gateway_adapter import LangGraphGatewayAdapter
 from auren.monitoring.decorators import get_token_tracker
 from auren.src.config.settings import get_settings
 
@@ -51,7 +51,7 @@ class TestNeuroscientistIntegration:
         
         # Initialize AI components
         cls.gateway = AIGateway()
-        cls.adapter = CrewAIGatewayAdapter(cls.gateway)
+        cls.adapter = LangGraphGatewayAdapter(cls.gateway)
         cls.neuroscientist = create_neuroscientist(cls.adapter)
         
         # Initialize CEP engine

@@ -1,4 +1,4 @@
-# CrewAI Studio Quick Setup Guide
+# AUREN Studio Quick Setup Guide
 
 ## 🚀 Quick Start on Any Computer
 
@@ -10,7 +10,7 @@
 ### Step 1: Clone Your Repository
 ```bash
 git clone <YOUR_REPOSITORY_URL>
-cd CrewAI-Studio-main
+cd AUREN-Studio-main
 ```
 
 ### Step 2: Set Up Virtual Environment
@@ -31,7 +31,7 @@ source the/bin/activate
 the\Scripts\activate
 ```
 
-### Step 4: Run CrewAI Studio
+### Step 4: Run AUREN Studio
 ```bash
 streamlit run app/app.py
 ```
@@ -40,7 +40,7 @@ streamlit run app/app.py
 Open your browser and go to: **http://localhost:8501**
 
 ## 📁 What's Included
-- ✅ Complete CrewAI Studio setup
+- ✅ Complete AUREN Studio setup
 - ✅ Custom knowledge base (knowledge_base.json)
 - ✅ All required dependencies
 - ✅ Ready-to-use configuration

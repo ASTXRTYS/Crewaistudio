@@ -1,6 +1,6 @@
 """
-CrewAI Integration Layer
-Provides seamless integration between PostgreSQL memory backend and CrewAI agents
+LangGraph Integration Layer
+Provides seamless integration between PostgreSQL memory backend and LangGraph agents
 """
 
 import asyncio
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class AURENMemoryStorage:
     """
-    Memory storage implementation for CrewAI agents
+    Memory storage implementation for LangGraph agents
     Provides unlimited memory storage with PostgreSQL backend
     """
     
@@ -94,7 +94,7 @@ class AURENMemoryStorage:
 
 class AURENCrewMemoryIntegration:
     """
-    Integration layer for CrewAI agents
+    Integration layer for LangGraph agents
     Provides factory methods for creating memory storage instances
     """
     

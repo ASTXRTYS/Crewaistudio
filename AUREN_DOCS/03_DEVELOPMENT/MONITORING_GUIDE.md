@@ -29,8 +29,12 @@ AUREN now has world-class observability with Prometheus metrics, Grafana dashboa
 - **URL**: http://144.126.215.218:3000
 - **Login**: admin / auren_grafana_2025
 - **Dashboards**:
-  - AUREN AI Agent Memory Tier Visualization
-  - AUREN System Overview
+  - AUREN Memory Tier Operations - Real-Time
+  - NEUROS Cognitive Mode Analytics
+  - AUREN Webhook & Event Processing
+  - AUREN System Health & Performance
+  - AUREN AI Agent Memory Tier Visualization (Legacy)
+  - AUREN System Overview (Legacy)
 
 ### 3. Biometric API Metrics
 - **Endpoint**: http://144.126.215.218:8888/metrics

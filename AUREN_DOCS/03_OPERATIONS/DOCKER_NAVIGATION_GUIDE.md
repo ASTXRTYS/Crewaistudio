@@ -45,6 +45,43 @@ AUREN Docker Infrastructure (172.18.0.0/16 network)
     └── Port: 9092
 ```
 
+## 🔗 Container Relationship Diagram
+
+```mermaid
+graph TB
+    subgraph "AUREN Docker Network (172.18.0.0/16)"
+        subgraph "Application Layer"
+            BIO[biometric-production<br/>:8888<br/>172.18.0.5]
+        end
+        
+        subgraph "Data Layer"
+            PG[auren-postgres<br/>:5432<br/>Database]
+            REDIS[auren-redis<br/>:6379<br/>Cache]
+            KAFKA[auren-kafka<br/>:9092<br/>Events]
+        end
+        
+        subgraph "Monitoring Layer"
+            PROM[auren-prometheus<br/>:9090<br/>172.18.0.8]
+            GRAF[auren-grafana<br/>:3000<br/>Dashboards]
+        end
+        
+        BIO -->|writes| PG
+        BIO -->|caches| REDIS
+        BIO -->|publishes| KAFKA
+        PROM -->|scrapes /metrics| BIO
+        GRAF -->|queries| PROM
+    end
+    
+    subgraph "External Access"
+        USER[User/Browser]
+        API[API Clients]
+    end
+    
+    USER -->|:3000| GRAF
+    USER -->|:9090| PROM
+    API -->|:8888| BIO
+```
+
 ---
 
 ## 🔍 Discovery Journey & Troubleshooting Paths

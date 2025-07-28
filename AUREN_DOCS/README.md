@@ -21,6 +21,7 @@
 - ❌ Website Deployment - **COMING SOON**
 
 ### 🔧 Operations
+- ✅ [Nginx Configuration](03_OPERATIONS/NGINX_CONFIGURATION.md) - Critical deployment info
 - ❌ Daily Checklist - **COMING SOON**
 - ❌ Troubleshooting - **COMING SOON**
 
@@ -68,9 +69,9 @@
 ```
 AUREN_DOCS/
 ├── 00_QUICK_START/          ✅ Has 2 documents
-├── 01_ARCHITECTURE/         ❌ Empty - needs content
+├── 01_ARCHITECTURE/         ✅ Has 1 document
 ├── 02_DEPLOYMENT/           ✅ Has 1 document  
-├── 03_OPERATIONS/           ❌ Empty - needs content
+├── 03_OPERATIONS/           ✅ Has 1 document
 └── 04_DEVELOPMENT/          ❌ Empty - needs content
 ```
 
@@ -83,6 +84,8 @@ AUREN_DOCS/
 - ✅ Added enterprise authentication, PHI encryption, and audit logging
 - ✅ Updated credentials vault with security keys
 - ✅ Created deployment script and comprehensive tests
+- ✅ Fixed website deployment (wrong version was live)
+- ✅ Created post-mortem and nginx configuration docs
 
 ### July 28, 2025
 - ✅ Deployed Biometric System (Sections 1-8)

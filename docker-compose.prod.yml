@@ -1,192 +1,80 @@
 version: '3.8'
 
 services:
-  # PostgreSQL - Essential
   postgres:
-    image: timescale/timescaledb:latest-pg16
+    image: timescale/timescaledb:latest-pg14
     container_name: auren-postgres
-    ports:
-      - "5432:5432"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     environment:
-      POSTGRES_DB: auren_db
       POSTGRES_USER: auren_user
-      POSTGRES_PASSWORD: auren_password_2024
+      POSTGRES_PASSWORD: auren_secure_2025
+      POSTGRES_DB: auren_production
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./sql/init:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U auren_user -d auren_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
 
-  # Redis - Essential  
   redis:
     image: redis:7-alpine
     container_name: auren-redis
-    ports:
-      - "6379:6379"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # ChromaDB - Essential for vector search
-  chromadb:
-    image: chromadb/chroma:0.4.22
-    container_name: auren-chromadb
-    ports:
-      - "8000:8000"
-    environment:
-      - IS_PERSISTENT=TRUE
-      - ANONYMIZED_TELEMETRY=FALSE
-    restart: unless-stopped
-
-  # API Service - Essential
-  auren-api:
-    build:
-      context: .
-      dockerfile: Dockerfile.api
-    container_name: auren-api
-    ports:
-      - "8080:8080"
-    environment:
-      - DATABASE_URL=postgresql://auren_user:auren_password_2024@postgres:5432/auren_db
-      - REDIS_URL=redis://redis:6379
-      - CHROMADB_HOST=chromadb
-      - CHROMADB_PORT=8000
-      - PYTHONPATH=/app
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-      - KAFKA_ENABLED=true
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      chromadb:
-        condition: service_started
-      kafka:
-        condition: service_started
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
     volumes:
-      - ./auren:/app/auren
-    command: python -m uvicorn auren.api.dashboard_api_minimal:app --host 0.0.0.0 --port 8080
+      - redis_data:/data
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
-  # Kafka Services
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
-    container_name: auren-zookeeper
+  biometric-bridge:
+    image: auren-biometric:latest
+    container_name: biometric-production
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    ports:
+      - "8888:8888"
     environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+      - ENVIRONMENT=production
+      - DISABLE_TEST_EVENTS=true
+    depends_on:
+      - postgres
+      - redis
     restart: unless-stopped
 
   kafka:
-    image: confluentinc/cp-kafka:7.5.0
+    image: bitnami/kafka:3.5
     container_name: auren-kafka
-    depends_on:
-      - zookeeper
-    ports:
-      - "9092:9092"
-      - "29092:29092"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-    restart: unless-stopped
-
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: auren-kafka-ui
-    depends_on:
-      - kafka
-    ports:
-      - "8081:8080"
-    environment:
-      KAFKA_CLUSTERS_0_NAME: auren
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
-      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
-    restart: unless-stopped
-
-  # Nginx Proxy
-  nginx:
-    image: nginx:alpine
-    container_name: auren-nginx
-    ports:
-      - "80:80"
-      - "443:443"
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
     volumes:
-      - ./nginx-temp.conf:/etc/nginx/nginx.conf:ro
-      - ./auren/dashboard_v2/dist:/usr/share/nginx/html:ro
-      - nginx-logs:/var/log/nginx
-    depends_on:
-      - auren-api
+      - kafka_data:/bitnami/kafka
     restart: unless-stopped
-
-  # Optional: Monitoring (can be enabled later)
-  # prometheus:
-  #   image: prom/prometheus:latest
-  #   container_name: auren-prometheus
-  #   ...
-
-  # Biometric Bridge Service
-  biometric-bridge:
-    build: 
-      context: .
-      dockerfile: Dockerfile.api
-    container_name: auren-biometric-bridge
-    environment:
-      - POSTGRES_URL=postgresql://auren_user:${POSTGRES_PASSWORD}@postgres:5432/auren
-      - CHECKPOINT_POSTGRES_URL=postgresql://auren_user:${POSTGRES_PASSWORD}@postgres:5432/auren
-      - REDIS_URL=redis://redis:6379
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-      - WEBSOCKET_URL=ws://auren-api:8080/ws
-      - PYTHONPATH=/app
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - LOG_LEVEL=INFO
-      - PRODUCTION=true
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      kafka:
-        condition: service_started
-      auren-api:
-        condition: service_healthy
-    volumes:
-      - ./auren:/app/auren
-      - ./config:/app/config
-    command: python -m auren.biometric.bridge
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8002/metrics"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    networks:
-      - default
 
 volumes:
   postgres_data:
-  redis-data:
-  chromadb-data:
-  nginx-logs:
+  redis_data:
+  kafka_data:
 
 networks:
   default:
-    name: auren-network 
+    name: auren-network
+    external: true

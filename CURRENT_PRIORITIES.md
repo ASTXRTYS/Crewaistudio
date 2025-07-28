@@ -426,7 +426,25 @@ DigitalOcean Droplet (144.126.215.218)
 1. [x] ~~Switch to TimescaleDB Docker image in production~~ ✅ ALREADY USING
 2. [x] ~~Activate Kafka integration that's already configured~~ ✅ ALREADY ACTIVE
 3. [ ] Complete Section 9 integration tasks above
-4. [ ] Deploy Prometheus & Grafana monitoring stack
+4. [x] Deploy Prometheus & Grafana monitoring stack ✅ DEPLOYED (July 28)
+
+### Sprint 1.5: CRITICAL FIXES (IMMEDIATE)
+1. [ ] **Fix Prometheus Metrics** 🚨
+   - Instrument biometric API with prometheus_client
+   - Add memory tier operation metrics
+   - Fix scraper network configuration
+   - Hand off to Executive Engineer (see PROMETHEUS_ISSUE_FOR_EXECUTIVE_ENGINEER.md)
+
+2. [ ] **Update NEUROS Memory Configuration** 🚨
+   - Add full memory tier definitions to neuros.yaml
+   - Enable Redis (hot tier) awareness
+   - Add memory management actions and tools
+   - See NEUROS_MEMORY_TIER_CAPABILITY_AUDIT.md for required changes
+
+3. [ ] **Enable Memory Tier Observability**
+   - Connect memory tier dashboard to Prometheus metrics
+   - Create Grafana dashboards for tier movements
+   - Add audit logging for AI memory decisions
 
 ### Sprint 2: Multi-Agent System (1-2 weeks)
 1. [ ] Implement remaining 5 specialist agents

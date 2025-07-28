@@ -115,6 +115,36 @@ redis://auren-redis:6379/0
 
 ---
 
+## 🔐 SECTION 9: SECURITY ENHANCEMENT LAYER
+
+### PHI Encryption
+- **PHI_MASTER_KEY**: `OIixes55QW8WL7ky0Q7HDHYRTwKld8U0kQvrZnFrRhA=`
+- **Algorithm**: AES-256-GCM with HKDF key derivation
+- **Purpose**: HIPAA-compliant PHI encryption at rest
+- **Created**: 2025-01-28
+
+### Enhanced Webhook Secrets (Comma-separated for rotation)
+- **OURA_WEBHOOK_SECRET**: `f62f68881a767d70e68c33ea6838ee30cc184236fe246eea2949d8e0b0e8a90f,48472b2ac542d7a09be5aaff871de00a82ca44afe29caa520281d0d57afe25f0`
+- **WHOOP_WEBHOOK_SECRET**: `3cffe8ff206c9981ae10dab70fd99c40d7d107cbe25e5afdc2406b0b2512334c,2078799b92d7ac64a9b5fa85e1f4c4b484fea3dec3af470ebe9109f9bedfbeda`
+- **APPLEHEALTH_WEBHOOK_SECRET**: `4251ed6108a8834e62447fb7565dd1da313135b2e6f5f8dd0cd03f9681583528,bf5b6cea694d0c9fabd5f1cfceb641e8de63835ab5db483fed183c386cde109f`
+- **GARMIN_WEBHOOK_SECRET**: `b1d9c59063acb8c36d8050ab996c43613186a92917de0715c57f9e3ece4ad6c1,b62003b2a4ba2155b00ab4f37070dffde052f0b45e45af2e3a24795d36dc00a2`
+- **FITBIT_WEBHOOK_SECRET**: `15e94fccfc0f657c533c4e9271bad165ccf30275797de585c2d2ac2aa64455cd,d46540be4c4f9f6f01be90bce89caa1895deda4715bcc579578682079ac0f9fa`
+
+### Security Service Endpoints
+- **Admin API**: http://144.126.215.218:8888/admin
+- **Audit Logs**: http://144.126.215.218:8888/admin/audit-logs
+- **API Key Management**: http://144.126.215.218:8888/admin/api-keys
+
+### Initial Admin API Key
+- **Key ID**: [To be generated during deployment]
+- **API Key**: [To be generated during deployment]
+- **Role**: admin
+- **Purpose**: Initial system administration
+
+*Note: Webhook signature verification is now ENABLED and REQUIRED*
+
+---
+
 ## 📁 CRITICAL FILE PATHS
 
 ### On Server
@@ -173,6 +203,7 @@ docker exec -it auren-kafka /bin/kafka-console-consumer --bootstrap-server local
 |------|------|--------|---------|
 | 2025-07-28 | Senior Engineer | Created vault | Initial documentation |
 | 2025-07-28 | Senior Engineer | Updated PostgreSQL | Changed password to auren_secure_2025 |
+| 2025-01-28 | Senior Engineer | Added Section 9 | Security enhancement credentials |
 
 ---
 

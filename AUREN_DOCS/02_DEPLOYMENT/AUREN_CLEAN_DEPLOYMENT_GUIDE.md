@@ -141,10 +141,11 @@ Expected response:
 
 ### 2. Test Webhook Endpoint
 ```bash
+# IMPORTANT: Must use correct event types!
 curl -X POST http://localhost:8888/webhooks/oura \
   -H "Content-Type: application/json" \
   -d '{
-    "event_type": "daily_readiness",
+    "event_type": "readiness.updated",
     "user_id": "test_user",
     "data": {
       "readiness_score": 85,

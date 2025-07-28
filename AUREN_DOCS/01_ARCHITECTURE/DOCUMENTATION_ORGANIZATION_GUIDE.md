@@ -23,7 +23,17 @@ CrewAI-Studio-main/
 │   │
 │   ├── 03_OPERATIONS/
 │   │   ├── SERVICE_ACCESS_GUIDE.md   ✅ All DevOps tools
-│   │   └── NGINX_CONFIGURATION.md    ✅ Website deployment
+│   │   ├── NGINX_CONFIGURATION.md    ✅ Website deployment
+│   │   ├── DOCKER_NAVIGATION_GUIDE.md ✅ Container navigation & troubleshooting
+│   │   ├── PROMETHEUS_TROUBLESHOOTING_PLAYBOOK.md ✅ Prometheus fix history
+│   │   ├── METRICS_CATALOG.md      ✅ Complete AUREN metrics reference
+│   │   ├── GRAFANA_QUERY_LIBRARY.md ✅ Ready-to-use PromQL queries
+│   │   ├── OBSERVABILITY_RUNBOOK.md ✅ Daily monitoring procedures
+│   │   └── MONITORING_STABILITY_GUIDE.md ✅ Prevention & recovery procedures
+│   │
+│   ├── 04_DEVELOPMENT/
+│   │   ├── MONITORING_GUIDE.md      ✅ Complete monitoring setup
+│   │   └── INTEGRATION_PATTERNS.md  ✅ Best practices for new features
 │   │
 │   └── README.md                  # Navigation hub with all links
 │
@@ -94,6 +104,25 @@ CrewAI-Studio-main/
     ├── MONITORING_QUICK_START.md
     └── JULY_28_2025_WORK_SUMMARY.md
 ```
+
+---
+
+## 📊 CURRENT DOCUMENTATION STATUS
+
+### Folder Document Counts:
+- `00_QUICK_START/`: 2 documents ✅
+- `01_ARCHITECTURE/`: 1 document ✅
+- `02_DEPLOYMENT/`: 1 document ✅
+- `03_OPERATIONS/`: 8 documents ✅ (Significantly expanded!)
+- `04_DEVELOPMENT/`: 2 documents ✅
+
+**Total AUREN_DOCS**: 14 documents
+
+### Recent Additions (January 28, 2025):
+- Added comprehensive monitoring documentation
+- Created metrics catalog and query library
+- Added observability runbook and stability guide
+- Created integration patterns for developers
 
 ---
 
@@ -247,7 +276,12 @@ Create `README.md` in each folder explaining what goes there
 → `auren/AUREN_STATE_OF_READINESS_REPORT.md`
 
 ### Monitoring & observability?
-→ `MONITORING_QUICK_START.md` & `PROMETHEUS_ISSUE_FOR_EXECUTIVE_ENGINEER.md`
+→ `AUREN_DOCS/03_OPERATIONS/` - Contains all monitoring docs:
+  - `METRICS_CATALOG.md` - All AUREN metrics
+  - `GRAFANA_QUERY_LIBRARY.md` - PromQL queries
+  - `OBSERVABILITY_RUNBOOK.md` - Daily procedures
+  - `MONITORING_STABILITY_GUIDE.md` - Prevention & recovery
+  - `PROMETHEUS_TROUBLESHOOTING_PLAYBOOK.md` - Fix history
 
 ### NEUROS memory configuration?
 → `auren/config/neuros.yaml` & `NEUROS_MEMORY_ENHANCEMENT_SUMMARY.md`
@@ -286,12 +320,12 @@ When creating new documentation:
 
 ## 🎯 PRIORITY ORDER
 
-1. **CRITICAL**: Move all passwords to CREDENTIALS_VAULT.md
-2. **HIGH**: Create AUREN_DOCS structure
+1. **CRITICAL**: ~~Move all passwords to CREDENTIALS_VAULT.md~~ ✅ DONE
+2. **HIGH**: ~~Create AUREN_DOCS structure~~ ✅ DONE
 3. **HIGH**: Document remaining agents
-4. **MEDIUM**: Create operational runbooks
+4. **MEDIUM**: ~~Create operational runbooks~~ ✅ DONE (Observability runbook created)
 5. **MEDIUM**: Update all deployment guides
-6. **LOW**: Add diagrams and visuals
+6. **LOW**: ~~Add diagrams and visuals~~ ✅ DONE (Docker navigation diagram added)
 
 ---
 

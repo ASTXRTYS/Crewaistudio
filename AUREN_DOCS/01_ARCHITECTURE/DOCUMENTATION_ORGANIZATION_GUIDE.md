@@ -10,57 +10,89 @@
 ```
 CrewAI-Studio-main/
 │
-├── AUREN_DOCS/                    # Master documentation hub (NEW)
+├── AUREN_DOCS/                    # Master documentation hub
 │   ├── 00_QUICK_START/
-│   │   ├── README.md              # Getting started guide
 │   │   ├── CREDENTIALS_VAULT.md   # All passwords/access (SECURE)
 │   │   └── SSH_ACCESS_STANDARD.md # sshpass usage guide
 │   │
 │   ├── 01_ARCHITECTURE/
-│   │   ├── SYSTEM_OVERVIEW.md     # High-level architecture
-│   │   ├── COMPONENT_MAP.md       # All components & connections
-│   │   └── DATA_FLOW.md           # How data moves through system
+│   │   └── DOCUMENTATION_ORGANIZATION_GUIDE.md  # This file - table of contents
 │   │
 │   ├── 02_DEPLOYMENT/
-│   │   ├── BIOMETRIC_SYSTEM_DEPLOYMENT_GUIDE.md  ✅ (Created today)
-│   │   ├── WEBSITE_DEPLOYMENT.md
-│   │   ├── INFRASTRUCTURE_SETUP.md
-│   │   └── DOCKER_SERVICES.md
+│   │   └── BIOMETRIC_SYSTEM_DEPLOYMENT_GUIDE.md  ✅ Complete deployment guide
 │   │
 │   ├── 03_OPERATIONS/
-│   │   ├── DAILY_CHECKLIST.md
-│   │   ├── MONITORING_GUIDE.md
-│   │   ├── TROUBLESHOOTING.md
-│   │   └── EMERGENCY_PROCEDURES.md
+│   │   ├── SERVICE_ACCESS_GUIDE.md   ✅ All DevOps tools
+│   │   └── NGINX_CONFIGURATION.md    ✅ Website deployment
 │   │
-│   └── 04_DEVELOPMENT/
-│       ├── AGENT_DEVELOPMENT_GUIDE.md
-│       ├── API_DOCUMENTATION.md
-│       ├── TESTING_PROCEDURES.md
-│       └── CONTRIBUTION_GUIDE.md
+│   └── README.md                  # Navigation hub with all links
 │
-├── auren/                         # Main application folder
-│   ├── AUREN_STATE_OF_READINESS_REPORT.md  ✅ (Updated today)
-│   ├── README.md                  # Project overview
-│   ├── agents/
-│   │   └── neuros/
-│   │       ├── README.md          ✅ (Exists)
-│   │       ├── DEPLOYMENT_GUIDE.md ✅ (Exists)
-│   │       └── API_REFERENCE.md   ❌ (Needs creation)
-│   └── docs/                      # Technical documentation
+├── app/                           # Application UI and integration
+│   ├── biometric_security_integration.py  # Section 9 example
+│   ├── section_9_security.py      # Security module
+│   └── SECTION_9_SECURITY_README.md  # Security documentation
 │
-├── AUPEX_WEBSITE_DOCUMENTATION/   ✅ (Well organized)
+├── auren/                         # Main AUREN application
+│   ├── agents/                    # Agent implementations
+│   │   └── neuros/               # NEUROS agent files
+│   ├── api/                      # API services
+│   ├── biometric/                # Biometric processing
+│   ├── config/                   # Agent configurations
+│   │   └── neuros.yaml           ✅ ENHANCED with memory awareness
+│   ├── dashboard/                # Visualization dashboards
+│   ├── src/                      # Source code
+│   │   └── agents/
+│   │       └── level1_knowledge/ # NEUROS knowledge base
+│   ├── tools/                    # Agent tools
+│   │   └── memory_management_tools.py  ✅ Memory tier management
+│   └── AUREN_STATE_OF_READINESS_REPORT.md  ✅ Current status
+│
+├── config/                        # CrewAI configurations
+│   └── agents/                   # Agent YAML profiles
+│
+├── scripts/                       # Deployment and utility scripts
+│   ├── deploy_section_9_security.sh
+│   ├── deploy_monitoring_stack.sh
+│   ├── fix_chromadb.sh
+│   └── [many more deployment scripts]
+│
+├── migrations/                    # Database migrations
+│   └── add_security_tables.sql   # Section 9 schema
+│
+├── sql/                           # Database initialization
+│   └── init/                     # Schema files
+│
+├── tests/                         # Test suites
+│   └── test_section_9_security.py
+│
+├── AUPEX_WEBSITE_DOCUMENTATION/   ✅ Website documentation
 │   ├── 01_Architecture/
 │   ├── 02_Implementation/
 │   ├── 03_Deployment/
 │   ├── 04_Configuration/
 │   └── 05_Status_Reports/
 │
-└── LANGRAF Pivot/                 ✅ (Good structure)
-    ├── 01_Migration_Planning/
-    ├── 02_Current_State/
-    ├── 03_Implementation_Examples/
-    └── 04_Knowledge_Base/
+├── DIGITALOCEAN_DOCKER_INFRASTRUCTURE/  # Infrastructure docs
+│   ├── 01_Infrastructure_Overview/
+│   ├── 02_Docker_Services/
+│   ├── 03_Server_Configuration/
+│   ├── 04_Deployment_Scripts/
+│   └── 05_Monitoring_Maintenance/
+│
+├── LANGRAF Pivot/                 # Strategic planning
+│   ├── 01_Migration_Planning/
+│   ├── 02_Current_State/
+│   ├── 03_Implementation_Examples/
+│   └── 04_Knowledge_Base/
+│
+└── [Root Level Documents]
+    ├── CURRENT_PRIORITIES.md      # Active task tracking
+    ├── PROMETHEUS_ISSUE_FOR_EXECUTIVE_ENGINEER.md
+    ├── NEUROS_MEMORY_TIER_CAPABILITY_AUDIT.md
+    ├── NEUROS_MEMORY_ENHANCEMENT_SUMMARY.md
+    ├── SECTION_9_INTEGRATION_STATUS.md
+    ├── MONITORING_QUICK_START.md
+    └── JULY_28_2025_WORK_SUMMARY.md
 ```
 
 ---

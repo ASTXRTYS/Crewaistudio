@@ -26,7 +26,7 @@
 ### Service Credentials
 - **Redis**: redis://auren-redis:6379/0 (no auth)
 - **Kafka**: auren-kafka:9092 (no auth)
-- **OpenAI API Key**: `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`
+- **OpenAI API Key**: `[REDACTED-OPENAI-API-KEY]`
 
 ### Service Endpoints
 - **Biometric System**: http://144.126.215.218:8888

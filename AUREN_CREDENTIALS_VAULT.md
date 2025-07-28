@@ -62,7 +62,7 @@ redis://auren-redis:6379/0
 ## 🔑 API KEYS
 
 ### OpenAI
-- **Key**: `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`
+- **Key**: `[REDACTED-OPENAI-API-KEY]`
 - **Purpose**: NEUROS cognitive processing
 - **Billing**: Check usage at platform.openai.com
 

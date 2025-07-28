@@ -534,7 +534,7 @@ Based on verified implementation status:
 SSH: root@144.126.215.218
 Password: .HvddX+@6dArsKd
 PostgreSQL: auren_user / auren_secure_2025
-OpenAI API: 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
+OpenAI API: [REDACTED-OPENAI-API-KEY]
 Docker Container: biometric-production
 ```
 

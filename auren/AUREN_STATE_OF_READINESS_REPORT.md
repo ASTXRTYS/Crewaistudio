@@ -42,6 +42,20 @@ As of this moment, AUREN has achieved **complete production deployment** with al
 
 **Current Status**: 100% Complete - FULL LANGGRAPH MIGRATION SUCCESSFUL! 🎉
 
+## ⚠️ CRITICAL ISSUE - July 28, 2025 (19:15 UTC)
+
+**Server Access Lost During Docker Cleanup**
+- SSH connections being rejected after aggressive Docker cleanup started
+- Disk was at 94% full (22GB of 24GB used)
+- Cleanup process was removing redundant images when connection lost
+- See `DOCKER_SAFE_CLEANUP_LIST.md` for verified safe-to-remove images
+
+**Recovery Steps**:
+1. Wait for server to stabilize
+2. May need console access via DigitalOcean
+3. Use documented safe cleanup list when access restored
+4. Expected to recover ~12.65GB of disk space
+
 ## 🚀 FULL DEPLOYMENT COMPLETE - July 28, 2025 (18:19 UTC)
 
 ### Deployment Achievements:

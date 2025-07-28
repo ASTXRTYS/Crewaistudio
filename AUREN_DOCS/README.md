@@ -43,6 +43,7 @@
 
 ### 🔧 Operations
 - ✅ [**Docker Redundancy Cleanup Guide**](03_OPERATIONS/DOCKER_REDUNDANCY_CLEANUP_GUIDE.md) - **CLEAN UP BEFORE DEPLOYMENT** 🆕
+- ✅ [**Docker Safe Cleanup List**](03_OPERATIONS/DOCKER_SAFE_CLEANUP_LIST.md) - **VERIFIED SAFE-TO-REMOVE IMAGES** 🆕
 - ✅ [Service Access Guide](03_OPERATIONS/SERVICE_ACCESS_GUIDE.md) - All DevOps tools & dashboards
 - ✅ [Nginx Configuration](03_OPERATIONS/NGINX_CONFIGURATION.md) - Critical deployment info
 - ✅ [Monitoring Quick Start](../MONITORING_QUICK_START.md) - Grafana & Prometheus guide

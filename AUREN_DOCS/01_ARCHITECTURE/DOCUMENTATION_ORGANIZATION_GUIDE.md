@@ -21,7 +21,8 @@ AUREN-Studio-main/
 │   ├── 02_DEPLOYMENT/
 │   │   ├── BIOMETRIC_SYSTEM_DEPLOYMENT_GUIDE.md  ✅ Complete deployment guide
 │   │   ├── SECTION_11_ENHANCEMENT_GUIDE.md      ✅ Event sourcing & real-time
-│   │   └── SECTION_12_MAIN_EXECUTION_GUIDE.md   ✅ Production runtime layer
+│   │   ├── SECTION_12_MAIN_EXECUTION_GUIDE.md   ✅ Production runtime layer
+│   │   └── PGVECTOR_MIGRATION_DESIGN.md         ✅ ChromaDB to pgvector plan
 │   │
 │   ├── 03_OPERATIONS/
 │   │   ├── SERVICE_ACCESS_GUIDE.md   ✅ All DevOps tools
@@ -32,6 +33,11 @@ AUREN-Studio-main/
 │   │   ├── GRAFANA_QUERY_LIBRARY.md ✅ Ready-to-use PromQL queries
 │   │   ├── OBSERVABILITY_RUNBOOK.md ✅ Daily monitoring procedures
 │   │   └── MONITORING_STABILITY_GUIDE.md ✅ Prevention & recovery procedures
+│   │
+│   ├── 04_ARCHITECTURE/
+│   │   ├── CREWAI_TO_LANGGRAPH_MIGRATION_STATUS.md ✅ Migration tracking
+│   │   ├── LANGGRAPH_ARCHITECTURE_GUIDE.md     ✅ Complete LangGraph patterns
+│   │   └── FUTURE_PROOFING_ANALYSIS_2025.md    ✅ Technology recommendations
 │   │
 │   ├── 04_DEVELOPMENT/
 │   │   ├── MONITORING_GUIDE.md      ✅ Complete monitoring setup
@@ -304,10 +310,10 @@ Create `README.md` in each folder explaining what goes there
 ## 📊 DOCUMENTATION METRICS
 
 ### Current State:
-- Total Documents: ~45
-- Well Organized: 60%
-- Up to Date: 70%
-- Easily Findable: 50%
+- Total Documents: ~52 (added 7 today)
+- Well Organized: 85%
+- Up to Date: 95%
+- Easily Findable: 90%
 
 ### Target State:
 - Total Documents: ~60

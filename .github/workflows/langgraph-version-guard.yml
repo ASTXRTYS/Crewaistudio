@@ -1,0 +1,104 @@
+name: LangGraph Version Guard
+
+on:
+  push:
+    paths:
+      - 'requirements.txt'
+      - 'requirements-locked.txt'
+      - 'pyproject.toml'
+      - 'poetry.lock'
+  pull_request:
+    paths:
+      - 'requirements.txt'
+      - 'requirements-locked.txt'
+      - 'pyproject.toml'
+      - 'poetry.lock'
+
+jobs:
+  check-versions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Check for LangGraph version changes
+        run: |
+          # Check if locked requirements exist
+          if [ ! -f "requirements-locked.txt" ]; then
+            echo "❌ ERROR: requirements-locked.txt not found!"
+            exit 1
+          fi
+          
+          # Extract versions from locked file
+          LOCKED_LANGCHAIN=$(grep "^langchain==" requirements-locked.txt | cut -d'=' -f3)
+          LOCKED_LANGGRAPH=$(grep "^langgraph==" requirements-locked.txt | cut -d'=' -f3)
+          LOCKED_LANGSMITH=$(grep "^langsmith==" requirements-locked.txt | cut -d'=' -f3)
+          
+          echo "📌 Locked versions:"
+          echo "  langchain: $LOCKED_LANGCHAIN"
+          echo "  langgraph: $LOCKED_LANGGRAPH"
+          echo "  langsmith: $LOCKED_LANGSMITH"
+          
+          # Check against requirements.txt
+          if [ -f "requirements.txt" ]; then
+            CURRENT_LANGCHAIN=$(grep "^langchain" requirements.txt | grep -v "langchain-" | cut -d'=' -f3)
+            CURRENT_LANGGRAPH=$(grep "^langgraph==" requirements.txt | cut -d'=' -f3)
+            CURRENT_LANGSMITH=$(grep "^langsmith==" requirements.txt | cut -d'=' -f3)
+            
+            # Compare versions
+            if [ "$CURRENT_LANGCHAIN" != "$LOCKED_LANGCHAIN" ]; then
+              echo "❌ langchain version mismatch! Locked: $LOCKED_LANGCHAIN, Current: $CURRENT_LANGCHAIN"
+              exit 1
+            fi
+            
+            if [ "$CURRENT_LANGGRAPH" != "$LOCKED_LANGGRAPH" ]; then
+              echo "❌ langgraph version mismatch! Locked: $LOCKED_LANGGRAPH, Current: $CURRENT_LANGGRAPH"
+              exit 1
+            fi
+            
+            if [ "$CURRENT_LANGSMITH" != "$LOCKED_LANGSMITH" ]; then
+              echo "❌ langsmith version mismatch! Locked: $LOCKED_LANGSMITH, Current: $CURRENT_LANGSMITH"
+              exit 1
+            fi
+          fi
+          
+          echo "✅ All LangGraph versions match locked requirements!"
+      
+      - name: Check for minor version bumps
+        run: |
+          # Fail if any langchain/langgraph packages have minor version changes
+          pip install packaging
+          cat << 'EOF' > check_versions.py
+          import re
+          import sys
+          from packaging import version
+          
+          with open('requirements-locked.txt', 'r') as f:
+              locked_deps = f.read()
+          
+          # Check for any 0.3+ versions of langchain/langgraph
+          pattern = r'(langchain|langgraph)[^=]*==\s*(\d+\.\d+)'
+          matches = re.findall(pattern, locked_deps)
+          
+          for pkg, ver in matches:
+              v = version.parse(ver)
+              if v.major == 0 and v.minor >= 3:
+                  print(f'❌ {pkg} version {ver} detected! This may break compatibility.')
+                  sys.exit(1)
+          
+          print('✅ No problematic version bumps detected.')
+          EOF
+          python check_versions.py
+      
+      - name: Verify no CrewAI dependencies
+        run: |
+          # Double-check no CrewAI sneaks back in
+          if grep -i "crewai" requirements*.txt; then
+            echo "❌ CrewAI dependency detected! Migration regression!"
+            exit 1
+          fi
+          echo "✅ No CrewAI dependencies found." 

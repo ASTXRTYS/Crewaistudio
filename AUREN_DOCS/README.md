@@ -30,6 +30,7 @@
 ### 💻 Development
 - ✅ [NEUROS Memory Enhancement](../NEUROS_MEMORY_ENHANCEMENT_SUMMARY.md) - Memory tier awareness
 - ✅ [Memory Management Tools](../auren/tools/memory_management_tools.py) - Implementation examples
+- ✅ [Monitoring Guide](03_DEVELOPMENT/MONITORING_GUIDE.md) - Prometheus & Grafana setup
 - ❌ Agent Development Guide - **COMING SOON**
 - ❌ API Documentation - **COMING SOON**
 

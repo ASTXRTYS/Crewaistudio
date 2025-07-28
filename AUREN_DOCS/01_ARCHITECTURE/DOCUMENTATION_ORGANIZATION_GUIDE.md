@@ -95,12 +95,44 @@ CrewAI-Studio-main/
 - DEPLOYMENT_GUIDE.md for setup
 - API_REFERENCE.md for endpoints
 
+**NEUROS Configuration**: `auren/config/neuros.yaml`
+- Complete personality definition
+- 5 cognitive modes (baseline/reflex/hypothesis/companion/sentinel)
+- Decision thresholds and rules
+
+**NEUROS Level 1 Knowledge**: `auren/src/agents/level1_knowledge/`
+- 15 knowledge files for CNS optimization
+- Core protocols and thresholds
+- Evidence-based guidelines
+- **NOTE**: Fixed from "Level 1 knowledge " (with spaces)
+
 ### 5. **Operational Procedures**
 **Location**: `AUREN_DOCS/03_OPERATIONS/`
 - Daily/weekly checklists
 - Monitoring procedures
 - Troubleshooting guides
 - Emergency contacts
+
+### 6. **Data Flow Architecture**
+**Biometric Data Flow**:
+```
+Wearables → Webhooks → Biometric API (port 8888) → Kafka → PostgreSQL/TimescaleDB
+                                                        ↓
+                                                   AI Agent (NEUROS)
+                                                        ↓
+                                                Frontend Dashboard
+```
+
+**Memory System** (`auren/THREE_TIER_MEMORY_IMPLEMENTATION.md`):
+- **Redis (Hot Tier)**: Recent interactions < 30 days
+- **PostgreSQL (Warm Tier)**: Structured storage 30 days - 1 year  
+- **ChromaDB (Cold Tier)**: Semantic search > 1 year
+- **NOTE**: Level 1 knowledge is loaded into ChromaDB (cold tier) for semantic search
+
+**Monitoring Flow**:
+```
+All Services → Metric Exporters → Prometheus → Grafana
+```
 
 ---
 

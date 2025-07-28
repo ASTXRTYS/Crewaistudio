@@ -31,7 +31,7 @@ class CNSKnowledgeInjector:
     """
     
     def __init__(self):
-        self.knowledge_folder = Path("./src/agents/Level 1 knowledge ")
+        self.knowledge_folder = Path("./src/agents/level1_knowledge")
         
         # Specialist mapping from Master Control Document
         self.specialist_mapping = {

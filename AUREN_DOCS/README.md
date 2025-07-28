@@ -54,6 +54,7 @@
 - ✅ [Observability Runbook](03_OPERATIONS/OBSERVABILITY_RUNBOOK.md) - Daily monitoring procedures
 - ✅ [Monitoring Stability Guide](03_OPERATIONS/MONITORING_STABILITY_GUIDE.md) - Prevention & recovery procedures
 - ✅ [Prometheus Configuration Fix](03_OPERATIONS/PROMETHEUS_CONFIGURATION_FIX.md) - Network configuration fix 🆕
+- ✅ [**Monitoring Troubleshooting Complete Guide**](03_OPERATIONS/MONITORING_TROUBLESHOOTING_COMPLETE_GUIDE.md) - **EVERYTHING TO FIX MONITORING** 🆕🔥
 - ❌ Daily Checklist - **COMING SOON**
 - ❌ Troubleshooting - **COMING SOON**
 

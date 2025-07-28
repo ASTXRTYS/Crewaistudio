@@ -45,6 +45,43 @@ AUREN Docker Infrastructure (172.18.0.0/16 network)
     └── Port: 9092
 ```
 
+## 🚨 CRITICAL MONITORING CONFIGURATION UPDATE
+
+### VERIFIED WORKING CONFIGURATION (July 28, 2025)
+
+**THE GOLDEN RULE**: Prometheus MUST use Docker container names for ALL targets!
+
+### Correct Container Map with Monitoring:
+```
+MONITORING CONTAINERS (ALL ON auren-network)
+│
+├── auren-prometheus (MUST use container names in config!)
+│   ├── Port: 9090
+│   ├── Config: Use container names NOT IPs!
+│   │   ├── ❌ WRONG: targets: ['144.126.215.218:9100']
+│   │   └── ✅ RIGHT: targets: ['auren-node-exporter:9100']
+│   └── Status: 4/5 targets UP (biometric-api needs implementation)
+│
+├── auren-node-exporter ✅ WORKING
+│   ├── Port: 9100
+│   └── Metrics: CPU, Memory, Disk, Network
+│
+├── auren-redis-exporter ✅ WORKING
+│   ├── Port: 9121
+│   ├── Config: REDIS_ADDR=auren-redis:6379
+│   └── Metrics: Commands/sec, Memory, Hit rates
+│
+├── auren-postgres-exporter ✅ WORKING
+│   ├── Port: 9187
+│   ├── Password: auren_password_2024 (NOT auren_secure_2025!)
+│   └── Metrics: Connections, Queries, Performance
+│
+└── auren-grafana ✅ WORKING
+    ├── Port: 3000
+    ├── Dashboards: System, PostgreSQL, Redis
+    └── Missing: Biometric API metrics (not implemented)
+```
+
 ## 🔗 Container Relationship Diagram
 
 ```mermaid

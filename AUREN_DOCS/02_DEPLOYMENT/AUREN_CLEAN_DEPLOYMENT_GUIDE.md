@@ -178,6 +178,90 @@ Look for:
 
 ---
 
+## 📊 MONITORING DEPLOYMENT (CRITICAL!)
+
+### Deploy Monitoring Stack with CORRECT Configuration:
+
+```bash
+# 1. Start Exporters (MUST use these exact commands!)
+docker run -d \
+  --name auren-node-exporter \
+  --network auren-network \
+  -p 9100:9100 \
+  --restart unless-stopped \
+  prom/node-exporter:latest
+
+docker run -d \
+  --name auren-redis-exporter \
+  --network auren-network \
+  -p 9121:9121 \
+  -e REDIS_ADDR=auren-redis:6379 \
+  --restart unless-stopped \
+  oliver006/redis_exporter:latest
+
+docker run -d \
+  --name auren-postgres-exporter \
+  --network auren-network \
+  -p 9187:9187 \
+  -e DATA_SOURCE_NAME="postgresql://auren_user:auren_password_2024@auren-postgres:5432/auren_production?sslmode=disable" \
+  --restart unless-stopped \
+  prometheuscommunity/postgres-exporter:latest
+
+# 2. Create CORRECT Prometheus config
+cat > /tmp/prometheus.yml << 'EOF'
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'biometric-api'
+    static_configs:
+      - targets: ['biometric-production:8888']  # MUST use container name!
+    metrics_path: '/metrics'
+
+  - job_name: 'redis-exporter'
+    static_configs:
+      - targets: ['auren-redis-exporter:9121']  # MUST use container name!
+
+  - job_name: 'postgres-exporter'  
+    static_configs:
+      - targets: ['auren-postgres-exporter:9187']  # MUST use container name!
+
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['auren-node-exporter:9100']  # MUST use container name!
+EOF
+
+# 3. Start Prometheus with CORRECT config
+docker run -d \
+  --name auren-prometheus \
+  --network auren-network \
+  -p 9090:9090 \
+  -v /tmp/prometheus.yml:/etc/prometheus/prometheus.yml \
+  --restart unless-stopped \
+  prom/prometheus:latest
+
+# 4. Start Grafana
+docker run -d \
+  --name auren-grafana \
+  --network auren-network \
+  -p 3000:3000 \
+  --restart unless-stopped \
+  grafana/grafana:latest
+```
+
+### ⚠️ CRITICAL MONITORING RULES:
+1. **MUST use container names** in Prometheus config (NOT IP addresses!)
+2. **ALL containers MUST be on auren-network**
+3. **PostgreSQL password MUST be auren_password_2024**
+4. **Include --restart unless-stopped on ALL containers**
+
+---
+
 ## 📦 DOCKER COMPOSE ALTERNATIVE
 
 For production, use this `docker-compose.prod.yml`:

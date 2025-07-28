@@ -1,15 +1,17 @@
 # AUREN Studio
 
-Welcome to AUREN Studio! This application provides a user-friendly interface written in Streamlit for interacting with CrewAI, suitable even for those who don't want to write any code. Follow the steps below to install and run the application using Docker/docker-compose or Conda/venv.
+Welcome to AUREN Studio! This application provides a user-friendly interface written in Streamlit for building AI agent systems powered by LangGraph, suitable even for those who don't want to write any code. Follow the steps below to install and run the application using Docker/docker-compose or Conda/venv.
+
+![CrewAI-Free](https://img.shields.io/badge/CrewAI-0%20deps-brightgreen)
 
 ## Features
 
 - **Multi-platform support**: Works on Windows, Linux and MacOS.
-- **No coding required**: User-friendly interface for interacting with CrewAI.
+- **No coding required**: User-friendly interface for building AI agent systems.
 - **Conda and virtual environment support**: Choose between Conda and a Python virtual environment for installation.
 - **Results history**: You can view previous results.
-- **Knowledge sources**: You can add knowledge sources for your crews
-- **CrewAI tools** You can use crewai tools to interact with real world. ~~AUREN Studio uses a forked version of crewai-tools with some bugfixes and enhancements (https://github.com/strnad/crewAI-tools)~~ (bugfixes already merged to crewai-tools)
+- **Knowledge sources**: You can add knowledge sources for your agents
+- **LangGraph Integration**: Powered by LangGraph for enterprise-grade agent orchestration with state management and checkpointing
 - **Custom Tools** Custom tools for calling APIs, writing files, enhanced code interpreter, enhanced web scraper... More will be added soon
 - **LLM providers supported**: Currently OpenAI, Groq, Anthropic, ollama, Grok and LM Studio backends are supported. OpenAI key is probably still needed for embeddings in many tools. Don't forget to load an embedding model when using LM Studio.
 - **Single Page app export**: Feature to export crew as simple single page streamlit app.

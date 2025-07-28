@@ -24,6 +24,8 @@
 - ✅ [Service Access Guide](03_OPERATIONS/SERVICE_ACCESS_GUIDE.md) - All DevOps tools & dashboards
 - ✅ [Nginx Configuration](03_OPERATIONS/NGINX_CONFIGURATION.md) - Critical deployment info
 - ✅ [Monitoring Quick Start](../MONITORING_QUICK_START.md) - Grafana & Prometheus guide
+- ✅ [Docker Navigation Guide](03_OPERATIONS/DOCKER_NAVIGATION_GUIDE.md) - Complete Docker infrastructure guide
+- ✅ [Prometheus Troubleshooting](03_OPERATIONS/PROMETHEUS_TROUBLESHOOTING_PLAYBOOK.md) - Step-by-step fix playbook
 - ❌ Daily Checklist - **COMING SOON**
 - ❌ Troubleshooting - **COMING SOON**
 

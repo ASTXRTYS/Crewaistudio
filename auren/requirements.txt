@@ -183,7 +183,7 @@ twilio==8.11.1
 sendgrid==6.11.0
 
 # Feature Flags
-python-feature-flag==1.2.0
+# Note: Feature flags are implemented as environment variables, no external library needed
 
 # A/B Testing
 sixpack-client==2.7.0

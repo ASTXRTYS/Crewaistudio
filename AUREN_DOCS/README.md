@@ -19,7 +19,8 @@
 - ✅ [Biometric System Guide](02_DEPLOYMENT/BIOMETRIC_SYSTEM_DEPLOYMENT_GUIDE.md) - Complete deployment instructions
 - ✅ [Section 9 Security Guide](../app/SECTION_9_SECURITY_README.md) - Enterprise security enhancement
 - ✅ [Section 11 Enhancement Guide](02_DEPLOYMENT/SECTION_11_ENHANCEMENT_GUIDE.md) - Event sourcing & real-time features
-- ✅ [Section 12 Main Execution Guide](02_DEPLOYMENT/SECTION_12_MAIN_EXECUTION_GUIDE.md) - Production runtime & lifecycle management
+- ⚠️ [Section 12 Main Execution Guide](02_DEPLOYMENT/SECTION_12_MAIN_EXECUTION_GUIDE.md) - Production runtime (PAUSED - Migration Required)
+- 🔍 [CrewAI → LangGraph Migration Status](04_ARCHITECTURE/CREWAI_TO_LANGGRAPH_MIGRATION_STATUS.md) - Active migration tracking
 - ❌ Website Deployment - **COMING SOON**
 
 ### 🔧 Operations
@@ -92,8 +93,9 @@
 AUREN_DOCS/
 ├── 00_QUICK_START/          ✅ Has 2 documents
 ├── 01_ARCHITECTURE/         ✅ Has 1 document
-├── 02_DEPLOYMENT/           ✅ Has 3 documents (Section 12 added!)
+├── 02_DEPLOYMENT/           ✅ Has 4 documents (Section 12 added!)
 ├── 03_OPERATIONS/           ✅ Has 8 documents (monitoring enhanced!)
+├── 04_ARCHITECTURE/         ✅ Has 1 document (Migration tracking added!)
 └── 04_DEVELOPMENT/          ✅ Has 2 documents
 ```
 

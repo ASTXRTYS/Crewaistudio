@@ -114,11 +114,12 @@ CrewAI-Studio-main/
 ### Folder Document Counts:
 - `00_QUICK_START/`: 2 documents ✅
 - `01_ARCHITECTURE/`: 1 document ✅
-- `02_DEPLOYMENT/`: 3 documents ✅ (Section 11 & 12 added!)
+- `02_DEPLOYMENT/`: 4 documents ✅ (Section 11 & 12 added!)
 - `03_OPERATIONS/`: 8 documents ✅ (Significantly expanded!)
+- `04_ARCHITECTURE/`: 1 document ✅ (Migration tracking!)
 - `04_DEVELOPMENT/`: 2 documents ✅
 
-**Total AUREN_DOCS**: 16 documents
+**Total AUREN_DOCS**: 18 documents
 
 ### Recent Additions (January 29, 2025):
 - Added Section 12 Main Execution Guide (production runtime)
@@ -126,6 +127,8 @@ CrewAI-Studio-main/
 - Created deployment summary for partial implementation
 - Added event sourcing demo script
 - Updated State of Readiness (93% → preparing for 100%)
+- Created CrewAI to LangGraph Migration Status document
+- Updated Section 12 status (paused pending migration)
 
 ### Recent Additions (January 28, 2025):
 - Added comprehensive monitoring documentation

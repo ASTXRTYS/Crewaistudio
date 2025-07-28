@@ -50,7 +50,7 @@ echo "Creating deployment package in $TEMP_DIR"
 
 # Copy all necessary files
 cp auren/main.py "$TEMP_DIR/"
-cp auren/requirements.txt "$TEMP_DIR/"
+cp auren/requirements_section12.txt "$TEMP_DIR/requirements.txt"
 cp auren/security.py "$TEMP_DIR/"
 
 # Copy dependencies

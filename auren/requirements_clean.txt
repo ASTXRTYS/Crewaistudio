@@ -1,0 +1,74 @@
+# AUREN Production Dependencies (Clean)
+# Updated: January 29, 2025 - CrewAI Migration Complete
+# NO CREWAI DEPENDENCIES
+
+# Core Framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-dotenv==1.0.0
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# LangGraph & AI (REPLACING CREWAI)
+langgraph==0.2.14
+langchain==0.2.16
+langchain-openai==0.1.23
+langchain-core==0.2.38
+langchain-community==0.2.16
+openai==1.13.3
+
+# Database & Storage
+asyncpg==0.29.0
+psycopg2-binary==2.9.9
+redis[hiredis]==5.0.1
+sqlalchemy==2.0.25
+alembic==1.13.1
+chromadb==0.4.22
+
+# Async & Streaming
+websockets==12.0
+aiokafka==0.10.0
+confluent-kafka==2.3.0
+httpx==0.26.0
+aiofiles==23.2.1
+anyio==4.2.0
+
+# Monitoring & Observability
+prometheus-client==0.19.0
+opentelemetry-api==1.22.0
+opentelemetry-sdk==1.22.0
+structlog==24.1.0
+
+# Security
+cryptography==41.0.7
+pyjwt==2.8.0
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.3.0
+
+# Data Processing
+numpy==1.24.3
+pandas==2.1.4
+scipy==1.11.4
+
+# Utilities
+pyyaml==6.0.1
+click==8.1.7
+python-multipart==0.0.6
+tenacity==8.2.3
+orjson==3.9.10
+
+# Development & Testing
+pytest==7.4.4
+pytest-asyncio==0.23.3
+pytest-cov==4.1.0
+black==23.12.1
+ruff==0.1.11
+mypy==1.8.0
+
+# Additional Required
+requests==2.31.0
+tiktoken==0.5.2
+networkx==3.2.1  # For LangGraph
+dill==0.3.8      # For state serialization
+psutil==5.9.8
+python-dateutil==2.8.2 

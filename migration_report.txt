@@ -1,0 +1,99 @@
+CrewAI to LangGraph Migration Report
+Generated: 2025-07-28 12:59:58.667150
+================================================================================
+
+Files migrated: 24
+Backup directory: crewai_backup_20250728_125958
+
+Migration Log:
+⚠️  auren/start_auren.py still has 1 CrewAI references
+✅ Migrated: auren/demo/demo_neuroscientist.py
+⚠️  auren/demo/demo_neuroscientist.py still has 1 CrewAI references
+✅ Migrated: auren/core/streaming/langgraph_instrumentation.py
+⚠️  auren/core/streaming/langgraph_instrumentation.py still has 3 CrewAI references
+✅ Migrated: auren/core/streaming/memory_tier_integration.py
+⚠️  auren/core/streaming/memory_tier_integration.py still has 2 CrewAI references
+✅ Migrated: auren/core/streaming/test_event_pipeline.py
+⚠️  auren/core/streaming/test_event_pipeline.py still has 3 CrewAI references
+✅ Migrated: auren/core/streaming/performance_optimizer_integration.py
+⚠️  auren/core/streaming/performance_optimizer_integration.py still has 1 CrewAI references
+✅ Migrated: auren/core/streaming/secure_integration.py
+⚠️  auren/core/streaming/secure_integration.py still has 1 CrewAI references
+✅ Migrated: auren/core/streaming/generate_test_events.py
+⚠️  auren/core/streaming/generate_test_events.py still has 1 CrewAI references
+✅ Migrated: auren/core/streaming/test_integration_module_d_c.py
+⚠️  auren/core/streaming/test_integration_module_d_c.py still has 1 CrewAI references
+✅ Migrated: auren/config/production_settings.py
+⚠️  auren/tests/test_postgresql_integration.py still has 1 CrewAI references
+⚠️  auren/tests/test_ai_gateway.py still has 1 CrewAI references
+⚠️  auren/tests/test_neuroscientist_integration.py still has 2 CrewAI references
+⚠️  auren/utils/check_system_health.py still has 2 CrewAI references
+✅ Migrated: auren/realtime/langgraph_instrumentation.py
+⚠️  auren/realtime/langgraph_instrumentation.py still has 3 CrewAI references
+✅ Migrated: auren/realtime/memory_tier_integration.py
+⚠️  auren/realtime/memory_tier_integration.py still has 2 CrewAI references
+✅ Migrated: auren/realtime/test_event_pipeline.py
+⚠️  auren/realtime/test_event_pipeline.py still has 3 CrewAI references
+✅ Migrated: auren/realtime/performance_optimizer_integration.py
+⚠️  auren/realtime/performance_optimizer_integration.py still has 1 CrewAI references
+✅ Migrated: auren/realtime/secure_integration.py
+⚠️  auren/realtime/secure_integration.py still has 1 CrewAI references
+✅ Migrated: auren/realtime/generate_test_events.py
+⚠️  auren/realtime/generate_test_events.py still has 1 CrewAI references
+✅ Migrated: auren/realtime/test_integration_module_d_c.py
+⚠️  auren/realtime/test_integration_module_d_c.py still has 1 CrewAI references
+✅ Migrated: auren/scripts/refactor_imports.py
+⚠️  auren/data_layer/crewai_integration.py still has 9 CrewAI references
+⚠️  auren/src/auren/ai/gateway.py still has 3 CrewAI references
+⚠️  auren/src/auren/ai/crewai_gateway_adapter.py still has 10 CrewAI references
+⚠️  auren/src/auren/ai/security_audit.py still has 6 CrewAI references
+⚠️  auren/src/auren/ai/neuroscientist_integration_example.py still has 4 CrewAI references
+⚠️  auren/src/auren/ai/__init__.py still has 2 CrewAI references
+⚠️  auren/src/auren/data_layer/crewai_integration.py still has 4 CrewAI references
+⚠️  auren/src/auren/monitoring/decorators.py still has 3 CrewAI references
+⚠️  auren/src/config/settings.py still has 2 CrewAI references
+⚠️  auren/src/agents/specialists/neuroscientist.py still has 7 CrewAI references
+⚠️  auren/src/agents/specialists/base_specialist_postgresql.py still has 3 CrewAI references
+⚠️  auren/src/agents/specialists/base_specialist.py still has 11 CrewAI references
+⚠️  src/auren/app/my_tools.py still has 3 CrewAI references
+⚠️  src/auren/app/utils.py still has 2 CrewAI references
+✅ Migrated: src/auren/app/app.py
+✅ Migrated: src/auren/app/db_utils.py
+⚠️  src/auren/app/app/my_tools.py still has 3 CrewAI references
+⚠️  src/auren/app/app/utils.py still has 2 CrewAI references
+✅ Migrated: src/auren/app/app/app.py
+✅ Migrated: src/auren/app/app/db_utils.py
+✅ Migrated: scripts/categorize_crewai_usage.py
+⚠️  scripts/categorize_crewai_usage.py still has 8 CrewAI references
+✅ Migrated: scripts/crewai_to_langgraph_migration.py
+⚠️  scripts/crewai_to_langgraph_migration.py still has 8 CrewAI references
+⚠️  scripts/test_whatsapp_flow.py still has 2 CrewAI references
+✅ Migrated: scripts/find_crewai_in_project.py
+⚠️  scripts/find_crewai_in_project.py still has 5 CrewAI references
+
+Errors:
+❌ Syntax error in auren/core/intelligence/error_handling.py: invalid syntax (error_handling.py, line 552)
+❌ Syntax error in auren/intelligence/error_handling.py: invalid syntax (error_handling.py, line 552)
+❌ Syntax error in auren/docs/context/prometheus-fix-implementation.py: invalid syntax (prometheus-fix-implementation.py, line 541)
+❌ Syntax error in auren/src/tools/routing_tools.py: invalid syntax (routing_tools.py, line 114)
+❌ Syntax error in auren/src/tools/protocol_tools.py: invalid syntax (protocol_tools.py, line 27)
+❌ Syntax error in auren/src/agents/neuroscientist.py: invalid syntax (neuroscientist.py, line 240)
+❌ Syntax error in auren/src/agents/ui_orchestrator.py: invalid syntax (ui_orchestrator.py, line 168)
+❌ Syntax error in auren/src/rag/agentic_rag.py: invalid syntax (agentic_rag.py, line 141)
+❌ Syntax error in src/auren/crews/whatsapp_crew.py: invalid syntax (whatsapp_crew.py, line 32)
+❌ Syntax error in src/auren/tools/DuckDuckGoSearchTool.py: unexpected indent (DuckDuckGoSearchTool.py, line 25)
+❌ Syntax error in src/auren/tools/IntentClassifierTool.py: invalid syntax (IntentClassifierTool.py, line 40)
+❌ Syntax error in src/auren/tools/ScrapeWebsiteToolEnhanced.py: invalid syntax (ScrapeWebsiteToolEnhanced.py, line 35)
+❌ Syntax error in src/auren/app/my_crew.py: unexpected indent (my_crew.py, line 109)
+❌ Syntax error in src/auren/app/pg_export_crew.py: f-string: closing parenthesis '}' does not match opening parenthesis '(' (pg_export_crew.py, line 66)
+❌ Syntax error in src/auren/app/db_utils.py: unexpected indent (db_utils.py, line 244)
+❌ Syntax error in src/auren/app/tools/DuckDuckGoSearchTool.py: unexpected indent (DuckDuckGoSearchTool.py, line 25)
+❌ Syntax error in src/auren/app/tools/IntentClassifierTool.py: invalid syntax (IntentClassifierTool.py, line 40)
+❌ Syntax error in src/auren/app/tools/ScrapeWebsiteToolEnhanced.py: invalid syntax (ScrapeWebsiteToolEnhanced.py, line 35)
+❌ Syntax error in src/auren/app/app/my_crew.py: unexpected indent (my_crew.py, line 108)
+❌ Syntax error in src/auren/app/app/pg_export_crew.py: f-string: closing parenthesis '}' does not match opening parenthesis '(' (pg_export_crew.py, line 65)
+❌ Syntax error in src/auren/app/app/db_utils.py: unexpected indent (db_utils.py, line 244)
+❌ Syntax error in src/auren/app/app/tools/DuckDuckGoSearchTool.py: unexpected indent (DuckDuckGoSearchTool.py, line 25)
+❌ Syntax error in src/auren/app/app/tools/IntentClassifierTool.py: invalid syntax (IntentClassifierTool.py, line 40)
+❌ Syntax error in src/auren/app/app/tools/ScrapeWebsiteToolEnhanced.py: invalid syntax (ScrapeWebsiteToolEnhanced.py, line 35)
+❌ Syntax error in src/auren/agents/whatsapp_message_handler.py: invalid syntax (whatsapp_message_handler.py, line 82)

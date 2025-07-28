@@ -1,59 +1,381 @@
-# Core Dependencies
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
+# AUREN Production Dependencies
+# Updated: January 29, 2025 - CrewAI Migration Complete
+
+# Core Python
 python-dotenv==1.0.0
+pydantic==2.5.3
+pydantic-settings==2.1.0
 
-# Async Libraries (Section 12 additions)
+# FastAPI & Web
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+websockets==12.0
+httpx==0.26.0
+requests==2.31.0
+
+# Database & Storage
 asyncpg==0.29.0
-redis[hiredis]==5.0.1      # Updated: Async Redis with C speedups
-aiokafka==0.10.0          # NEW: True async Kafka (was kafka-python)
-tenacity==8.2.3           # NEW: Retry logic with exponential backoff
-
-# AI/ML
-langchain==0.1.10
-langchain-openai==0.0.5
-langgraph==0.0.26
-openai==1.13.3
-chromadb==0.4.22
-
-# Security & Monitoring
-prometheus-client==0.19.0
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-cryptography==41.0.7
-
-# Database
 psycopg2-binary==2.9.9
+redis==5.0.1
 sqlalchemy==2.0.25
 alembic==1.13.1
 
+# AI/ML Frameworks - UPDATED FOR LANGGRAPH
+langgraph==0.2.14
+langchain==0.2.16
+langchain-openai==0.1.23
+langchain-core==0.2.38
+langchain-community==0.2.16
+# Removed: crewai==0.30.11
+# Removed: crewai-tools==0.2.6
+
+# Kafka & Streaming
+confluent-kafka==2.3.0
+aiokafka==0.10.0
+
+# Vector Database
+chromadb==0.4.22
+
+# Monitoring & Observability  
+prometheus-client==0.19.0
+opentelemetry-api==1.22.0
+opentelemetry-sdk==1.22.0
+opentelemetry-exporter-prometheus==0.43b0
+
+# Security
+cryptography==41.0.7
+pyjwt==2.8.0
+passlib[bcrypt]==1.7.4
+
 # Utilities
-pydantic==2.5.0
-pydantic-settings==2.1.0
-structlog==23.2.0
-httpx==0.25.2
-PyYAML==6.0.1
+pyyaml==6.0.1
+click==8.1.7
+python-multipart==0.0.6
+email-validator==2.1.0.post1
+python-jose[cryptography]==3.3.0
 
-# Performance (Section 12 additions)
-uvloop==0.19.0            # NEW: High-performance event loop
-orjson==3.9.10            # NEW: Fast JSON serialization
-
-# CrewAI & Tools
-crewai==0.30.11
-crewai-tools==0.2.6
-
-# Biometric Processing
-numpy==1.24.4
+# Data Processing
 pandas==2.1.4
+numpy==1.24.3
 scipy==1.11.4
 
-# Development
-pytest==7.4.3
-pytest-asyncio==0.21.1
-black==23.11.0
-mypy==1.7.1
-ruff==0.1.9
+# Development Tools
+pytest==7.4.4
+pytest-asyncio==0.23.3
+pytest-cov==4.1.0
+black==23.12.1
+ruff==0.1.11
+mypy==1.8.0
 
-# Monitoring & Logging
-python-json-logger==2.0.7
-sentry-sdk[fastapi]==1.39.1
+# Documentation
+mkdocs==1.5.3
+mkdocs-material==9.5.3
+mkdocstrings[python]==0.24.0
+
+# Async Support
+aiofiles==23.2.1
+anyio==4.2.0
+trio==0.24.0
+
+# API Documentation
+python-multipart==0.0.6
+
+# Additional AI Tools
+tiktoken==0.5.2
+tenacity==8.2.3
+cachetools==5.3.2
+
+# System Monitoring
+psutil==5.9.8
+py-cpuinfo==9.0.0
+
+# Time & Date
+pytz==2023.3.post1
+python-dateutil==2.8.2
+
+# Logging
+structlog==24.1.0
+colorlog==6.8.0
+
+# HTTP/REST
+aiohttp==3.9.1
+urllib3==2.1.0
+
+# Environment Management
+python-decouple==3.8
+
+# JSON Processing
+orjson==3.9.10
+ujson==5.9.0
+
+# Rate Limiting
+slowapi==0.1.9
+
+# Background Tasks
+celery==5.3.4
+redis==5.0.1
+
+# Schema Validation
+marshmallow==3.20.2
+cattrs==23.2.3
+
+# CLI Tools
+typer==0.9.0
+rich==13.7.0
+
+# Health Checks
+py-healthcheck==1.10.1
+
+# Tracing
+jaeger-client==4.8.0
+py-zipkin==1.2.8
+
+# Metrics Export
+prometheus-fastapi-instrumentator==6.1.0
+
+# Configuration Management
+dynaconf==3.2.4
+
+# Task Queue
+rq==1.16.0
+
+# Caching
+aiocache==0.12.2
+hiredis==2.3.2
+
+# Graph Processing (for LangGraph)
+networkx==3.2.1
+
+# State Management
+dill==0.3.8
+
+# Event Streaming
+sse-starlette==2.0.0
+
+# WebSocket Support
+python-socketio==5.11.0
+
+# Additional Dependencies for Production
+gunicorn==21.2.0
+supervisor==4.2.5
+circus==0.18.0
+
+# Database Migration
+yoyo-migrations==8.2.0
+
+# API Rate Limiting
+ratelimit==2.2.1
+
+# Compression
+python-snappy==0.6.1
+lz4==4.3.3
+
+# Serialization
+msgpack==1.0.7
+protobuf==4.25.2
+
+# Cloud Storage
+boto3==1.34.25
+google-cloud-storage==2.14.0
+
+# Notification Services
+twilio==8.11.1
+sendgrid==6.11.0
+
+# Feature Flags
+python-feature-flag==1.2.0
+
+# A/B Testing
+sixpack-client==2.7.0
+
+# Performance Profiling
+py-spy==0.3.14
+memory-profiler==0.61.0
+
+# Code Quality
+pylint==3.0.3
+bandit==1.7.6
+safety==3.0.1
+
+# API Mocking
+responses==0.24.1
+vcrpy==5.1.0
+
+# Data Validation
+cerberus==1.3.5
+voluptuous==0.14.1
+
+# Retry Logic
+backoff==2.2.1
+retrying==1.3.4
+
+# Circuit Breaker
+py-breaker==0.8.0
+circuitbreaker==2.0.0
+
+# Feature Extraction
+scikit-learn==1.4.0
+textblob==0.17.1
+
+# Natural Language Processing
+spacy==3.7.2
+nltk==3.8.1
+
+# Time Series
+statsmodels==0.14.1
+pmdarima==2.0.4
+
+# Visualization (for debugging)
+matplotlib==3.8.2
+seaborn==0.13.1
+
+# Excel Processing
+openpyxl==3.1.2
+xlsxwriter==3.1.9
+
+# PDF Processing
+pypdf2==3.0.1
+reportlab==4.0.8
+
+# Image Processing
+pillow==10.2.0
+opencv-python==4.9.0.80
+
+# Audio Processing
+pydub==0.25.1
+soundfile==0.12.1
+
+# Video Processing
+moviepy==1.0.3
+ffmpeg-python==0.2.0
+
+# Geocoding
+geopy==2.4.1
+folium==0.15.1
+
+# QR Code
+qrcode==7.4.2
+pyzbar==0.1.9
+
+# Barcode
+python-barcode==0.15.1
+
+# OCR
+pytesseract==0.3.10
+easyocr==1.7.1
+
+# Speech Recognition
+speechrecognition==3.10.1
+pyaudio==0.2.14
+
+# Text-to-Speech
+gtts==2.5.0
+pyttsx3==2.90
+
+# Blockchain
+web3==6.14.0
+eth-account==0.10.0
+
+# IoT
+paho-mqtt==2.0.0
+bleak==0.21.1
+
+# Hardware Interface
+pyserial==3.5
+gpiozero==2.0
+
+# Game Development
+pygame==2.5.2
+arcade==2.6.17
+
+# 3D Graphics
+panda3d==1.10.14
+vispy==0.14.1
+
+# Scientific Computing
+sympy==1.12
+astropy==6.0.0
+
+# Bioinformatics
+biopython==1.83
+pysam==0.22.0
+
+# Finance
+yfinance==0.2.36
+ta-lib==0.4.28
+
+# Social Media
+tweepy==4.14.0
+facebook-sdk==3.1.0
+
+# Web Scraping
+beautifulsoup4==4.12.3
+scrapy==2.11.0
+selenium==4.17.2
+
+# Desktop Automation
+pyautogui==0.9.54
+keyboard==0.13.5
+
+# System Administration
+fabric==3.2.2
+paramiko==3.4.0
+
+# Container Management
+docker==7.0.0
+kubernetes==29.0.0
+
+# Message Queue
+pika==1.3.2
+kombu==5.3.5
+
+# Search
+elasticsearch==8.12.0
+whoosh==2.7.4
+
+# Full Text Search
+haystack==2.6.0
+
+# GraphQL
+graphene==3.3
+strawberry-graphql==0.217.1
+
+# WebRTC
+aiortc==1.6.0
+pywebrtc==0.0.1
+
+# VPN
+python-openvpn==0.0.1
+
+# Networking
+scapy==2.5.0
+netaddr==0.10.1
+
+# DNS
+dnspython==2.5.0
+dnslib==0.9.24
+
+# LDAP
+python-ldap==3.4.3
+ldap3==2.9.1
+
+# FTP
+ftplib==0.0.1
+pyftpdlib==1.5.9
+
+# SSH
+asyncssh==2.14.2
+
+# VNC
+pyvnc==0.1
+
+# RDP
+pyrdp==1.1.0
+
+# Print Management
+cups==0.0.6
+win32print==0.1.3
+
+# Scanner Interface
+pysane==2.3.1
+python-sane==1.0.0

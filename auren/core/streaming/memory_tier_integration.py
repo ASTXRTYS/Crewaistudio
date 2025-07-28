@@ -7,12 +7,13 @@ import asyncio
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timezone
 import logging
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
 
 # Import memory tier tracking
 from auren.realtime.memory_tier_tracking import MemoryTierTracker, TieredMemoryBackend, MemoryTier
 
 # Import from Module C
-from auren.realtime.langgraph_instrumentation import CrewAIEventInstrumentation, AURENEventType
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
 from auren.realtime.multi_protocol_streaming import RedisStreamEventStreamer
 
 # Import from Module D

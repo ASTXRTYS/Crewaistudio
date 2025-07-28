@@ -8,12 +8,13 @@ from typing import Dict, Any, Optional
 from datetime import datetime, timezone
 import logging
 from cryptography.fernet import Fernet
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
 
 # Import security layer
 from auren.realtime.security_layer import SecureEventStreamer, SecurityPolicy, RoleBasedEventFilter
 
 # Import from Module C
-from auren.realtime.langgraph_instrumentation import CrewAIEventInstrumentation
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
 from auren.realtime.multi_protocol_streaming import RedisStreamEventStreamer
 from auren.realtime.enhanced_websocket_streamer import EnhancedWebSocketEventStreamer, ClientSubscription
 

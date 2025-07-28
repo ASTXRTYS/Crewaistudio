@@ -6,6 +6,7 @@ import asyncio
 import random
 from datetime import datetime, timezone
 from auren.realtime.langgraph_instrumentation import (
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
     CrewAIEventInstrumentation, 
     AURENStreamEvent, 
     AURENEventType,

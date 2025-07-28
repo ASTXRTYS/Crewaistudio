@@ -1,0 +1,27 @@
+Smart CrewAI to LangGraph Migration Report
+Generated: 2025-07-28 13:01:55.335840
+================================================================================
+
+Files migrated: 2
+Backup directory: crewai_backup_20250728_130155
+
+Migration Log:
+✅ Migrated: auren/core/streaming/langgraph_instrumentation.py
+  ⚠️  Still has 7 CrewAI references
+✅ Migrated: auren/realtime/langgraph_instrumentation.py
+  ⚠️  Still has 7 CrewAI references
+
+
+Errors:
+❌ Would create syntax error in auren/core/streaming/memory_tier_integration.py: invalid syntax (memory_tier_integration.py, line 4)
+❌ Would create syntax error in auren/core/streaming/test_event_pipeline.py: invalid syntax (test_event_pipeline.py, line 4)
+❌ Would create syntax error in auren/core/streaming/performance_optimizer_integration.py: invalid syntax (performance_optimizer_integration.py, line 4)
+❌ Would create syntax error in auren/core/streaming/secure_integration.py: invalid syntax (secure_integration.py, line 4)
+❌ Would create syntax error in auren/core/streaming/generate_test_events.py: invalid syntax (generate_test_events.py, line 4)
+❌ Would create syntax error in auren/core/streaming/test_integration_module_d_c.py: invalid syntax (test_integration_module_d_c.py, line 4)
+❌ Would create syntax error in auren/realtime/memory_tier_integration.py: invalid syntax (memory_tier_integration.py, line 4)
+❌ Would create syntax error in auren/realtime/test_event_pipeline.py: invalid syntax (test_event_pipeline.py, line 4)
+❌ Would create syntax error in auren/realtime/performance_optimizer_integration.py: invalid syntax (performance_optimizer_integration.py, line 4)
+❌ Would create syntax error in auren/realtime/secure_integration.py: invalid syntax (secure_integration.py, line 4)
+❌ Would create syntax error in auren/realtime/generate_test_events.py: invalid syntax (generate_test_events.py, line 4)
+❌ Would create syntax error in auren/realtime/test_integration_module_d_c.py: invalid syntax (test_integration_module_d_c.py, line 4)

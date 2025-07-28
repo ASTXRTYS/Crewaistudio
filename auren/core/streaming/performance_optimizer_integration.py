@@ -7,6 +7,7 @@ import asyncio
 import logging
 from typing import Dict, Any
 from datetime import datetime, timezone
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
 
 # Import performance optimization
 from auren.realtime.performance_optimizer import (

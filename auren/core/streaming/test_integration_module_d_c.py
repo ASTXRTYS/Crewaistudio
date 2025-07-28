@@ -11,6 +11,7 @@ import redis.asyncio as redis
 from unittest.mock import AsyncMock, MagicMock
 import sys
 import os
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

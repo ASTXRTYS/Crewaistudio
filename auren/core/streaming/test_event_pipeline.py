@@ -6,6 +6,7 @@ Tests: Instrumentation → Redis Streaming → WebSocket Server
 import asyncio
 import logging
 from datetime import datetime, timezone
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
 
 from auren.realtime.langgraph_instrumentation import (
     CrewAIEventInstrumentation, 

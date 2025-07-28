@@ -78,7 +78,7 @@ class AURENStreamEvent:
     performance_metrics: Optional[AURENPerformanceMetrics] = None
     user_id: Optional[str] = None
 
-class CrewAIEventInstrumentation:
+class LangGraphEventStreamer:
     """
     Complete instrumentation system for CrewAI agents
     Captures all agent activities and generates standardized events

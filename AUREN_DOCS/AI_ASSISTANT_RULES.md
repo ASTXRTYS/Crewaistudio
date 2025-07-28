@@ -2,8 +2,10 @@
 ## Standard Operating Procedures for All Sessions
 
 *Created: July 28, 2025*  
-*Version: 1.0*  
-*Purpose: Ensure consistent, efficient operations across all AI sessions*
+*Version: 2.0*  
+*Purpose: Ensure consistent, efficient, and continuously optimizing operations*
+
+⚠️ **CRITICAL**: NO content may be removed from this file without explicit authorization from the Founder/Visionary (Human).
 
 ---
 
@@ -11,10 +13,12 @@
 
 **ALWAYS START HERE**: When beginning any AUREN-related task or answering any question, follow this hierarchy:
 
-1. **Check `AUREN_DOCS/README.md` FIRST** - This is your navigation hub
-2. **Consult `DOCUMENTATION_ORGANIZATION_GUIDE.md`** - This is your table of contents AND system overview
-3. **Reference `CREDENTIALS_VAULT.md`** - For any access-related tasks
-4. **Review `AUREN_STATE_OF_READINESS_REPORT.md`** - For current system status
+1. **Check `AUREN_DOCS/README.md` FIRST** - Your navigation hub
+2. **Consult `AUREN_DOCS/01_ARCHITECTURE/DOCUMENTATION_ORGANIZATION_GUIDE.md`** - Your complete table of contents AND navigation map
+3. **Reference `AUREN_DOCS/00_QUICK_START/CREDENTIALS_VAULT.md`** - For any access-related tasks
+4. **Review `auren/AUREN_STATE_OF_READINESS_REPORT.md`** - Shows what's BUILT vs what's MISSING
+
+**KEY MINDSET**: Always be scanning for optimization opportunities while maintaining momentum
 
 ---
 
@@ -59,6 +63,7 @@
   5. Deployment guides (if deployment process changed)
 - **NEVER** consider a task complete until documentation is updated
 - **VERIFY** all team members follow this rule
+- **BALANCE**: Document thoroughly but don't let it block progress - capture essentials first, refine later
 
 ### Rule 7: Git Branch Management
 - **CREATE** new branches for all feature work
@@ -68,19 +73,40 @@
 - **NEVER** work directly on main without explicit permission
 - **ANNOUNCE** branch switches prominently
 
+### Rule 8: OPTIMIZATION MINDSET (NEW)
+- **ALWAYS** look for opportunities to:
+  - Reduce redundancy in code or documentation
+  - Automate repetitive tasks with scripts
+  - Improve system performance
+  - Streamline workflows
+  - Consolidate similar functions
+- **SUGGEST** optimizations proactively but don't force them
+- **BALANCE** optimization with progress - don't let perfect be the enemy of good
+- **DOCUMENT** optimization opportunities for future sprints if not immediately actionable
+- **MEASURE** impact of optimizations when implemented
+
 ---
 
 ## 🔍 INFORMATION RETRIEVAL PROTOCOL
 
 When asked about ANY aspect of AUREN:
 
-1. **START**: Open AUREN_DOCS/README.md
-2. **NAVIGATE**: Use links to find specific information
-3. **VERIFY**: Check if documentation exists or shows "COMING SOON"
-4. **FALLBACK**: If not documented, check these locations:
+1. **START**: Open AUREN_DOCS/README.md for navigation
+2. **CHECK STATUS**: Review State of Readiness Report to understand:
+   - What capabilities exist (look for ✅)
+   - What's missing (look for ❌)
+   - Current completion percentage
+   - Outstanding issues and handoffs
+3. **NAVIGATE**: Use Documentation Organization Guide as your map to find:
+   - Where specific documentation lives
+   - Which directory contains what you need
+   - Current file structure
+4. **VERIFY**: Check if documentation exists or shows "COMING SOON"
+5. **FALLBACK**: If not documented, check these locations:
    - `auren/` folder for code-based understanding
    - `AUPEX_WEBSITE_DOCUMENTATION/` for website info
    - `LANGRAF Pivot/` for strategic planning
+   - Root level for recent work documents
 
 ---
 
@@ -213,19 +239,30 @@ When starting a new session:
 
 ```
 Primary Navigation:        AUREN_DOCS/README.md
-System Overview:          AUREN_DOCS/DOCUMENTATION_ORGANIZATION_GUIDE.md
+Table of Contents:        AUREN_DOCS/01_ARCHITECTURE/DOCUMENTATION_ORGANIZATION_GUIDE.md
+System Status:            auren/AUREN_STATE_OF_READINESS_REPORT.md
 All Passwords:           AUREN_DOCS/00_QUICK_START/CREDENTIALS_VAULT.md
 SSH Standards:           AUREN_DOCS/00_QUICK_START/SSH_ACCESS_STANDARD.md
 Deployment Guide:        AUREN_DOCS/02_DEPLOYMENT/BIOMETRIC_SYSTEM_DEPLOYMENT_GUIDE.md
-System Status:           auren/AUREN_STATE_OF_READINESS_REPORT.md
+Current Priorities:      CURRENT_PRIORITIES.md
+NEUROS Config:           auren/config/neuros.yaml
 ```
+
+## 💡 PRODUCTIVITY OPTIMIZATION TIPS
+
+1. **Use parallel tool calls** when gathering information (3-5x faster)
+2. **Read State of Readiness FIRST** to avoid building what already exists
+3. **Check Documentation Organization Guide** before creating new files
+4. **Batch similar operations** together
+5. **Create scripts for repetitive tasks** and save in scripts/
+6. **Document as you go** but don't over-document obvious things
 
 ---
 
 ## ⚡ GOLDEN RULES
 
 1. **README FIRST** - Always start with the README
-2. **DOCUMENT EVERYTHING** - If you do it, document it
+2. **DOCUMENT EVERYTHING** - If you do it, document it (but keep it lean)
 3. **VERIFY BEFORE SUGGESTING** - Test links, check files exist
 4. **SSHPASS ALWAYS** - Never suggest plain SSH
 5. **UPDATE IMMEDIATELY** - Don't wait to update docs
@@ -233,6 +270,9 @@ System Status:           auren/AUREN_STATE_OF_READINESS_REPORT.md
 7. **BRANCH AWARENESS** - Always know and communicate which branch is active
 8. **TRUST BUT VERIFY** - Never mark deployed without checking live site
 9. **CHECK NGINX CONFIG** - Always verify web root before deploying
+10. **OPTIMIZE CONTINUOUSLY** - Always look for better ways, but don't let it block progress
+11. **STATE OF READINESS IS TRUTH** - Check what exists before building
+12. **NO REMOVAL WITHOUT PERMISSION** - Only Founder can authorize removal from this file
 
 ---
 
@@ -249,5 +289,11 @@ After ANY implementation:
 
 ---
 
-*These rules ensure consistent, professional, and secure operations across all AI sessions for the AUREN project.*
-*Version 1.1 - Updated with team structure and mandatory documentation maintenance* 
+*These rules ensure consistent, professional, secure, and continuously optimizing operations across all AI sessions for the AUREN project.*
+
+**Version History:**
+- *Version 1.0 - Initial rules*
+- *Version 1.1 - Added team structure and mandatory documentation*
+- *Version 2.0 - Added optimization mindset, productivity focus, and removal protection (July 28, 2025)*
+
+⚠️ **REMINDER**: No content may be removed from this file without Founder authorization. 

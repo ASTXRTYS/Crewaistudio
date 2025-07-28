@@ -38,6 +38,9 @@
 - ✅ [NEUROS Memory Audit](../NEUROS_MEMORY_TIER_CAPABILITY_AUDIT.md) - Gap analysis
 - ✅ [Website Deployment Post-Mortem](../WEBSITE_DEPLOYMENT_POSTMORTEM.md) - Incident analysis
 
+### 📝 Session Reports
+- ✅ [July 28, 2025 Work Summary](../JULY_28_2025_WORK_SUMMARY.md) - Complete session report
+
 ---
 
 ## 📊 Documentation Status Reports

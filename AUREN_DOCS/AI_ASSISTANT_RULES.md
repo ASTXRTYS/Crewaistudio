@@ -44,6 +44,9 @@
 - **USE** BIOMETRIC_SYSTEM_DEPLOYMENT_GUIDE.md as the template
 - **FOLLOW** the phased approach (Infrastructure → Schema → Service)
 - **VERIFY** each phase before proceeding
+- **CHECK** nginx configuration BEFORE website deployment
+- **TEST** live site after deployment (never trust, always verify)
+- **DOCUMENT** verification with screenshots/curl output
 
 ### Rule 6: POST-IMPLEMENTATION DOCUMENTATION (CRITICAL)
 - **AFTER EVERY IMPLEMENTATION**: Update ALL relevant documentation
@@ -228,6 +231,8 @@ System Status:           auren/AUREN_STATE_OF_READINESS_REPORT.md
 5. **UPDATE IMMEDIATELY** - Don't wait to update docs
 6. **DOCUMENTATION AFTER IMPLEMENTATION** - Task isn't done until docs are updated
 7. **BRANCH AWARENESS** - Always know and communicate which branch is active
+8. **TRUST BUT VERIFY** - Never mark deployed without checking live site
+9. **CHECK NGINX CONFIG** - Always verify web root before deploying
 
 ---
 

@@ -119,4 +119,4 @@ def create_security_app(app: FastAPI, redis_client: Optional[aioredis.Redis] = N
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Get current user from API key"""
     security_handler = SecurityEnhancement()
-    return await security_handler.verify_api_key(credentials) 
+    return await security_handler.verify_api_key(credentials)

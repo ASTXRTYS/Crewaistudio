@@ -1,0 +1,76 @@
+# =============================================================================
+# AUREN Section 12 - LangGraph Production Runtime Requirements
+# =============================================================================
+# Last Updated: 2025-01-29
+# Purpose: Clean production dependencies without CrewAI
+# =============================================================================
+
+# Core Framework
+fastapi==0.109.0
+uvicorn[standard]==0.25.0
+uvloop==0.19.0  # High-performance event loop
+httptools==0.6.1
+
+# Async Database
+asyncpg==0.29.0  # PostgreSQL async driver
+redis[hiredis]==5.0.1  # Redis with C extension for performance
+
+# LangGraph & LangChain (Production Stack)
+langgraph==0.0.26
+langgraph-checkpoint==1.0.0
+langchain==0.1.10
+langchain-openai==0.0.5
+langchain-community==0.0.10
+langsmith==0.0.87  # For production observability
+
+# OpenAI
+openai==1.13.3
+
+# JSON Performance
+orjson==3.9.10  # Fastest JSON library
+
+# Retry & Resilience
+tenacity==8.2.3
+
+# Async Utilities
+aiokafka==0.10.0  # For future Kafka integration
+aiofiles==23.2.1
+
+# Monitoring & Metrics
+prometheus-client==0.19.0
+opentelemetry-api==1.22.0
+opentelemetry-sdk==1.22.0
+opentelemetry-instrumentation-fastapi==0.43b0
+opentelemetry-instrumentation-asyncpg==0.43b0
+
+# Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+
+# Configuration
+python-dotenv==1.0.1
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# Utilities
+httpx==0.26.0  # Async HTTP client
+python-dateutil==2.8.2
+
+# Development & Testing (optional)
+pytest==7.4.4
+pytest-asyncio==0.23.3
+pytest-mock==3.12.0
+
+# ChromaDB for cold storage (existing in AUREN)
+chromadb==0.4.22
+
+# Data Processing
+numpy==1.26.3
+pandas==2.1.4
+
+# Logging
+structlog==24.1.0
+
+# Health checks
+psutil==5.9.8

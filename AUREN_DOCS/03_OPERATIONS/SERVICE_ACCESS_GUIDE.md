@@ -76,23 +76,25 @@ sshpass -p '.HvddX+@6dArsKd' ssh root@144.126.215.218
 
 ### Monitoring Services
 
-#### Prometheus ⚠️
-- **Container**: auren-prometheus (if deployed)
+#### Prometheus ✅
+- **Container**: auren-prometheus
 - **Port**: 9090
-- **Status**: NOT CONFIRMED DEPLOYED
-- **Expected URL**: http://localhost:9090 (when SSH'd in)
-- **Config Location**: `/prometheus.yml`
+- **Status**: DEPLOYED & RUNNING
+- **External URL**: http://144.126.215.218:9090
+- **Internal URL**: http://localhost:9090 (when SSH'd in)
+- **Config Location**: `/root/prometheus.yml`
 - **Check if running**:
   ```bash
   docker ps | grep prometheus
   ```
 
-#### Grafana ⚠️
-- **Container**: auren-grafana (if deployed)
+#### Grafana ✅
+- **Container**: auren-grafana
 - **Port**: 3000
-- **Status**: NOT CONFIRMED DEPLOYED
-- **Expected URL**: http://localhost:3000 (when SSH'd in)
-- **Default Credentials**: admin/admin (first login)
+- **Status**: DEPLOYED & RUNNING
+- **External URL**: http://144.126.215.218:3000
+- **Internal URL**: http://localhost:3000 (when SSH'd in)
+- **Credentials**: admin/auren_grafana_2025
 - **Check if running**:
   ```bash
   docker ps | grep grafana
@@ -160,14 +162,15 @@ sshpass -p '.HvddX+@6dArsKd' ssh root@144.126.215.218 'docker logs -f [container
 
 ---
 
-## 🚨 MISSING SERVICES (Need Deployment)
+## ✅ MONITORING STACK STATUS (January 28, 2025)
 
-Based on docker-compose.yml, these services are defined but NOT confirmed running:
+All observability services have been successfully deployed:
 
-1. **Prometheus** (Port 9090) - Metrics collection
-2. **Grafana** (Port 3000) - Metrics visualization  
-3. **Redis Exporter** (Port 9121) - Redis metrics for Prometheus
-4. **Postgres Exporter** (Port 9187) - PostgreSQL metrics
+1. **Prometheus** (Port 9090) - ✅ RUNNING - Collecting metrics
+2. **Grafana** (Port 3000) - ✅ RUNNING - Visualization ready  
+3. **Redis Exporter** (Port 9121) - ✅ RUNNING - Redis metrics
+4. **Postgres Exporter** (Port 9187) - ✅ RUNNING - PostgreSQL metrics
+5. **Node Exporter** (Port 9100) - ✅ RUNNING - System metrics
 
 ### To Deploy Missing Services
 
@@ -194,11 +197,11 @@ docker ps
 - ✅ **Biometric API Health**: http://144.126.215.218:8888/health
 - ✅ **Main Website**: http://aupex.ai
 - ✅ **Admin API**: http://144.126.215.218:8888/admin (requires API key)
+- ✅ **Prometheus**: http://144.126.215.218:9090
+- ✅ **Grafana**: http://144.126.215.218:3000 (admin/auren_grafana_2025)
 
-### Need Verification/Deployment
-- ❓ **Kafka UI**: http://144.126.215.218:8081
-- ❌ **Prometheus**: Would be at port 9090
-- ❌ **Grafana**: Would be at port 3000
+### Need Verification
+- ❓ **Kafka UI**: http://144.126.215.218:8081 (check if running)
 
 ### Internal Only (via SSH)
 - ✅ **PostgreSQL**: Via docker exec commands

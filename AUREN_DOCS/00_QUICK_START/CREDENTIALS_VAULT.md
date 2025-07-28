@@ -198,6 +198,26 @@ docker exec -it auren-kafka /bin/kafka-console-consumer --bootstrap-server local
 
 ---
 
+## 🔍 MONITORING SERVICES (January 28, 2025)
+
+### Grafana
+- **URL**: http://144.126.215.218:3000
+- **Username**: admin
+- **Password**: auren_grafana_2025
+- **Purpose**: Visualization dashboards for all metrics
+
+### Prometheus
+- **URL**: http://144.126.215.218:9090
+- **Purpose**: Metrics collection and storage
+- **No authentication required** (internal use)
+
+### Metric Exporters
+- **Node Exporter**: Port 9100 (system metrics)
+- **Redis Exporter**: Port 9121 (Redis metrics)
+- **PostgreSQL Exporter**: Port 9187 (database metrics)
+
+---
+
 ## 📝 ACCESS LOG
 
 | Date | User | Action | Details |
@@ -205,6 +225,7 @@ docker exec -it auren-kafka /bin/kafka-console-consumer --bootstrap-server local
 | 2025-07-28 | Senior Engineer | Created vault | Initial documentation |
 | 2025-07-28 | Senior Engineer | Updated PostgreSQL | Changed password to auren_secure_2025 |
 | 2025-01-28 | Senior Engineer | Added Section 9 | Security enhancement credentials |
+| 2025-01-28 | Senior Engineer | Deployed Monitoring | Prometheus + Grafana + Exporters |
 
 ---
 

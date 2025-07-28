@@ -397,6 +397,30 @@ docker stop auren-postgres && docker rm auren-postgres
 # Then run create command again with auren_password_2024
 ```
 
+### PostgreSQL Authentication Issues
+```bash
+# The code uses hardcoded password that must match environment
+# If seeing "password authentication failed":
+# 1. Check environment: docker exec biometric-production env | grep POSTGRES
+# 2. The code expects: auren_password_2024 (not securepwd123!)
+```
+
+### Webhook Event Types
+```bash
+# Webhooks require specific event types:
+# ✅ Oura: "event_type": "readiness.updated"
+# ✅ WHOOP: "event_type": "recovery.updated"
+# ❌ Wrong: "daily_readiness", "recovery_update"
+```
+
+### Metrics Endpoint Issues
+```bash
+# If /metrics returns 404:
+# 1. Check if running: curl http://localhost:8888/metrics
+# 2. Restart container: docker restart biometric-production
+# 3. The endpoint must return Prometheus format, not JSON
+```
+
 ### Kafka Issues
 ```bash
 # Check Kafka logs

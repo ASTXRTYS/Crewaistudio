@@ -371,7 +371,7 @@ class SystemHealthChecker:
     async def check_python_dependencies(self) -> Tuple[bool, str, List[str]]:
         """Check required Python packages"""
         required_packages = [
-            "langgraph",
+            "crewai",
             "redis",
             "asyncpg",
             "fastapi",

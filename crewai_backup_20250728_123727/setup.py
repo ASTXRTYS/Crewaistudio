@@ -7,9 +7,7 @@ setup(
     packages=find_packages(where="src"),
     package_data={'auren': ['app/static/img/*']},
     install_requires=[
-    "langchain-openai>=0.1.23",
-    "langchain>=0.2.16",
-    "langgraph>=0.2.14",
+        "crewai>=0.8.0",
         "streamlit>=1.28.0",
         "pydantic>=2.0.0",
         "requests>=2.31.0",

@@ -23,7 +23,7 @@ class PageKnowledge:
         # This will clear knowledge stores in CrewAI
         # Get CrewAI home directory
         home_dir = Path.home()
-        langgraph_dir = home_dir / ".crewai"
+        langgraph_dir = home_dir / ".langgraph"
         
         # Remove knowledge folder
         knowledge_dir = langgraph_dir / "knowledge"

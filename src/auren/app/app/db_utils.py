@@ -24,8 +24,8 @@ TOOL_CLASSES = _TOOL_CLASSES
 from sqlalchemy import create_engine, text
 
 # If you have an environment variable DB_URL for Postgres, use that. 
-# Otherwise, fallback to local SQLite file: 'sqlite:///crewai.db'
-DEFAULT_SQLITE_URL = 'sqlite:///crewai.db'
+# Otherwise, fallback to local SQLite file: 'sqlite:///langgraph.db'
+DEFAULT_SQLITE_URL = 'sqlite:///langgraph.db'
 DB_URL = os.getenv('DB_URL', DEFAULT_SQLITE_URL)
 
 # Create a SQLAlchemy Engine.

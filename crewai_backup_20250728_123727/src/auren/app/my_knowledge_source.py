@@ -47,7 +47,7 @@ class MyKnowledgeSource:
     def get_langgraph_knowledge_source(self):
         # Import knowledge source classes based on type
         if self.source_type == "string":
-            from langchain.memory import ConversationStringBufferMemory as StringKnowledgeSource
+            from crewai.knowledge.source.string_knowledge_source import StringKnowledgeSource
             return StringKnowledgeSource(
                 content=self.content,
                 metadata=self.metadata,
@@ -55,8 +55,7 @@ class MyKnowledgeSource:
                 chunk_overlap=self.chunk_overlap
             )
         elif self.source_type == "docling":
-            # TODO: Implement custom docling source using LangChain
-# from langchain.document_loaders import BaseLoader as CrewDoclingSource
+            from crewai.knowledge.source.crew_docling_source import CrewDoclingSource
             return CrewDoclingSource(
                 file_paths=[self.source_path],
                 metadata=self.metadata,
@@ -71,7 +70,7 @@ class MyKnowledgeSource:
                 
             # Import the appropriate class based on source type
             if self.source_type == "text_file":
-                from langchain.document_loaders import TextLoader as TextFileKnowledgeSource
+                from crewai.knowledge.source.text_file_knowledge_source import TextFileKnowledgeSource
                 return TextFileKnowledgeSource(
                     file_paths=[actual_path],
                     metadata=self.metadata,
@@ -79,7 +78,7 @@ class MyKnowledgeSource:
                     chunk_overlap=self.chunk_overlap
                 )
             elif self.source_type == "pdf":
-                from langchain.document_loaders import PyPDFLoader as PDFKnowledgeSource               
+                from crewai.knowledge.source.pdf_knowledge_source import PDFKnowledgeSource               
                 return PDFKnowledgeSource(
                     file_paths=[actual_path],
                     metadata=self.metadata,
@@ -87,7 +86,7 @@ class MyKnowledgeSource:
                     chunk_overlap=self.chunk_overlap
                 )
             elif self.source_type == "csv":
-                from langchain.document_loaders import CSVLoader as CSVKnowledgeSource
+                from crewai.knowledge.source.csv_knowledge_source import CSVKnowledgeSource
                 return CSVKnowledgeSource(
                     file_paths=[actual_path],
                     metadata=self.metadata,
@@ -95,7 +94,7 @@ class MyKnowledgeSource:
                     chunk_overlap=self.chunk_overlap
                 )
             elif self.source_type == "excel":
-                from langchain.document_loaders import UnstructuredExcelLoader as ExcelKnowledgeSource
+                from crewai.knowledge.source.excel_knowledge_source import ExcelKnowledgeSource
                 return ExcelKnowledgeSource(
                     file_paths=[actual_path],
                     metadata=self.metadata,
@@ -103,7 +102,7 @@ class MyKnowledgeSource:
                     chunk_overlap=self.chunk_overlap
                 )
             elif self.source_type == "json":
-                from langchain.document_loaders import JSONLoader as JSONKnowledgeSource
+                from crewai.knowledge.source.json_knowledge_source import JSONKnowledgeSource
                 return JSONKnowledgeSource(
                     file_paths=[actual_path],
                     metadata=self.metadata,

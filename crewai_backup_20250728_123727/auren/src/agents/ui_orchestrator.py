@@ -16,7 +16,7 @@ from pydantic import Field
 
 from typing import TypedDict, Annotated, List
 from langgraph.graph import StateGraph, START, END, Task, Crew
-from langchain.tools import Tool as BaseTool
+from crewai.tools.agent_tools import StructuredTool as BaseTool
 
 # Import routing tools
 from src.tools.routing_tools import (

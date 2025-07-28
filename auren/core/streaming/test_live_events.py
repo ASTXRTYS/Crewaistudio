@@ -59,7 +59,7 @@ async def send_live_events():
                     "tools_available": ["hrv_analyzer", "neural_fatigue_detector", "recovery_optimizer"],
                     "focus_area": random.choice(["HRV analysis", "sleep quality", "stress response", "recovery patterns"])
                 },
-                metadata={"platform": "crewai", "version": "2.0"},
+                metadata={"platform": "langgraph", "version": "0.2.27"},
                 user_id="test_user"
             )
             

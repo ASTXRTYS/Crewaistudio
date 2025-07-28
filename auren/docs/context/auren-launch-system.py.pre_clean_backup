@@ -196,7 +196,7 @@ class AURENSystemLauncher:
     async def check_python_packages(self):
         """Verify required packages are installed"""
         required_packages = [
-            "langgraph", "redis", "asyncpg", "websockets",
+            "crewai", "redis", "asyncpg", "websockets",
             "boto3", "opentelemetry-api", "fastapi"
         ]
         

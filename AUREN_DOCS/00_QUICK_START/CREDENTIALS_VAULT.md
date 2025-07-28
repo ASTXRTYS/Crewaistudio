@@ -136,10 +136,11 @@ redis://auren-redis:6379/0
 - **API Key Management**: http://144.126.215.218:8888/admin/api-keys
 
 ### Initial Admin API Key
-- **Key ID**: [To be generated during deployment]
-- **API Key**: [To be generated during deployment]
+- **Key ID**: ak_96a217014a9c
+- **API Key**: auren_WKfjsldLWvzubSJaV--FspQnTRT-fvnGRxr2_uQ_Y7w
 - **Role**: admin
 - **Purpose**: Initial system administration
+- **Created**: 2025-01-28
 
 *Note: Webhook signature verification is now ENABLED and REQUIRED*
 

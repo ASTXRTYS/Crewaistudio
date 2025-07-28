@@ -23,12 +23,20 @@
 ### 🔧 Operations
 - ✅ [Service Access Guide](03_OPERATIONS/SERVICE_ACCESS_GUIDE.md) - All DevOps tools & dashboards
 - ✅ [Nginx Configuration](03_OPERATIONS/NGINX_CONFIGURATION.md) - Critical deployment info
+- ✅ [Monitoring Quick Start](../MONITORING_QUICK_START.md) - Grafana & Prometheus guide
 - ❌ Daily Checklist - **COMING SOON**
 - ❌ Troubleshooting - **COMING SOON**
 
 ### 💻 Development
+- ✅ [NEUROS Memory Enhancement](../NEUROS_MEMORY_ENHANCEMENT_SUMMARY.md) - Memory tier awareness
+- ✅ [Memory Management Tools](../auren/tools/memory_management_tools.py) - Implementation examples
 - ❌ Agent Development Guide - **COMING SOON**
 - ❌ API Documentation - **COMING SOON**
+
+### 🚨 Critical Issues & Handoffs
+- ✅ [Prometheus Issue Report](../PROMETHEUS_ISSUE_FOR_EXECUTIVE_ENGINEER.md) - For Executive Engineer
+- ✅ [NEUROS Memory Audit](../NEUROS_MEMORY_TIER_CAPABILITY_AUDIT.md) - Gap analysis
+- ✅ [Website Deployment Post-Mortem](../WEBSITE_DEPLOYMENT_POSTMORTEM.md) - Incident analysis
 
 ---
 
@@ -80,6 +88,15 @@ AUREN_DOCS/
 
 ## 🆕 Recent Updates
 
+### July 28, 2025 (Later in Day)
+- ✅ Enhanced NEUROS with complete memory tier awareness (167 lines added to YAML)
+- ✅ Created memory management tools for three-tier system
+- ✅ Deployed Prometheus & Grafana monitoring (needs instrumentation fix)
+- ✅ Fixed ChromaDB NumPy 2.0 compatibility issue
+- ✅ Fixed Level 1 knowledge directory path (removed spaces)
+- ✅ Updated Documentation Organization Guide with data flow
+- ✅ Created handoff documents for Executive Engineer
+
 ### January 28, 2025
 - ✅ Created Section 9 Security Enhancement Layer
 - ✅ Added enterprise authentication, PHI encryption, and audit logging
@@ -88,7 +105,7 @@ AUREN_DOCS/
 - ✅ Fixed website deployment (wrong version was live)
 - ✅ Created post-mortem and nginx configuration docs
 
-### July 28, 2025
+### July 28, 2025 (Earlier)
 - ✅ Deployed Biometric System (Sections 1-8)
 - ✅ Created comprehensive deployment documentation
 - ✅ Updated State of Readiness report
@@ -183,4 +200,4 @@ For documentation questions or updates:
 
 ---
 
-*This is the master index for all AUREN documentation. All links have been verified to work as of July 28, 2025.* 
+*This is the master index for all AUREN documentation. All links have been verified to work as of July 28, 2025 (5:00 AM UTC).* 

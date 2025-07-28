@@ -99,12 +99,18 @@ CrewAI-Studio-main/
 - Complete personality definition
 - 5 cognitive modes (baseline/reflex/hypothesis/companion/sentinel)
 - Decision thresholds and rules
+- **ENHANCED**: Full three-tier memory system awareness (July 28, 2025)
 
 **NEUROS Level 1 Knowledge**: `auren/src/agents/level1_knowledge/`
 - 15 knowledge files for CNS optimization
 - Core protocols and thresholds
 - Evidence-based guidelines
 - **NOTE**: Fixed from "Level 1 knowledge " (with spaces)
+
+**NEUROS Memory Tools**: `auren/tools/memory_management_tools.py`
+- 5 essential memory management functions
+- Implementation examples for tier operations
+- Created July 28, 2025
 
 ### 5. **Operational Procedures**
 **Location**: `AUREN_DOCS/03_OPERATIONS/`
@@ -133,6 +139,20 @@ Wearables → Webhooks → Biometric API (port 8888) → Kafka → PostgreSQL/Ti
 ```
 All Services → Metric Exporters → Prometheus → Grafana
 ```
+
+### 6. **Deployment Scripts & Tools**
+**Location**: `scripts/`
+
+**Security & Infrastructure**:
+- `deploy_section_9_security.sh` - Security layer deployment
+- `deploy_monitoring_stack.sh` - Prometheus & Grafana deployment
+- `fix_chromadb.sh` - ChromaDB NumPy 2.0 compatibility fix
+- `fix_prometheus_metrics.sh` & `fix_prometheus_metrics_v2.sh` - Monitoring fix attempts
+
+**API & Integration**:
+- `create_device_api_keys.py` - API key generation for devices
+- `enable_webhook_signatures.py` - Webhook security guide
+- `create_initial_admin_key.py` → `simple_create_admin_key.py` - Admin key creation
 
 ---
 
@@ -193,6 +213,12 @@ Create `README.md` in each folder explaining what goes there
 
 ### Current system status?
 → `auren/AUREN_STATE_OF_READINESS_REPORT.md`
+
+### Monitoring & observability?
+→ `MONITORING_QUICK_START.md` & `PROMETHEUS_ISSUE_FOR_EXECUTIVE_ENGINEER.md`
+
+### NEUROS memory configuration?
+→ `auren/config/neuros.yaml` & `NEUROS_MEMORY_ENHANCEMENT_SUMMARY.md`
 
 ---
 

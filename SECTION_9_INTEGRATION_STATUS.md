@@ -60,13 +60,14 @@ Section 9 Security Enhancement Layer has been **deployed** but requires **integr
 - ✅ Redis - Port 6379  
 - ✅ Kafka - Port 9092
 - ✅ Biometric API - Port 8888
-- ⚠️ ChromaDB - Restarting (needs investigation)
+- ✅ ChromaDB - Port 8000 (Fixed NumPy 2.0 issue on July 28)
 
-### Missing Services
-- ❌ Prometheus (defined but not deployed)
-- ❌ Grafana (defined but not deployed)
-- ❌ Redis Exporter
-- ❌ Postgres Exporter
+### Missing Services (Updated July 28)
+- ✅ Prometheus - NOW DEPLOYED (Port 9090) but metrics instrumentation missing
+- ✅ Grafana - NOW DEPLOYED (Port 3000) - admin/auren_grafana_2025
+- ✅ Redis Exporter - NOW DEPLOYED (Port 9121)
+- ✅ Postgres Exporter - NOW DEPLOYED (Port 9187)
+- ✅ Node Exporter - NOW DEPLOYED (Port 9100)
 
 ---
 
@@ -132,4 +133,5 @@ When ready to integrate:
 
 ---
 
-*This represents the current state of Section 9 integration as of January 28, 2025.* 
+*This represents the current state of Section 9 integration as of January 28, 2025.*
+*Updated July 28, 2025 with service deployment status and fixes.* 

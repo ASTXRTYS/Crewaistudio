@@ -10,10 +10,10 @@ aiokafka==0.10.0          # NEW: True async Kafka (was kafka-python)
 tenacity==8.2.3           # NEW: Retry logic with exponential backoff
 
 # AI/ML
-langchain==0.1.0
+langchain==0.1.10
 langchain-openai==0.0.5
 langgraph==0.0.26
-openai==1.10.0
+openai==1.13.3
 chromadb==0.4.22
 
 # Security & Monitoring

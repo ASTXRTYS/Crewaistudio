@@ -29,7 +29,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential  # Added: Retry
 # Import our components
 from biometric.bridge import BiometricKafkaLangGraphBridge
 from agents.neuros.section_8_neuros_graph import NEUROSCognitiveGraph
-# Note: Section 9 security integration will be added via environment check
+from security import create_security_app  # Section 9 security integration
 
 # Configure logging
 logging.basicConfig(
@@ -271,9 +271,9 @@ app.add_middleware(
 )
 
 # Integrate Section 9 security (if enabled)
-# TODO: Section 9 security integration
-# app = create_security_app(app)
-# For now, using base app without additional security layer
+if os.getenv("ENABLE_SECURITY", "true").lower() == "true":
+    # Will pass Redis client during lifespan startup
+    app = create_security_app(app)
 
 # =============================================================================
 # HEALTH & MONITORING ENDPOINTS

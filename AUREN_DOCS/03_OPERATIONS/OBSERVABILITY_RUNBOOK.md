@@ -338,6 +338,8 @@ sshpass -p '.HvddX+@6dArsKd' ssh root@144.126.215.218 'df -h'
 - [Grafana Query Library](GRAFANA_QUERY_LIBRARY.md) - PromQL queries
 - [Docker Navigation Guide](DOCKER_NAVIGATION_GUIDE.md) - Container details
 - [Monitoring Guide](../03_DEVELOPMENT/MONITORING_GUIDE.md) - Setup details
+- [Monitoring Stability Guide](MONITORING_STABILITY_GUIDE.md) - Prevention & recovery procedures
+- [Integration Patterns](../04_DEVELOPMENT/INTEGRATION_PATTERNS.md) - How to add metrics
 
 ---
 

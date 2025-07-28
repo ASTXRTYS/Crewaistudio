@@ -29,6 +29,7 @@
 - ✅ [Metrics Catalog](03_OPERATIONS/METRICS_CATALOG.md) - Complete catalog of all AUREN metrics
 - ✅ [Grafana Query Library](03_OPERATIONS/GRAFANA_QUERY_LIBRARY.md) - Ready-to-use PromQL queries
 - ✅ [Observability Runbook](03_OPERATIONS/OBSERVABILITY_RUNBOOK.md) - Daily monitoring procedures
+- ✅ [Monitoring Stability Guide](03_OPERATIONS/MONITORING_STABILITY_GUIDE.md) - Prevention & recovery procedures
 - ❌ Daily Checklist - **COMING SOON**
 - ❌ Troubleshooting - **COMING SOON**
 
@@ -90,7 +91,7 @@ AUREN_DOCS/
 ├── 00_QUICK_START/          ✅ Has 2 documents
 ├── 01_ARCHITECTURE/         ✅ Has 1 document
 ├── 02_DEPLOYMENT/           ✅ Has 1 document  
-├── 03_OPERATIONS/           ✅ Has 7 documents (expanded!)
+├── 03_OPERATIONS/           ✅ Has 8 documents (monitoring enhanced!)
 └── 04_DEVELOPMENT/          ✅ Has 2 documents
 ```
 
@@ -104,12 +105,17 @@ AUREN_DOCS/
   - ✅ Grafana Query Library - Ready-to-use PromQL queries  
   - ✅ Observability Runbook - Daily monitoring procedures
   - ✅ Integration Patterns - Best practices for new features
+  - ✅ Monitoring Stability Guide - Prevention & recovery procedures
 - Created 4 enhanced Grafana dashboards:
   - Memory Tier Operations
   - NEUROS Cognitive Modes
   - Webhook Processing
   - System Health & Performance
-- Fixed Prometheus monitoring and documented the entire process
+- Fixed critical monitoring issues:
+  - ✅ Prometheus container (was down) - now running with restart policy
+  - ✅ Metrics endpoint (500 error) - fixed missing Response import
+  - ✅ All 6 Grafana dashboards - now operational
+  - ⚠️ Custom AUREN metrics - defined but need implementation
 
 ### July 28, 2025 (Later in Day)
 - ✅ Enhanced NEUROS with complete memory tier awareness (167 lines added to YAML)

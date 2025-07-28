@@ -429,11 +429,19 @@ DigitalOcean Droplet (144.126.215.218)
 4. [x] Deploy Prometheus & Grafana monitoring stack ✅ DEPLOYED (July 28)
 
 ### Sprint 1.5: CRITICAL FIXES (IMMEDIATE)
-1. [ ] **Fix Prometheus Metrics** 🚨
-   - Instrument biometric API with prometheus_client
-   - Add memory tier operation metrics
-   - Fix scraper network configuration
-   - Hand off to Executive Engineer (see PROMETHEUS_ISSUE_FOR_EXECUTIVE_ENGINEER.md)
+1. [x] **Fix Prometheus & Grafana** ✅ COMPLETED (January 28, 2025)
+   - Fixed missing Response import in biometric API
+   - Restarted Prometheus container
+   - All 6 Grafana dashboards now working
+   - Added restart policies to prevent future outages
+   - Created comprehensive monitoring documentation
+   
+2. [ ] **Implement Custom AUREN Metrics** 🚨 NEXT PRIORITY
+   - Integrate `auren_webhook_requests_total` and related webhook metrics
+   - Add `auren_memory_tier_operations_total` for memory tier tracking
+   - Implement `auren_neuros_mode_switches_total` for NEUROS modes
+   - Add `auren_biometric_events_processed_total` for event tracking
+   - See `enhanced_api_metrics.py` blueprint for full implementation
 
 2. [x] **Update NEUROS Memory Configuration** ✅ COMPLETED
    - Added full memory tier definitions to neuros.yaml

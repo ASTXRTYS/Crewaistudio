@@ -5,6 +5,8 @@ Purpose: Production-ready configuration for observability and persistence
 """
 
 import os
+import logging
+from datetime import datetime
 from typing import Optional, Dict, Any
 from dataclasses import dataclass
 from functools import lru_cache
@@ -15,6 +17,8 @@ from langgraph.store.postgres import PostgresStore
 from langchain.cache import RedisCache
 from langsmith import Client
 import redis
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -186,6 +190,84 @@ class LangGraphRuntime:
             pass
         
         return compiled
+    
+    async def save_conversation_checkpoint(
+        self,
+        thread_id: str,
+        checkpoint_data: dict,
+        metadata: dict = None
+    ):
+        """Save conversation checkpoint with metadata"""
+        config = {
+            "configurable": {
+                "thread_id": thread_id,
+                "checkpoint_ns": self.config.checkpoint_namespace
+            }
+        }
+        
+        # Add metadata for better observability
+        if metadata:
+            config["metadata"] = {
+                **metadata,
+                "saved_at": datetime.utcnow().isoformat(),
+                "version": "1.0"
+            }
+        
+        await self.checkpointer.aput(config, checkpoint_data)
+    
+    async def load_conversation_checkpoint(
+        self,
+        thread_id: str
+    ) -> Optional[dict]:
+        """Load conversation checkpoint"""
+        config = {
+            "configurable": {
+                "thread_id": thread_id,
+                "checkpoint_ns": self.config.checkpoint_namespace
+            }
+        }
+        
+        return await self.checkpointer.aget(config)
+    
+    def get_cached_node_result(
+        self,
+        node_name: str,
+        input_hash: str
+    ) -> Optional[dict]:
+        """Cache node results to avoid re-computation"""
+        if not self.cache:
+            return None
+            
+        cache_key = f"{self.config.checkpoint_namespace}:node:{node_name}:{input_hash}"
+        
+        try:
+            # Try to get from cache
+            cached = self.cache.lookup(cache_key)
+            if cached:
+                return cached
+        except Exception as e:
+            logger.warning(f"Cache lookup failed: {e}")
+            
+        return None
+    
+    def cache_node_result(
+        self,
+        node_name: str,
+        input_hash: str,
+        result: dict,
+        ttl: Optional[int] = None
+    ):
+        """Cache node result for deduplication"""
+        if not self.cache:
+            return
+            
+        cache_key = f"{self.config.checkpoint_namespace}:node:{node_name}:{input_hash}"
+        ttl = ttl or self.config.redis_cache_ttl
+        
+        try:
+            self.cache.update(cache_key, result)
+        except Exception as e:
+            logger.warning(f"Cache update failed: {e}")
     
     @lru_cache(maxsize=128)
     def get_cached_config(self, cache_key: str) -> Dict[str, Any]:

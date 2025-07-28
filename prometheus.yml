@@ -10,6 +10,14 @@ scrape_configs:
   - job_name: 'redis'
     static_configs:
       - targets: ['redis-exporter:9121']
+    # Prevent cardinality explosion from user_id labels
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: '.*user_id.*'
+        action: drop
+      - source_labels: [__name__]
+        regex: '.*trace_id.*'
+        action: drop
 
   - job_name: 'postgres'
     static_configs:
@@ -19,6 +27,17 @@ scrape_configs:
     static_configs:
       - targets: ['host.docker.internal:8080']
     metrics_path: '/metrics'
+    # Prevent high cardinality labels
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: '.*user_id.*'
+        action: drop
+      - source_labels: [__name__]
+        regex: '.*session_id.*'
+        action: drop
+      - source_labels: [__name__]
+        regex: '.*trace_id.*'
+        action: drop
 
   - job_name: 'chromadb'
     static_configs:

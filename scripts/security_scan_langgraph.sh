@@ -37,6 +37,20 @@ check_requirements() {
         pip install cyclonedx-bom
     fi
     
+    # Check for trivy
+    if ! command -v trivy &> /dev/null; then
+        echo "⚠️  Trivy not found. Installing for container scanning..."
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            # macOS
+            brew install aquasecurity/trivy/trivy
+        elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            # Linux
+            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+        else
+            echo "⚠️  Please install Trivy manually from https://github.com/aquasecurity/trivy"
+        fi
+    fi
+    
     echo "✅ All requirements satisfied"
     echo ""
 }
@@ -178,6 +192,66 @@ check_cves() {
     echo ""
 }
 
+# Check container vulnerabilities
+check_container_vulnerabilities() {
+    echo "🐳 Scanning container images with Trivy..."
+    echo "----------------------------------------"
+    
+    # Find Docker images in compose files
+    IMAGES=$(grep -h "image:" docker-compose*.yml 2>/dev/null | awk '{print $2}' | sort -u)
+    
+    if [ -z "$IMAGES" ]; then
+        echo "No Docker images found in compose files"
+        return
+    fi
+    
+    # Scan each image
+    for image in $IMAGES; do
+        echo "Scanning: $image"
+        
+        # Generate report name
+        REPORT_NAME=$(echo "$image" | tr '/:' '_')
+        
+        # Run Trivy scan
+        trivy image \
+            --severity HIGH,CRITICAL \
+            --format json \
+            --output "security_reports/trivy_${REPORT_NAME}.json" \
+            "$image" 2>/dev/null || echo "  ⚠️  Failed to scan $image"
+        
+        # Also generate human-readable report
+        trivy image \
+            --severity HIGH,CRITICAL \
+            --format table \
+            --output "security_reports/trivy_${REPORT_NAME}.txt" \
+            "$image" 2>/dev/null || true
+        
+        echo "  ✅ Scan complete"
+    done
+    
+    echo ""
+}
+
+# Generate SBOM for containers
+generate_container_sbom() {
+    echo "📦 Generating container SBOMs..."
+    echo "--------------------------------"
+    
+    # Check if we have a local Dockerfile
+    if [ -f "Dockerfile" ]; then
+        echo "Scanning local Dockerfile..."
+        
+        trivy sbom \
+            --format spdx-json \
+            --output security_reports/sbom_container_local.json \
+            . 2>/dev/null || echo "  ⚠️  Failed to generate SBOM"
+        
+        echo "  ✅ Local container SBOM generated"
+    fi
+    
+    echo ""
+}
+
 # Generate summary report
 generate_summary() {
     echo "📝 Generating security summary..."
@@ -197,6 +271,10 @@ Generated: $(date)
 - **CycloneDX JSON**: [sbom_cyclonedx.json](sbom_cyclonedx.json)
 - **CycloneDX XML**: [sbom_cyclonedx.xml](sbom_cyclonedx.xml)
 - **SPDX JSON**: [sbom_spdx.json](sbom_spdx.json)
+- **Container SBOM**: [sbom_container_local.json](sbom_container_local.json)
+
+### Container Security
+- **Trivy Reports**: trivy_*.txt (see individual container reports)
 
 ### Outdated Packages
 - **Report**: [outdated_packages.json](outdated_packages.json)
@@ -240,6 +318,8 @@ main() {
     run_pip_audit
     run_safety_check
     generate_sbom
+    check_container_vulnerabilities
+    generate_container_sbom
     check_outdated
     check_cves
     generate_summary

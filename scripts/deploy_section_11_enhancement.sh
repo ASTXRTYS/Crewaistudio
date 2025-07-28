@@ -48,7 +48,7 @@ check_command ssh
 # Step 1: Create SQL file on server
 echo -e "\n${YELLOW}Step 1: Creating Section 11 v3.0 SQL file on server...${NC}"
 remote_exec "cat > /tmp/section_11_v3_enhancement.sql << 'EOF'
-$(cat auren/docs/context/auren_section_11_v2.sql)
+$(cat auren/docs/context/section_11_v3_enhancement.sql)
 EOF"
 
 # Step 2: Backup current database

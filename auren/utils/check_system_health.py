@@ -14,7 +14,7 @@ import aiohttp
 import redis.asyncio as redis
 import asyncpg
 import psutil
-from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer
 
 # Try imports to check if packages are installed
 try:
@@ -234,7 +234,7 @@ class SystemHealthChecker:
         """Check event streaming infrastructure"""
         try:
             # Check if instrumentation module exists
-from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer
             
             # Check if streaming module exists
             from auren.realtime.multi_protocol_streaming import RedisStreamEventStreamer

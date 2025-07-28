@@ -6,8 +6,8 @@ import asyncio
 import random
 from datetime import datetime, timezone
 from auren.realtime.langgraph_instrumentation import (
-from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
-    CrewAIEventInstrumentation, 
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer
+    LangGraphEventStreamer, 
     AURENStreamEvent, 
     AURENEventType,
     AURENPerformanceMetrics
@@ -30,7 +30,7 @@ async def generate_test_events():
     logger.info("✅ Redis streamer initialized")
     
     # Initialize instrumentation
-    instrumentation = CrewAIEventInstrumentation(
+    instrumentation = LangGraphEventStreamer(
         event_streamer=redis_streamer
     )
     logger.info("✅ Event instrumentation initialized")

@@ -7,13 +7,13 @@ import asyncio
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timezone
 import logging
-from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer
 
 # Import memory tier tracking
 from auren.realtime.memory_tier_tracking import MemoryTierTracker, TieredMemoryBackend, MemoryTier
 
 # Import from Module C
-from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer
 from auren.realtime.multi_protocol_streaming import RedisStreamEventStreamer
 
 # Import from Module D
@@ -102,7 +102,7 @@ async def setup_memory_tier_monitoring(config: Dict[str, Any]):
     logger.info("Memory tier tracking initialized")
     
     # 3. Create event instrumentation
-    event_instrumentation = CrewAIEventInstrumentation(
+    event_instrumentation = LangGraphEventStreamer(
         event_streamer=redis_streamer
     )
     

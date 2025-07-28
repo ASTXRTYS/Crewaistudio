@@ -8,13 +8,13 @@ from typing import Dict, Any, Optional
 from datetime import datetime, timezone
 import logging
 from cryptography.fernet import Fernet
-from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer
 
 # Import security layer
 from auren.realtime.security_layer import SecureEventStreamer, SecurityPolicy, RoleBasedEventFilter
 
 # Import from Module C
-from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer
 from auren.realtime.multi_protocol_streaming import RedisStreamEventStreamer
 from auren.realtime.enhanced_websocket_streamer import EnhancedWebSocketEventStreamer, ClientSubscription
 
@@ -57,7 +57,7 @@ async def setup_secure_monitored_auren_system(config: Dict[str, Any]):
     logger.info("Security layer initialized with sanitization and encryption")
     
     # 3. Initialize event instrumentation with secure streamer
-    event_instrumentation = CrewAIEventInstrumentation(
+    event_instrumentation = LangGraphEventStreamer(
         event_streamer=secure_streamer  # Now all events go through security!
     )
     

@@ -12,7 +12,7 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Tuple
-from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer
 
 class CrewAIToLangGraphMigrator:
     def __init__(self):
@@ -60,11 +60,11 @@ class CrewAIToLangGraphMigrator:
         return content
     
     def migrate_event_instrumentation(self, content: str) -> str:
-        """Replace CrewAIEventInstrumentation with LangGraph equivalent"""
+        """Replace LangGraphEventStreamer with LangGraph equivalent"""
         
         # Replace class definition
         content = re.sub(
-            r'class CrewAIEventInstrumentation:.*?(?=\nclass|\n\n|\Z)',
+            r'class LangGraphEventStreamer:.*?(?=\nclass|\n\n|\Z)',
             '''class LangGraphEventStreamer:
     """LangGraph event streaming for real-time updates"""
     
@@ -87,7 +87,7 @@ class CrewAIToLangGraphMigrator:
         
         # Replace instantiation
         content = re.sub(
-            r'CrewAIEventInstrumentation\(',
+            r'LangGraphEventStreamer\(',
             'LangGraphEventStreamer(',
             content
         )

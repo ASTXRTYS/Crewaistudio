@@ -1,57 +1,65 @@
-name: Assert No CrewAI
+name: Guard-No-CrewAI
 
-on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
+on: [pull_request, push]
 
 jobs:
-  check-no-crewai:
+  assert-no-crewai:
     runs-on: ubuntu-latest
-    
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Install ripgrep
-      run: |
-        curl -LO https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep_14.1.0-1_amd64.deb
-        sudo dpkg -i ripgrep_14.1.0-1_amd64.deb
-    
-    - name: Assert repo is CrewAI-free
-      run: |
-        echo "Checking for CrewAI references..."
-        
-        # Check code for CrewAI references (excluding migration scripts)
-        disallowed=$(rg -i --hidden --no-ignore -e 'crew[ _-]?ai' \
-          --glob '!.github/**' \
-          --glob '!**/migration*.py' \
-          --glob '!**/*crewai*.py' \
-          --glob '!**/backup*/**' \
-          --glob '!.git/**' \
-          || true)
-        
-        if [[ -n "$disallowed" ]]; then
-          echo "::error::Found CrewAI references:"
-          echo "$disallowed"
-          exit 1
-        fi
-        
-        echo "✅ No CrewAI references found in code!"
-    
-    - name: Check Python dependencies
-      run: |
-        echo "Checking requirements files..."
-        
-        # Check for CrewAI in requirements (excluding comments)
-        if grep -i "^crewai" **/requirements*.txt 2>/dev/null; then
-          echo "::error::Found CrewAI in requirements files!"
-          exit 1
-        fi
-        
-        echo "✅ No CrewAI in requirements files!"
-    
-    - name: Summary
-      run: |
-        echo "🎉 Repository is CrewAI-free!"
-        echo "All checks passed - no CrewAI dependencies detected." 
+      - uses: actions/checkout@v4
+      
+      - name: Install ripgrep
+        run: |
+          curl -LO https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep_14.1.0-1_amd64.deb
+          sudo dpkg -i ripgrep_14.1.0-1_amd64.deb
+      
+      - name: Source-tree sweep
+        run: |
+          echo "Checking for CrewAI references in source tree..."
+          
+          disallowed=$(rg -i --hidden --no-ignore -e 'crew[ _-]?ai' \
+            -g '!.git/**' -g '!.venv*/**' -g '!venv*/**' -g '!**/bin/**' \
+            -g '!**/__pycache__/**' -g '!*migration*.py' -g '!*crewai*.py' \
+            -g '!investigate_crewai*' -t py -t ts -t js -t go -t md -t yaml -t json -t docker -t sh \
+            || true)
+          
+          if [[ -n "$disallowed" ]]; then
+            echo "::error::Found CrewAI references in source:"
+            echo "$disallowed"
+            exit 1
+          fi
+          
+          echo "✅ No CrewAI references found in source code!"
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r auren/requirements.txt
+      
+      - name: Runtime guard
+        run: |
+          python scripts/assert_no_crewai.py
+      
+      - name: Check transitive dependencies
+        run: |
+          pip install pipdeptree
+          echo "Checking for CrewAI in transitive dependencies..."
+          
+          if pipdeptree -w silence | grep -i crew; then
+            echo "::error::Found CrewAI in transitive dependencies!"
+            exit 1
+          fi
+          
+          echo "✅ No CrewAI in transitive dependencies!"
+      
+      - name: Summary
+        run: |
+          echo "🎉 Repository is CrewAI-free!"
+          echo "✅ Source code: Clean"
+          echo "✅ Runtime: Clean"
+          echo "✅ Dependencies: Clean" 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Migrate CrewAIEventInstrumentation to LangGraphEventStreamer
+Migrate LangGraphEventStreamer to LangGraphEventStreamer
 Author: Senior Engineer
 Date: January 29, 2025
 """
@@ -10,15 +10,15 @@ import re
 import shutil
 from datetime import datetime
 from pathlib import Path
-from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer
 
 def migrate_event_instrumentation():
-    """Replace all CrewAIEventInstrumentation with LangGraphEventStreamer"""
+    """Replace all LangGraphEventStreamer with LangGraphEventStreamer"""
     
     files_modified = 0
     errors = []
     
-    # Find all Python files that use CrewAIEventInstrumentation
+    # Find all Python files that use LangGraphEventStreamer
     target_files = []
     
     for root, dirs, files in os.walk('.'):
@@ -32,12 +32,12 @@ def migrate_event_instrumentation():
                     with open(filepath, 'r', encoding='utf-8') as f:
                         content = f.read()
                     
-                    if 'CrewAIEventInstrumentation' in content:
+                    if 'LangGraphEventStreamer' in content:
                         target_files.append(filepath)
                 except:
                     pass
     
-    print(f"Found {len(target_files)} files with CrewAIEventInstrumentation")
+    print(f"Found {len(target_files)} files with LangGraphEventStreamer")
     
     # Process each file
     for filepath in target_files:
@@ -63,17 +63,17 @@ def migrate_event_instrumentation():
                     needs_import = False
                 
                 # Replace imports
-from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
-                    modified_lines.append('from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as LangGraphEventStreamer as CrewAIEventInstrumentation')
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer
+                    modified_lines.append('from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as LangGraphEventStreamer as LangGraphEventStreamer')
                     needs_import = False
                     import_added = True
-from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
-                    modified_lines.append('from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as LangGraphEventStreamer as CrewAIEventInstrumentation')
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer
+                    modified_lines.append('from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as LangGraphEventStreamer as LangGraphEventStreamer')
                     needs_import = False
                     import_added = True
-                elif 'LangGraphEventStreamer as CrewAIEventInstrumentation' in line and 'import' in line:
+                elif 'LangGraphEventStreamer as LangGraphEventStreamer' in line and 'import' in line:
                     # Handle other import patterns
-                    new_line = line.replace('CrewAIEventInstrumentation', 'LangGraphEventStreamer as CrewAIEventInstrumentation')
+                    new_line = line.replace('LangGraphEventStreamer', 'LangGraphEventStreamer as LangGraphEventStreamer')
                     modified_lines.append(new_line)
                     needs_import = False
                     import_added = True
@@ -84,7 +84,7 @@ from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer
                 if needs_import and not import_added and i < len(lines) - 1:
                     next_line = lines[i + 1] if i + 1 < len(lines) else ''
                     if (line.startswith('import ') or line.startswith('from ')) and not (next_line.startswith('import ') or next_line.startswith('from ')):
-                        modified_lines.append('from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as LangGraphEventStreamer as CrewAIEventInstrumentation')
+                        modified_lines.append('from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as LangGraphEventStreamer as LangGraphEventStreamer')
                         needs_import = False
                         import_added = True
             

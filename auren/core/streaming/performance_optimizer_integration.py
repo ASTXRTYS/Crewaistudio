@@ -7,7 +7,7 @@ import asyncio
 import logging
 from typing import Dict, Any
 from datetime import datetime, timezone
-from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer
 
 # Import performance optimization
 from auren.realtime.performance_optimizer import (
@@ -17,7 +17,7 @@ from auren.realtime.performance_optimizer import (
 
 # Import from Module C
 from auren.realtime.langgraph_instrumentation import (
-    CrewAIEventInstrumentation, 
+    LangGraphEventStreamer, 
     AURENStreamEvent,
     AURENEventType
 )
@@ -58,7 +58,7 @@ async def setup_optimized_event_streaming(config: Dict[str, Any]):
     await optimized_streamer.initialize()
     
     # 4. Create event instrumentation with optimized streamer
-    event_instrumentation = CrewAIEventInstrumentation(
+    event_instrumentation = LangGraphEventStreamer(
         event_streamer=optimized_streamer  # All events now batched!
     )
     

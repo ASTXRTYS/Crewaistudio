@@ -1,5 +1,5 @@
 """
-LangGraph Event Streamer - Replacement for CrewAIEventInstrumentation
+LangGraph Event Streamer - Replacement for LangGraphEventStreamer
 Purpose: Provides event streaming capabilities using LangGraph patterns
 Author: Senior Engineer
 Date: January 29, 2025
@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional, Callable
 from enum import Enum
 import uuid
-from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer
 
 from langgraph.graph import StateGraph
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
@@ -51,7 +51,7 @@ class AURENEventType(str, Enum):
 class LangGraphEventStreamer:
     """
     LangGraph-based event streaming system
-    Drop-in replacement for CrewAIEventInstrumentation
+    Drop-in replacement for LangGraphEventStreamer
     """
     
     def __init__(self, 
@@ -260,4 +260,4 @@ class LangGraphEventStreamer:
 
 
 # Alias for backward compatibility
-CrewAIEventInstrumentation = LangGraphEventStreamer 
+LangGraphEventStreamer = LangGraphEventStreamer 

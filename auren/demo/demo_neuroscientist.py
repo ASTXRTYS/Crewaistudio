@@ -11,7 +11,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Any, Optional
 import uuid
 import logging
-from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer
 
 # Set up logging
 logging.basicConfig(
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 # Import AUREN components
 from auren.realtime.langgraph_instrumentation import (
-    CrewAIEventInstrumentation,
+    LangGraphEventStreamer,
     AURENStreamEvent,
     AURENEventType,
     AURENPerformanceMetrics
@@ -89,7 +89,7 @@ class DemoNeuroscientist:
         self.redis_streamer = RedisStreamEventStreamer(redis_url)
         await self.redis_streamer.initialize()
         
-        self.event_instrumentation = CrewAIEventInstrumentation(
+        self.event_instrumentation = LangGraphEventStreamer(
             event_streamer=self.redis_streamer
         )
         

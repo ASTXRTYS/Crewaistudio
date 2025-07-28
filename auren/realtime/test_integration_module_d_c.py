@@ -11,14 +11,14 @@ import redis.asyncio as redis
 from unittest.mock import AsyncMock, MagicMock
 import sys
 import os
-from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from realtime.enhanced_websocket_streamer import EnhancedWebSocketStreamer
 from realtime.langgraph_instrumentation import (
-    CrewAIEventInstrumentation,
+    LangGraphEventStreamer,
     AURENStreamEvent,
     AURENEventType,
     AURENPerformanceMetrics
@@ -54,7 +54,7 @@ class TestModuleDCIntegration:
     @pytest.fixture
     async def event_instrumentation(self, redis_client):
         """Create event instrumentation instance"""
-        instrumentation = CrewAIEventInstrumentation(
+        instrumentation = LangGraphEventStreamer(
             redis_url="redis://localhost:6379",
             enable_streaming=True
         )
@@ -378,7 +378,7 @@ async def run_integration_tests():
     await redis_client.delete("auren:events:operational")
     await redis_client.delete("auren:events:analytical")
     
-    instrumentation = CrewAIEventInstrumentation(
+    instrumentation = LangGraphEventStreamer(
         redis_url="redis://localhost:6379",
         enable_streaming=True
     )

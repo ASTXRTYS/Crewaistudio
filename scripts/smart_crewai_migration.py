@@ -11,7 +11,7 @@ import re
 import shutil
 from datetime import datetime
 from pathlib import Path
-from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer
 
 class SmartCrewAIMigrator:
     def __init__(self):
@@ -33,10 +33,10 @@ class SmartCrewAIMigrator:
             shutil.copy2(backup_path, filepath)
             
     def migrate_crewai_event_instrumentation(self, content: str) -> str:
-        """Replace CrewAIEventInstrumentation with proper LangGraph pattern"""
+        """Replace LangGraphEventStreamer with proper LangGraph pattern"""
         
         # First, add necessary imports at the top if not present
-        if 'LangGraphEventStreamer as CrewAIEventInstrumentation' in content and 'from datetime import datetime' not in content:
+        if 'LangGraphEventStreamer as LangGraphEventStreamer' in content and 'from datetime import datetime' not in content:
             # Find the last import line
             import_lines = []
             lines = content.split('\n')
@@ -52,7 +52,7 @@ class SmartCrewAIMigrator:
         
         # Replace the class name and instantiation
         content = re.sub(
-            r'CrewAIEventInstrumentation',
+            r'LangGraphEventStreamer',
             'LangGraphEventStreamer',
             content
         )
@@ -221,7 +221,7 @@ class LangGraphEventStreamer:
             # 1. Handle imports carefully
             content = self.migrate_imports_carefully(content)
             
-            # 2. Handle CrewAIEventInstrumentation
+            # 2. Handle LangGraphEventStreamer
             content = self.migrate_crewai_event_instrumentation(content)
             
             # 3. Handle integration files

@@ -6,10 +6,10 @@ Tests: Instrumentation → Redis Streaming → WebSocket Server
 import asyncio
 import logging
 from datetime import datetime, timezone
-from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer as CrewAIEventInstrumentation
+from auren.core.streaming.langgraph_event_streamer import LangGraphEventStreamer
 
 from auren.realtime.langgraph_instrumentation import (
-    CrewAIEventInstrumentation, 
+    LangGraphEventStreamer, 
     AURENStreamEvent, 
     AURENEventType,
     AURENPerformanceMetrics
@@ -33,7 +33,7 @@ async def test_event_pipeline():
     logger.info("✅ Redis streamer initialized")
     
     # 2. Initialize CrewAI Instrumentation
-    instrumentation = CrewAIEventInstrumentation(
+    instrumentation = LangGraphEventStreamer(
         event_streamer=redis_streamer
     )
     logger.info("✅ CrewAI instrumentation initialized")

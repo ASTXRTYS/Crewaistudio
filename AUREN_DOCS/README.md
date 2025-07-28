@@ -26,6 +26,9 @@
 - ✅ [Monitoring Quick Start](../MONITORING_QUICK_START.md) - Grafana & Prometheus guide
 - ✅ [Docker Navigation Guide](03_OPERATIONS/DOCKER_NAVIGATION_GUIDE.md) - Complete Docker infrastructure guide
 - ✅ [Prometheus Troubleshooting](03_OPERATIONS/PROMETHEUS_TROUBLESHOOTING_PLAYBOOK.md) - Step-by-step fix playbook
+- ✅ [Metrics Catalog](03_OPERATIONS/METRICS_CATALOG.md) - Complete catalog of all AUREN metrics
+- ✅ [Grafana Query Library](03_OPERATIONS/GRAFANA_QUERY_LIBRARY.md) - Ready-to-use PromQL queries
+- ✅ [Observability Runbook](03_OPERATIONS/OBSERVABILITY_RUNBOOK.md) - Daily monitoring procedures
 - ❌ Daily Checklist - **COMING SOON**
 - ❌ Troubleshooting - **COMING SOON**
 
@@ -33,6 +36,7 @@
 - ✅ [NEUROS Memory Enhancement](../NEUROS_MEMORY_ENHANCEMENT_SUMMARY.md) - Memory tier awareness
 - ✅ [Memory Management Tools](../auren/tools/memory_management_tools.py) - Implementation examples
 - ✅ [Monitoring Guide](03_DEVELOPMENT/MONITORING_GUIDE.md) - Prometheus & Grafana setup
+- ✅ [Integration Patterns](04_DEVELOPMENT/INTEGRATION_PATTERNS.md) - Best practices for new features
 - ❌ Agent Development Guide - **COMING SOON**
 - ❌ API Documentation - **COMING SOON**
 
@@ -86,13 +90,26 @@ AUREN_DOCS/
 ├── 00_QUICK_START/          ✅ Has 2 documents
 ├── 01_ARCHITECTURE/         ✅ Has 1 document
 ├── 02_DEPLOYMENT/           ✅ Has 1 document  
-├── 03_OPERATIONS/           ✅ Has 1 document
-└── 04_DEVELOPMENT/          ❌ Empty - needs content
+├── 03_OPERATIONS/           ✅ Has 7 documents (expanded!)
+└── 04_DEVELOPMENT/          ✅ Has 2 documents
 ```
 
 ---
 
 ## 🆕 Recent Updates
+
+### January 28, 2025 - Enhanced Observability & Documentation
+- Added comprehensive observability documentation:
+  - ✅ Metrics Catalog - Complete list of all AUREN metrics
+  - ✅ Grafana Query Library - Ready-to-use PromQL queries  
+  - ✅ Observability Runbook - Daily monitoring procedures
+  - ✅ Integration Patterns - Best practices for new features
+- Created 4 enhanced Grafana dashboards:
+  - Memory Tier Operations
+  - NEUROS Cognitive Modes
+  - Webhook Processing
+  - System Health & Performance
+- Fixed Prometheus monitoring and documented the entire process
 
 ### July 28, 2025 (Later in Day)
 - ✅ Enhanced NEUROS with complete memory tier awareness (167 lines added to YAML)

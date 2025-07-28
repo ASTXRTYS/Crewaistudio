@@ -876,3 +876,38 @@ grep -r "crewai" --include="*.py" . | grep -v "venv" | wc -l
 **What's Needed:**
 - ⏳ Phase C: Integration testing
 - ⏳ Phase D: Production deployment
+
+---
+
+## 🛑 DEPLOYMENT BLOCKED - July 28, 2025 16:50 UTC
+
+### Schema Mismatch Issue
+
+**Status**: 92% Complete but BLOCKED
+
+#### What's Working:
+- ✅ Infrastructure: All components healthy
+- ✅ Code: 0 CrewAI references (migration complete)
+- ✅ Health endpoint: Returns "healthy" status
+- ✅ All 10 components: Showing green
+
+#### What's Blocking Deployment:
+- ❌ Database schema mismatch
+- ❌ Application expects different columns than documented
+- ❌ Each column added reveals another missing column
+- ❌ No definitive schema source found
+
+#### Columns Application Expects:
+1. event_id (uuid) - added
+2. metric_type (varchar) - added  
+3. value (numeric) - added
+4. timestamp (timestamptz) - added
+5. metadata - still missing
+6. Unknown what else...
+
+#### Action Required:
+- Need senior engineer guidance on correct schema
+- May need to check application ORM/models
+- Possible missing migration step
+
+**See**: AUREN_DEPLOYMENT_STATUS_REPORT_20250728.md for full details 

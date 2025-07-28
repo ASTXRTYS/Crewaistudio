@@ -23,10 +23,10 @@ class PageKnowledge:
         # This will clear knowledge stores in CrewAI
         # Get CrewAI home directory
         home_dir = Path.home()
-        crewai_dir = home_dir / ".crewai"
+        langgraph_dir = home_dir / ".crewai"
         
         # Remove knowledge folder
-        knowledge_dir = crewai_dir / "knowledge"
+        knowledge_dir = langgraph_dir / "knowledge"
         if knowledge_dir.exists():
             shutil.rmtree(knowledge_dir)
             st.success("Knowledge stores cleared successfully!")

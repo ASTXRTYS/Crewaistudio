@@ -1,6 +1,6 @@
 import re
 import streamlit as st
-from crewai import TaskOutput
+from typing import Dict, Any
 from streamlit import session_state as ss
 import threading
 import ctypes
@@ -75,12 +75,12 @@ class PageCrewRun:
         
         return placeholders
 
-    def run_crew(self, crewai_crew, inputs, message_queue):
+    def run_crew(self, langgraph_crew, inputs, message_queue):
         if (str(os.getenv('AGENTOPS_ENABLED')).lower() in ['true', '1']) and not ss.get('agentops_failed', False):
             import agentops
             agentops.start_session()
         try:
-            result = crewai_crew.kickoff(inputs=inputs)
+            result = langgraph_crew.kickoff(inputs=inputs)
             message_queue.put({"result": result})
         except Exception as e:
             if (str(os.getenv('AGENTOPS_ENABLED')).lower() in ['true', '1']) and not ss.get('agentops_failed', False):
@@ -145,7 +145,7 @@ class PageCrewRun:
             ss.result = None
             
             try:
-                crew = selected_crew.get_crewai_crew(full_output=True)
+                crew = selected_crew.get_langgraph_crew(full_output=True)
             except Exception as e:
                 st.exception(e)
                 traceback.print_exc()
@@ -159,7 +159,7 @@ class PageCrewRun:
             ss.crew_thread = threading.Thread(
                 target=self.run_crew,
                 kwargs={
-                    "crewai_crew": crew,
+                    "langgraph_crew": crew,
                     "inputs": inputs,
                     "message_queue": ss.message_queue
                 }

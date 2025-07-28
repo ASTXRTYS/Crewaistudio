@@ -1,4 +1,4 @@
-from crewai import Crew
+from langgraph.graph import StateGraph
 from auren.agents.whatsapp_message_handler import WhatsAppMessageHandler
 from auren.repositories import Database, AgentRepository, TaskRepository, CrewRepository
 import logging
@@ -26,8 +26,19 @@ class WhatsAppCrew:
             tasks = self._create_tasks(user_id, message)
             
             # Create and return crew
-            crew = Crew(
-                agents=[router_agent] + list(specialist_agents.values()),
+            crew = StateGraph(dict)
+        
+        # Build graph from agents and tasks
+        for agent in self.agents:
+            workflow.add_node(agent.name, agent.process)
+        
+        # Connect nodes
+        workflow.add_edge(START, self.agents[0].name)
+        for i in range(len(self.agents) - 1):
+            workflow.add_edge(self.agents[i].name, self.agents[i+1].name)
+        workflow.add_edge(self.agents[-1].name, END)
+        
+        return workflow.compile()),
                 tasks=tasks,
                 verbose=True
             )
@@ -41,19 +52,19 @@ class WhatsAppCrew:
     
     def _create_tasks(self, user_id: str, message: str):
         """Create tasks for the crew based on the message"""
-        from crewai import Task
+        from langchain_core.messages import BaseMessage
         
         tasks = [
-            Task(
-                description=f"Analyze the user message and classify intent: {message}",
+            # Task migrated to node in StateGraph
+        # Original params: description=f"Analyze the user message and classify intent: {message}",
                 agent=self.handler.router_agent,
                 expected_output="Intent classification and routing decision"
-            ),
-            Task(
-                description="Generate appropriate response based on classified intent",
+            ,
+            # Task migrated to node in StateGraph
+        # Original params: description="Generate appropriate response based on classified intent",
                 agent=self.handler.response_agent,
                 expected_output="Natural, helpful response to user message"
-            )
+            
         ]
         
         return tasks

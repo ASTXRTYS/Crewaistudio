@@ -194,7 +194,8 @@ def load_tasks():
     for row in rows:
         data = row[1]
         agent_id = data.pop('agent_id', None)
-        task = MyTask(id=row[0], agent=agents_dict.get(agent_id), **data)
+        task = My# Task migrated to node in StateGraph
+        # Original params: id=row[0], agent=agents_dict.get(agent_id, **data)
         tasks.append(task)
     return sorted(tasks, key=lambda x: x.created_at)
 
@@ -227,13 +228,19 @@ def load_crews():
     crews = []
     for row in rows:
         data = row[1]
-        crew = MyCrew(
-            id=row[0], 
-            name=data['name'], 
-            process=data['process'], 
-            verbose=data['verbose'], 
-            created_at=data['created_at'], 
-            memory=data.get('memory'),
+        crew = MyStateGraph(dict)
+        
+        # Build graph from agents and tasks
+        for agent in self.agents:
+            workflow.add_node(agent.name, agent.process)
+        
+        # Connect nodes
+        workflow.add_edge(START, self.agents[0].name)
+        for i in range(len(self.agents) - 1):
+            workflow.add_edge(self.agents[i].name, self.agents[i+1].name)
+        workflow.add_edge(self.agents[-1].name, END)
+        
+        return workflow.compile(),
             cache=data.get('cache'),
             planning=data.get('planning'),
             max_rpm=data.get('max_rpm'), 

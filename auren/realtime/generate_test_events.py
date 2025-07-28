@@ -5,7 +5,7 @@ Generate test events to demonstrate the real-time event pipeline
 import asyncio
 import random
 from datetime import datetime, timezone
-from auren.realtime.crewai_instrumentation import (
+from auren.realtime.langgraph_instrumentation import (
     CrewAIEventInstrumentation, 
     AURENStreamEvent, 
     AURENEventType,

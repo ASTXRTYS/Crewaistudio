@@ -4,7 +4,7 @@ from streamlit import markdown
 import markdown as md
 from datetime import datetime
 import re
-from crewai import TaskOutput
+from typing import Dict, Any
 
 
 def rnd_id(length=8):

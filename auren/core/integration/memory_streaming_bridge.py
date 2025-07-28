@@ -12,7 +12,7 @@ from dataclasses import dataclass, asdict
 
 from ..memory import UnifiedMemorySystem
 from ..streaming.enhanced_websocket_streamer import EnhancedWebSocketEventStreamer, ClientSubscription
-from ..streaming.crewai_instrumentation import AURENStreamEvent, AURENEventType
+from ..streaming.langgraph_instrumentation import AURENStreamEvent, AURENEventType
 
 logger = logging.getLogger(__name__)
 

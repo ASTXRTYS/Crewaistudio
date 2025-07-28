@@ -5,7 +5,8 @@ from datetime import datetime
 import requests
 from bs4 import BeautifulSoup, Tag
 from pydantic import BaseModel, Field
-from crewai.tools import BaseTool
+from langchain.tools import Tool
+from langchain_core.pydantic_v1 import BaseModel, Field
 
 
 class FixedScrapeWebsiteToolEnhancedSchema(BaseModel):
@@ -18,71 +19,20 @@ class ScrapeWebsiteToolEnhancedSchema(FixedScrapeWebsiteToolEnhancedSchema):
     website_url: str = Field(..., description="Mandatory website URL to read the file")
 
 
-class ScrapeWebsiteToolEnhanced(BaseTool):
-    name: str = "Read website content"
-    description: str = "A tool that can be used to read website content."
-    args_schema: Type[BaseModel] = ScrapeWebsiteToolEnhancedSchema
+class ScrapeWebsiteToolEnhancedInput(BaseModel):
+    """Input for ScrapeWebsiteToolEnhanced"""
+    query: str = Field(description="Input query")
 
-    website_url: Optional[str] = None
-    cookies: Optional[dict] = None
-    show_urls: Optional[bool] = False
-    css_selector: Optional[str] = None
-        
-    headers: Optional[dict] = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Referer": "https://www.google.com/",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1",
-    }
+def scrapewebsitetoolenhanced_func(query: str) -> str:
+    """ScrapeWebsiteToolEnhanced tool"""
+    pass
 
-    def __init__(
-        self,
-        website_url: Optional[str] = None,
-        cookies: Optional[dict] = None,
-        show_urls: Optional[bool] = False,
-        css_selector: Optional[str] = None,
-        **kwargs,
-    ):
-        super().__init__(**kwargs)
-
-        self.website_url = website_url
-        self.cookies = cookies
-        self.show_urls = show_urls
-        self.css_selector = css_selector
-
-        if website_url is not None and "description" not in kwargs:
-            self.description = (
-                f"A tool that can be used to read {website_url}'s content."
-            )
-            self.args_schema = FixedScrapeWebsiteToolEnhancedSchema
-            self._generate_description()
-        
-    def clean_text(self, text: str) -> str:
-        """Clean and normalize text content."""
-        if not text:
-            return ""
-
-        # Remove HTML tags while preserving line breaks
-        text = text.replace('<br>', '\n').replace('<br/>', '\n').replace('<br />', '\n')
-        text = text.replace('<hr/>', '').replace('<hr />', '').replace('<hr>', '')
-        
-        # Remove all remaining HTML tags
-        text = re.sub(r'<[^>]+>', '', text)
-        
-        # Convert various whitespace to spaces
-        text = re.sub(r'[\t\f\r\x0b]', ' ', text)
-        
-        # Clean up spaces and empty lines
-        text = re.sub(r' {2,}', ' ', text)
-        text = text.strip()
-        text = re.sub(r'^\s+', '', text, flags=re.MULTILINE)
-        
-        # Remove wicket attributes and other technical artifacts
-        text = re.sub(r'wicket:[^\s>]+', '', text)
-        text = re.sub(r'\s*style="[^"]*"', '', text)
-        text = re.sub(r'\s*class="[^"]*"', '', text)
+scrapewebsitetoolenhanced_tool = Tool(
+    name="ScrapeWebsiteToolEnhanced",
+    func=scrapewebsitetoolenhanced_func,
+    description="""ScrapeWebsiteToolEnhanced tool""",
+    args_schema=ScrapeWebsiteToolEnhancedInput
+)class="[^"]*"', '', text)
         text = re.sub(r'<!--.*?-->', '', text, flags=re.DOTALL)
         
         # Remove empty lines while preserving intentional line breaks

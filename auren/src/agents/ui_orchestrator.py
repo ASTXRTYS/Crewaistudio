@@ -14,7 +14,8 @@ from pathlib import Path
 from dataclasses import dataclass
 from pydantic import Field
 
-from crewai import Agent, Task, Crew
+from typing import TypedDict, Annotated, List
+from langgraph.graph import StateGraph, START, END, Task, Crew
 from crewai.tools.agent_tools import StructuredTool as BaseTool
 
 # Import routing tools
@@ -164,30 +165,38 @@ class AURENUIOrchestrator:
             primary_specialist = routing_decision['primary_specialist']
             
             # Create task for primary specialist
-            primary_task = Task(
-                description=f"Provide expert guidance on: {context_packet['original_message']}",
+            primary_task = # Task migrated to node in StateGraph
+        # Original params: description=f"Provide expert guidance on: {context_packet['original_message']}",
                 agent=None,  # Will be assigned to specific specialist
                 context=context_packet
-            )
+            
             
             # Create collaboration tasks if needed
             tasks = [primary_task]
             
             if routing_decision.get('requires_collaboration'):
                 for secondary in routing_decision.get('secondary_specialists', []):
-                    collaboration_task = Task(
-                        description=f"Provide input on {secondary} aspects of the issue",
+                    collaboration_task = # Task migrated to node in StateGraph
+        # Original params: description=f"Provide input on {secondary} aspects of the issue",
                         agent=None,
                         context=context_packet
-                    )
+                    
                     tasks.append(collaboration_task)
             
             # Execute coordination
-            crew = Crew(
-                agents=[self.agent],  # In production, this would include specialists
-                tasks=tasks,
-                verbose=True
-            )
+            crew = StateGraph(dict)
+        
+        # Build graph from agents and tasks
+        for agent in self.agents:
+            workflow.add_node(agent.name, agent.process)
+        
+        # Connect nodes
+        workflow.add_edge(START, self.agents[0].name)
+        for i in range(len(self.agents) - 1):
+            workflow.add_edge(self.agents[i].name, self.agents[i+1].name)
+        workflow.add_edge(self.agents[-1].name, END)
+        
+        return workflow.compile()
             
             result = crew.kickoff()
             

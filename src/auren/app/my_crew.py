@@ -34,8 +34,8 @@ class MyCrew:
     def edit(self, value):
         ss[self.edit_key] = value
 
-    def get_crewai_crew(self, *args, **kwargs) -> Crew:
-        crewai_agents = [agent.get_crewai_agent() for agent in self.agents]
+    def get_langgraph_crew(self, *args, **kwargs) -> Crew:
+        langgraph_agents = [agent for agent in self.agents]
 
         # Create a dictionary to hold the Task objects
         task_objects = {}
@@ -58,19 +58,19 @@ class MyCrew:
 
             # Only pass context if it's an async task or if specific context is defined
             if task.async_execution or context_tasks:
-                crewai_task = task.get_crewai_task(context_from_async_tasks=context_tasks)
+                langgraph_task = task.get_langgraph_task(context_from_async_tasks=context_tasks)
             else:
-                crewai_task = task.get_crewai_task()
+                langgraph_task = task
 
-            task_objects[task.id] = crewai_task
-            return crewai_task
+            task_objects[task.id] = langgraph_task
+            return langgraph_task
 
         # Create all tasks, resolving dependencies recursively
         for task in self.tasks:
             create_task(task)
 
         # Collect the final list of tasks in the original order
-        crewai_tasks = [task_objects[task.id] for task in self.tasks]
+        langgraph_tasks = [task_objects[task.id] for task in self.tasks]
 
         # Add knowledge sources if they exist
         knowledge_sources = []
@@ -81,7 +81,7 @@ class MyCrew:
                 ks = next((k for k in ss.knowledge_sources if k.id == ks_id), None)
                 if ks:
                     try:
-                        knowledge_sources.append(ks.get_crewai_knowledge_source())
+                        knowledge_sources.append(ks)
                         valid_knowledge_source_ids.append(ks_id)
                     except Exception as e:
                         print(f"Error loading knowledge source {ks.id}: {str(e)}")
@@ -93,45 +93,56 @@ class MyCrew:
 
         # Create the crew with knowledge sources
         if self.manager_llm:
-            return Crew(
-                agents=crewai_agents,
-                tasks=crewai_tasks,
-                cache=self.cache,
-                process=self.process,
-                max_rpm=self.max_rpm,
-                verbose=self.verbose,
-                manager_llm=create_llm(self.manager_llm),
+            return StateGraph(dict)
+        
+        # Build graph from agents and tasks
+        for agent in self.agents:
+            workflow.add_node(agent.name, agent.process)
+        
+        # Connect nodes
+        workflow.add_edge(START, self.agents[0].name)
+        for i in range(len(self.agents) - 1):
+            workflow.add_edge(self.agents[i].name, self.agents[i+1].name)
+        workflow.add_edge(self.agents[-1].name, END)
+        
+        return workflow.compile(),
                 memory=self.memory,
                 planning=self.planning,
                 knowledge_sources=knowledge_sources if knowledge_sources else None,
                 *args, **kwargs
             )
         elif self.manager_agent:
-            return Crew(
-                agents=crewai_agents,
-                tasks=crewai_tasks,
-                cache=self.cache,
-                process=self.process,
-                max_rpm=self.max_rpm,
-                verbose=self.verbose,
-                manager_agent=self.manager_agent.get_crewai_agent(),
+            return StateGraph(dict)
+        
+        # Build graph from agents and tasks
+        for agent in self.agents:
+            workflow.add_node(agent.name, agent.process)
+        
+        # Connect nodes
+        workflow.add_edge(START, self.agents[0].name)
+        for i in range(len(self.agents) - 1):
+            workflow.add_edge(self.agents[i].name, self.agents[i+1].name)
+        workflow.add_edge(self.agents[-1].name, END)
+        
+        return workflow.compile(),
                 memory=self.memory,
                 planning=self.planning,
                 knowledge_sources=knowledge_sources if knowledge_sources else None,
                 *args, **kwargs
             )
-        cr = Crew(
-            agents=crewai_agents,
-            tasks=crewai_tasks,
-            cache=self.cache,
-            process=self.process,
-            max_rpm=self.max_rpm,
-            verbose=self.verbose,
-            memory=self.memory,
-            planning=self.planning,
-            knowledge_sources=knowledge_sources if knowledge_sources else None,
-            *args, **kwargs
-        )
+        cr = StateGraph(dict)
+        
+        # Build graph from agents and tasks
+        for agent in self.agents:
+            workflow.add_node(agent.name, agent.process)
+        
+        # Connect nodes
+        workflow.add_edge(START, self.agents[0].name)
+        for i in range(len(self.agents) - 1):
+            workflow.add_edge(self.agents[i].name, self.agents[i+1].name)
+        workflow.add_edge(self.agents[-1].name, END)
+        
+        return workflow.compile()
         return cr
     
     def update_knowledge_sources(self):

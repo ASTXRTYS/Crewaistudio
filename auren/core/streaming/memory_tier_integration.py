@@ -12,7 +12,7 @@ import logging
 from auren.realtime.memory_tier_tracking import MemoryTierTracker, TieredMemoryBackend, MemoryTier
 
 # Import from Module C
-from auren.realtime.crewai_instrumentation import CrewAIEventInstrumentation, AURENEventType
+from auren.realtime.langgraph_instrumentation import CrewAIEventInstrumentation, AURENEventType
 from auren.realtime.multi_protocol_streaming import RedisStreamEventStreamer
 
 # Import from Module D

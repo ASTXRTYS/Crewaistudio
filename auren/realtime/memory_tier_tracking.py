@@ -376,7 +376,7 @@ class MemoryTierTracker:
         if not self.event_streamer:
             return
         
-        from auren.realtime.crewai_instrumentation import AURENStreamEvent, AURENEventType
+        from auren.realtime.langgraph_instrumentation import AURENStreamEvent, AURENEventType
         
         # Build tier latency breakdown
         tier_latencies = {}

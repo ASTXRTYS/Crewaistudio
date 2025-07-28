@@ -15,7 +15,7 @@ from auren.realtime.performance_optimizer import (
 )
 
 # Import from Module C
-from auren.realtime.crewai_instrumentation import (
+from auren.realtime.langgraph_instrumentation import (
     CrewAIEventInstrumentation, 
     AURENStreamEvent,
     AURENEventType

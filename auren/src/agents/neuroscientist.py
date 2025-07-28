@@ -10,7 +10,8 @@ recognition and long-term learning capabilities.
 """
 
 import os
-from crewai import Agent, Task, Crew
+from typing import TypedDict, Annotated, List
+from langgraph.graph import StateGraph, START, END, Task, Crew
 from typing import Dict, List, Optional, Any
 import logging
 from datetime import datetime, timedelta
@@ -236,17 +237,25 @@ class NeuroscientistAgent(BaseAIAgent):
     
     async def _execute_crew_task(self, task_description: str) -> str:
         """Execute a CrewAI task and return the result."""
-        task = Task(
-            description=task_description,
+        task = # Task migrated to node in StateGraph
+        # Original params: description=task_description,
             agent=self.crew_agent,
             expected_output="Detailed analysis with specific, actionable recommendations"
-        )
         
-        crew = Crew(
-            agents=[self.crew_agent],
-            tasks=[task],
-            verbose=True
-        )
+        
+        crew = StateGraph(dict)
+        
+        # Build graph from agents and tasks
+        for agent in self.agents:
+            workflow.add_node(agent.name, agent.process)
+        
+        # Connect nodes
+        workflow.add_edge(START, self.agents[0].name)
+        for i in range(len(self.agents) - 1):
+            workflow.add_edge(self.agents[i].name, self.agents[i+1].name)
+        workflow.add_edge(self.agents[-1].name, END)
+        
+        return workflow.compile()
         
         # Execute the analysis
         loop = asyncio.get_event_loop()

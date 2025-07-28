@@ -16,7 +16,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from realtime.enhanced_websocket_streamer import EnhancedWebSocketStreamer
-from realtime.crewai_instrumentation import (
+from realtime.langgraph_instrumentation import (
     CrewAIEventInstrumentation,
     AURENStreamEvent,
     AURENEventType,

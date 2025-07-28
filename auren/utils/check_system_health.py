@@ -233,7 +233,7 @@ class SystemHealthChecker:
         """Check event streaming infrastructure"""
         try:
             # Check if instrumentation module exists
-            from auren.realtime.crewai_instrumentation import CrewAIEventInstrumentation
+            from auren.realtime.langgraph_instrumentation import CrewAIEventInstrumentation
             
             # Check if streaming module exists
             from auren.realtime.multi_protocol_streaming import RedisStreamEventStreamer

@@ -1,6 +1,6 @@
 """
 Update to add MEMORY_TIER_ACCESS event type
-This should be added to the existing AURENEventType enum in crewai_instrumentation.py
+This should be added to the existing AURENEventType enum in langgraph_instrumentation.py
 """
 
 from enum import Enum
@@ -26,7 +26,7 @@ class AURENEventType(Enum):
 async def emit_memory_tier_event(event_streamer, tier_data):
     """Example of emitting a memory tier access event"""
     
-    from auren.realtime.crewai_instrumentation import AURENStreamEvent
+    from auren.realtime.langgraph_instrumentation import AURENStreamEvent
     from datetime import datetime, timezone
     import uuid
     

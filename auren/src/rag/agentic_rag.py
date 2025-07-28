@@ -6,7 +6,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
-from crewai import Agent, Crew, Task
+from typing import TypedDict, Annotated, List
+from langgraph.graph import StateGraph, START, END, Crew, Task
 
 from ..agents.biometric_aware_agents import BiometricAwareAgentFactory
 from .vector_store import BiometricVectorStore
@@ -137,8 +138,8 @@ class AgenticRAG:
         logger.info("Starting agentic retrieval")
 
         # Step 1: Plan - Agent decomposes the query
-        planning_task = Task(
-            description=f"""
+        planning_task = # Task migrated to node in StateGraph
+        # Original params: description=f"""
             Analyze this query and create a retrieval plan:
             Query: {context.query}
             Intent: {context.intent}
@@ -149,9 +150,21 @@ class AgenticRAG:
             """,
             agent=self.retrieval_agent,
             expected_output="Retrieval plan with specific information needs",
-        )
+        
 
-        planning_crew = Crew(agents=[self.retrieval_agent], tasks=[planning_task], verbose=True)
+        planning_crew = StateGraph(dict)
+        
+        # Build graph from agents and tasks
+        for agent in self.agents:
+            workflow.add_node(agent.name, agent.process)
+        
+        # Connect nodes
+        workflow.add_edge(START, self.agents[0].name)
+        for i in range(len(self.agents) - 1):
+            workflow.add_edge(self.agents[i].name, self.agents[i+1].name)
+        workflow.add_edge(self.agents[-1].name, END)
+        
+        return workflow.compile()
 
         plan = await planning_crew.kickoff_async()
 
@@ -174,13 +187,13 @@ class AgenticRAG:
             results.extend(convergence_results)
 
         # Step 3: Reason - Analyze retrieved information
-        analysis_task = Task(
-            description=f"""
+        analysis_task = # Task migrated to node in StateGraph
+        # Original params: description=f"""
             Analyze these retrieved documents for relevance to the query:
             Query: {context.query}
             
             Retrieved documents:
-            {self._format_results_for_agent(results)}
+            {self._format_results_for_agent(results}
             
             Identify:
             1. Which documents are most relevant
@@ -191,7 +204,19 @@ class AgenticRAG:
             expected_output="Analysis of retrieval quality and gaps",
         )
 
-        analysis_crew = Crew(agents=[self.retrieval_agent], tasks=[analysis_task], verbose=True)
+        analysis_crew = StateGraph(dict)
+        
+        # Build graph from agents and tasks
+        for agent in self.agents:
+            workflow.add_node(agent.name, agent.process)
+        
+        # Connect nodes
+        workflow.add_edge(START, self.agents[0].name)
+        for i in range(len(self.agents) - 1):
+            workflow.add_edge(self.agents[i].name, self.agents[i+1].name)
+        workflow.add_edge(self.agents[-1].name, END)
+        
+        return workflow.compile()
 
         analysis = await analysis_crew.kickoff_async()
 
@@ -200,8 +225,8 @@ class AgenticRAG:
             logger.info("Agent requested additional retrieval")
 
             # Perform targeted retrieval based on gaps
-            refinement_task = Task(
-                description=f"""
+            refinement_task = # Task migrated to node in StateGraph
+        # Original params: description=f"""
                 Based on the gaps identified, create a refined search query:
                 Original query: {context.query}
                 Gaps: {analysis}
@@ -210,11 +235,21 @@ class AgenticRAG:
                 """,
                 agent=self.retrieval_agent,
                 expected_output="Refined search query",
-            )
+            
 
-            refinement_crew = Crew(
-                agents=[self.retrieval_agent], tasks=[refinement_task], verbose=True
-            )
+            refinement_crew = StateGraph(dict)
+        
+        # Build graph from agents and tasks
+        for agent in self.agents:
+            workflow.add_node(agent.name, agent.process)
+        
+        # Connect nodes
+        workflow.add_edge(START, self.agents[0].name)
+        for i in range(len(self.agents) - 1):
+            workflow.add_edge(self.agents[i].name, self.agents[i+1].name)
+        workflow.add_edge(self.agents[-1].name, END)
+        
+        return workflow.compile()
 
             refined_query = await refinement_crew.kickoff_async()
 

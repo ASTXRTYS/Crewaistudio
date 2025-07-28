@@ -8,7 +8,8 @@ APP_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, 'ap
 if APP_DIR not in sys.path:
     sys.path.insert(0, APP_DIR)
 
-from crewai import Agent
+from typing import TypedDict, Annotated, List
+from langgraph.graph import StateGraph, START, END
 import streamlit as st
 from utils import rnd_id, fix_columns_width
 from streamlit import session_state as ss
@@ -61,7 +62,7 @@ class MyAgent:
         ss[self.edit_key] = value
 
     # --- CrewAI glue ---
-    def get_crewai_agent(self) -> Agent:
+    def get_langgraph_agent(self) -> Agent:
         llm = create_llm(self.llm_provider_model, temperature=self.temperature)
         tools = [tool.create_tool() for tool in self.tools]
 
@@ -72,7 +73,7 @@ class MyAgent:
                 ks = next((k for k in ss.knowledge_sources if k.id == ks_id), None)
                 if ks:
                     try:
-                        knowledge_sources.append(ks.get_crewai_knowledge_source())
+                        knowledge_sources.append(ks)
                         valid_knowledge_source_ids.append(ks_id)
                     except Exception as e:
                         print(f"Error loading knowledge source {ks.id}: {str(e)}")

@@ -4,7 +4,7 @@ import streamlit as st
 from langchain_openai import ChatOpenAI
 from langchain_groq import ChatGroq
 from langchain_anthropic import ChatAnthropic
-from crewai import LLM
+from langchain_openai import ChatOpenAI
 from langchain_openai.chat_models.base import BaseChatOpenAI
 from litellm import completion
 

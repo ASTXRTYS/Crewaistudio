@@ -11,7 +11,7 @@ from pathlib import Path
 
 # Import the AI Gateway components
 from .gateway import AIGateway
-from .crewai_gateway_adapter import CrewAIGatewayAdapter, AgentContext
+from .langgraph_gateway_adapter import CrewAIGatewayAdapter, AgentContext
 
 # Import the BaseSpecialist framework
 from ..agents.specialists.base_specialist import (

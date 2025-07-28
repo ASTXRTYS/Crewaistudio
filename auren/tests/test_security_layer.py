@@ -16,7 +16,7 @@ from auren.realtime.security_layer import (
     EventAccessLevel,
     RoleBasedEventFilter
 )
-from auren.realtime.crewai_instrumentation import AURENStreamEvent, AURENEventType, AURENPerformanceMetrics
+from auren.realtime.langgraph_instrumentation import AURENStreamEvent, AURENEventType, AURENPerformanceMetrics
 
 
 @pytest.fixture

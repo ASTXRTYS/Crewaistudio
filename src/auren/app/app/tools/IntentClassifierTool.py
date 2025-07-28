@@ -3,7 +3,8 @@ import json
 from typing import Dict, Any, Optional, List, ClassVar, Type
 from datetime import datetime
 
-from crewai.tools import BaseTool
+from langchain.tools import Tool
+from langchain_core.pydantic_v1 import BaseModel, Field
 from pydantic import BaseModel, Field
 
 
@@ -23,17 +24,20 @@ class IntentClassifierOutput(BaseModel):
     requires_followup: bool = Field(description="Whether this intent requires follow-up questions")
 
 
-class IntentClassifierTool(BaseTool):
-    name: str = "Intent Classifier Tool"
-    description: str = "Classify athlete messages into intent categories (TRAINING_LOG, NUTRITION_QUERY, etc.)"
-    args_schema: Type[BaseModel] = IntentClassifierInput
+class IntentClassifierToolInput(BaseModel):
+    """Input for IntentClassifierTool"""
+    query: str = Field(description="Input query")
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.intent_patterns = self._load_intent_patterns()
-        
-    def _load_intent_patterns(self) -> Dict[str, Dict[str, Any]]:
-        """Load intent classification patterns and keywords."""
+def intentclassifiertool_func(query: str) -> str:
+    """IntentClassifierTool tool"""
+    pass
+
+intentclassifiertool_tool = Tool(
+    name="IntentClassifierTool",
+    func=intentclassifiertool_func,
+    description="""IntentClassifierTool tool""",
+    args_schema=IntentClassifierToolInput
+)classification patterns and keywords."""
         return {
             "TRAINING_LOG": {
                 "keywords": [

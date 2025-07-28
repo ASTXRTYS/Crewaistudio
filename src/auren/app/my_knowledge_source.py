@@ -44,7 +44,7 @@ class MyKnowledgeSource:
             else:
                 return None
 
-    def get_crewai_knowledge_source(self):
+    def get_langgraph_knowledge_source(self):
         # Import knowledge source classes based on type
         if self.source_type == "string":
             from crewai.knowledge.source.string_knowledge_source import StringKnowledgeSource

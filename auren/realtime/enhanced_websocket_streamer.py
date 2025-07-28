@@ -17,7 +17,7 @@ import jwt
 from collections import defaultdict, deque
 import uuid
 
-from auren.realtime.crewai_instrumentation import AURENStreamEvent, AURENEventType, AURENPerformanceMetrics
+from auren.realtime.langgraph_instrumentation import AURENStreamEvent, AURENEventType, AURENPerformanceMetrics
 from auren.realtime.multi_protocol_streaming import EventStreamer
 
 logger = logging.getLogger(__name__)

@@ -20,7 +20,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Import AUREN components
-from auren.realtime.crewai_instrumentation import (
+from auren.realtime.langgraph_instrumentation import (
     CrewAIEventInstrumentation,
     AURENStreamEvent,
     AURENEventType,

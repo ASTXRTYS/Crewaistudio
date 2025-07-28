@@ -55,8 +55,8 @@ Agent(
 
         task_definitions = ",\n        ".join([
             f"""
-Task(
-    description={json_dumps_python(task.description)},
+# Task migrated to node in StateGraph
+        # Original params: description={json_dumps_python(task.description},
     expected_output={json_dumps_python(task.expected_output)},
     agent=next(agent for agent in agents if agent.role == {json_dumps_python(task.agent.role)}),
     async_execution={json_dumps_python(task.async_execution)}
@@ -80,13 +80,14 @@ Task(
         
         app_content = f"""
 import streamlit as st
-from crewai import Agent, Task, Crew, Process
+from typing import TypedDict, Annotated, List
+from langgraph.graph import StateGraph, START, END, Task, Crew, Process
 from langchain_openai import ChatOpenAI
 from langchain_groq import ChatGroq
 from langchain_anthropic import ChatAnthropic
 from dotenv import load_dotenv
 import os
-from crewai_tools import *
+from langchain.tools import Tool
 {'''from .tools.CustomApiTool import CustomApiTool''' if custom_tools_used else ''}
 {'''from .tools.CustomFileWriteTool import CustomFileWriteTool''' if custom_tools_used else ''}
 {'''from .tools.CustomCodeInterpreterTool import CustomCodeInterpreterTool''' if custom_tools_used else ''}
@@ -174,10 +175,19 @@ def main():
 
     agents = load_agents()
     tasks = load_tasks(agents)
-    crew = Crew(
-        agents=agents, 
-        tasks=tasks, 
-        process={json_dumps_python(crew.process)}, 
+    crew = StateGraph(dict)
+        
+        # Build graph from agents and tasks
+        for agent in self.agents:
+            workflow.add_node(agent.name, agent.process)
+        
+        # Connect nodes
+        workflow.add_edge(START, self.agents[0].name)
+        for i in range(len(self.agents) - 1):
+            workflow.add_edge(self.agents[i].name, self.agents[i+1].name)
+        workflow.add_edge(self.agents[-1].name, END)
+        
+        return workflow.compile()}, 
         verbose={json_dumps_python(crew.verbose)}, 
         memory={json_dumps_python(crew.memory)}, 
         cache={json_dumps_python(crew.cache)}, 
@@ -423,12 +433,12 @@ streamlit run app.py --server.headless true
         # Create tasks
         tasks = []
         for task_data in crew_data['tasks']:
-            task = MyTask(
-                id=task_data['id'],
+            task = My# Task migrated to node in StateGraph
+        # Original params: id=task_data['id'],
                 description=task_data['description'],
                 expected_output=task_data['expected_output'],
                 async_execution=task_data['async_execution'],
-                agent=next((agent for agent in agents if agent.id == task_data['agent_id']), None),
+                agent=next((agent for agent in agents if agent.id == task_data['agent_id'], None),
                 context_from_async_tasks_ids=task_data.get('context_from_async_tasks_ids', None),
                 context_from_sync_tasks_ids=task_data.get('context_from_sync_tasks_ids', None),
                 created_at=task_data['created_at']
@@ -437,16 +447,19 @@ streamlit run app.py --server.headless true
             db_utils.save_task(task)
 
         # Create crew
-        crew = MyCrew(
-            id=crew_data['id'],
-            name=crew_data['name'],
-            process=crew_data['process'],
-            verbose=crew_data['verbose'],
-            memory=crew_data['memory'],
-            cache=crew_data['cache'],
-            max_rpm=crew_data['max_rpm'],
-            manager_llm=crew_data['manager_llm'],
-            manager_agent=next((agent for agent in agents if agent.id == crew_data['manager_agent']), None),
+        crew = MyStateGraph(dict)
+        
+        # Build graph from agents and tasks
+        for agent in self.agents:
+            workflow.add_node(agent.name, agent.process)
+        
+        # Connect nodes
+        workflow.add_edge(START, self.agents[0].name)
+        for i in range(len(self.agents) - 1):
+            workflow.add_edge(self.agents[i].name, self.agents[i+1].name)
+        workflow.add_edge(self.agents[-1].name, END)
+        
+        return workflow.compile(), None),
             created_at=crew_data['created_at']
         )
         crew.agents = agents

@@ -17,7 +17,7 @@ import inspect
 from unittest.mock import patch, MagicMock
 
 from .gateway import AIGateway
-from .crewai_gateway_adapter import CrewAIGatewayAdapter, AgentContext
+from .langgraph_gateway_adapter import CrewAIGatewayAdapter, AgentContext
 from .neuroscientist_integration_example import NeuroscientistSpecialist
 from ..monitoring.otel_config import init_telemetry
 

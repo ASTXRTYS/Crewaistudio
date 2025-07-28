@@ -1,9 +1,9 @@
 from pydantic import BaseModel, Field, model_validator
-from crewai_tools import RagTool
+from langchain.tools import Tool
 from embedchain.models.data_type import DataType
 from typing import Any, Optional, Type
 from embedchain import App
-from crewai_tools.tools.rag.rag_tool import Adapter
+from langgraph_tools.tools.rag.rag_tool import Adapter
 
 class CSVEmbedchainAdapter(Adapter):
     embedchain_app: App

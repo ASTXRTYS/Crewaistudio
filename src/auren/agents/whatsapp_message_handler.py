@@ -1,4 +1,5 @@
-from crewai import Agent
+from typing import TypedDict, Annotated, List
+from langgraph.graph import StateGraph, START, END
 from auren.tools.IntentClassifierTool import IntentClassifierTool
 from auren.tools.WhatsAppWebhookTool import WhatsAppWebhookTool
 import logging
@@ -77,12 +78,12 @@ class WhatsAppMessageHandler:
             specialist = self.specialist_agents.get(intent, self.specialist_agents['general'])
             
             # Create a simple task for the specialist
-            from crewai import Task
-            task = Task(
-                description=f"User message: {message}\nUser ID: {user_id}\nPlease provide a helpful response.",
+            from langchain_core.messages import BaseMessage
+            task = # Task migrated to node in StateGraph
+        # Original params: description=f"User message: {message}\nUser ID: {user_id}\nPlease provide a helpful response.",
                 agent=specialist,
                 expected_output="A helpful response to the user's message"
-            )
+            
             
             # Execute the task
             response = specialist.execute_task(task)

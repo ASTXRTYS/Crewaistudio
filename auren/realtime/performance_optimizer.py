@@ -581,7 +581,7 @@ class LoadTestGenerator:
     def _create_test_event(self) -> Dict[str, Any]:
         """Create test event"""
         
-        from auren.realtime.crewai_instrumentation import AURENStreamEvent, AURENEventType
+        from auren.realtime.langgraph_instrumentation import AURENStreamEvent, AURENEventType
         import uuid
         
         return AURENStreamEvent(

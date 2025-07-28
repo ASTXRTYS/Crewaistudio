@@ -129,7 +129,7 @@ class SecureEventStreamer:
     
     def _deep_copy_event(self, event: 'AURENStreamEvent') -> 'AURENStreamEvent':
         """Create a deep copy of the event for modification"""
-        from auren.realtime.crewai_instrumentation import AURENStreamEvent, AURENPerformanceMetrics
+        from auren.realtime.langgraph_instrumentation import AURENStreamEvent, AURENPerformanceMetrics
         
         # Copy performance metrics if present
         perf_metrics = None
@@ -405,7 +405,7 @@ class SecureEventStreamer:
         """Determine appropriate access level for event"""
         
         # Admin level for system events without user data
-        from auren.realtime.crewai_instrumentation import AURENEventType
+        from auren.realtime.langgraph_instrumentation import AURENEventType
         if event.event_type == AURENEventType.SYSTEM_HEALTH:
             return EventAccessLevel.PUBLIC
         

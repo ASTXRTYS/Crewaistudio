@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 from utils import rnd_id
-from crewai_tools import CodeInterpreterTool,ScrapeElementFromWebsiteTool,TXTSearchTool,SeleniumScrapingTool,PGSearchTool,PDFSearchTool,MDXSearchTool,JSONSearchTool,GithubSearchTool,EXASearchTool,DOCXSearchTool,CSVSearchTool,ScrapeWebsiteTool, FileReadTool, DirectorySearchTool, DirectoryReadTool, CodeDocsSearchTool, YoutubeVideoSearchTool,SerperDevTool,YoutubeChannelSearchTool,WebsiteSearchTool
+from langchain.tools import Tool
 from app.tools.CSVSearchToolEnhanced import CSVSearchToolEnhanced
 from app.tools.CustomApiTool import CustomApiTool
 from app.tools.CustomCodeInterpreterTool import CustomCodeInterpreterTool
@@ -20,9 +20,9 @@ from app.tools.IntentClassifierTool import IntentClassifierTool
 from langchain_community.tools import YahooFinanceNewsTool
 
 try:
-    from crewai_tools import ReadPdfTextTool
+    from langchain.tools import Tool
 except ImportError:
-    # Fallback stub so the rest of the app can still work even if crewai_tools
+    # Fallback stub so the rest of the app can still work even if langgraph_tools
     # is missing this specific helper.  Provides a minimal no-op interface that
     # just returns the raw PDF bytes (or an error message) when invoked.
     class ReadPdfTextTool:  # type: ignore
@@ -487,7 +487,7 @@ class MyIntentClassifierTool(MyTool):
 
 class MyMCPServerAdapterTool(MyTool):
     def __init__(self, tool_id=None, server_url=None, transport=None, tool_names=None):
-        """A wrapper around crewai_tools.MCPServerAdapter so it can be enabled via the Tools UI.
+        """A wrapper around langgraph_tools.MCPServerAdapter so it can be enabled via the Tools UI.
         Parameters
         ----------
         server_url : str (mandatory)
@@ -513,7 +513,7 @@ class MyMCPServerAdapterTool(MyTool):
         )
 
     def create_tool(self):
-        from crewai_tools import MCPServerAdapter
+        from langchain.tools import Tool
         # Build server_params dict expected by MCPServerAdapter
         server_params = {
             'url': self.parameters.get('server_url')

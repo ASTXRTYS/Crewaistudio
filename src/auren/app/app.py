@@ -120,7 +120,7 @@ def load_data():
 
 def draw_sidebar():
     with st.sidebar:
-        logo_path = asset_loader.get_image('crewai_logo.png')
+        logo_path = asset_loader.get_image('langgraph_logo.png')
         st.image(logo_path)
 
         if 'page' not in ss:

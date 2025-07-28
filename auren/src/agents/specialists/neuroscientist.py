@@ -11,12 +11,13 @@ import asyncio
 import logging
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
-from crewai import Agent, Task
+from typing import TypedDict, Annotated, List
+from langgraph.graph import StateGraph, START, END, Task
 from pathlib import Path
 
 # Import our custom components
 from src.agents.specialists.base_specialist import BaseSpecialist
-from src.auren.ai.crewai_gateway_adapter import CrewAIGatewayAdapter
+from src.auren.ai.langgraph_gateway_adapter import CrewAIGatewayAdapter
 from src.database.connection import DatabaseConnection
 from src.auren.monitoring.decorators import track_tokens
 from src.auren.monitoring.otel_config import otel_trace
@@ -685,7 +686,7 @@ class Neuroscientist(BaseSpecialist):
             "Previous recovery recommendations were effective"
         ]
     
-    def as_crewai_agent(self) -> Agent:
+    def as_langgraph_agent(self) -> Agent:
         """
         Convert to CrewAI Agent format for crew integration
         
@@ -722,7 +723,7 @@ def create_neuroscientist(gateway_adapter: CrewAIGatewayAdapter) -> Neuroscienti
 if __name__ == "__main__":
     import asyncio
     from src.auren.ai.gateway import AIGateway
-    from src.auren.ai.crewai_gateway_adapter import CrewAIGatewayAdapter
+    from src.auren.ai.langgraph_gateway_adapter import CrewAIGatewayAdapter
     
     async def test_neuroscientist():
         """Test the Neuroscientist agent"""

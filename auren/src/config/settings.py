@@ -85,8 +85,8 @@ class ApplicationSettings(BaseSettings):
     debug: bool = Field(default=False, env="DEBUG")
     
     # CrewAI settings
-    crewai_max_iterations: int = Field(default=3, env="CREWAI_MAX_ITERATIONS")
-    crewai_memory_enabled: bool = Field(default=True, env="CREWAI_MEMORY_ENABLED")
+    langgraph_max_iterations: int = Field(default=3, env="CREWAI_MAX_ITERATIONS")
+    langgraph_memory_enabled: bool = Field(default=True, env="CREWAI_MEMORY_ENABLED")
     
     # Token tracking settings
     token_tracking_enabled: bool = Field(default=True, env="TOKEN_TRACKING_ENABLED")

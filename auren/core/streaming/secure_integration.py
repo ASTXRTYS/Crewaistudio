@@ -13,7 +13,7 @@ from cryptography.fernet import Fernet
 from auren.realtime.security_layer import SecureEventStreamer, SecurityPolicy, RoleBasedEventFilter
 
 # Import from Module C
-from auren.realtime.crewai_instrumentation import CrewAIEventInstrumentation
+from auren.realtime.langgraph_instrumentation import CrewAIEventInstrumentation
 from auren.realtime.multi_protocol_streaming import RedisStreamEventStreamer
 from auren.realtime.enhanced_websocket_streamer import EnhancedWebSocketEventStreamer, ClientSubscription
 

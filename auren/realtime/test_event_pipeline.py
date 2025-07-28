@@ -7,7 +7,7 @@ import asyncio
 import logging
 from datetime import datetime, timezone
 
-from auren.realtime.crewai_instrumentation import (
+from auren.realtime.langgraph_instrumentation import (
     CrewAIEventInstrumentation, 
     AURENStreamEvent, 
     AURENEventType,

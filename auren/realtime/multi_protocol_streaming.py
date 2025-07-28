@@ -14,7 +14,7 @@ from kafka import KafkaProducer, KafkaConsumer
 from kafka.errors import KafkaError
 import socket
 
-from auren.realtime.crewai_instrumentation import AURENStreamEvent, AURENPerformanceMetrics
+from auren.realtime.langgraph_instrumentation import AURENStreamEvent, AURENPerformanceMetrics
 from dataclasses import asdict
 
 logger = logging.getLogger(__name__)

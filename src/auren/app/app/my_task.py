@@ -3,7 +3,7 @@ import sys, os
 from auren.repositories import TaskRepository
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from crewai import Task
+from langchain_core.messages import BaseMessage
 import streamlit as st
 from utils import rnd_id, fix_columns_width  # type: ignore
 from streamlit import session_state as ss
@@ -39,7 +39,7 @@ class MyTask:
     def edit(self, value):
         ss[self.edit_key] = value
 
-    def get_crewai_task(self, context_from_async_tasks=None, context_from_sync_tasks=None) -> Task:
+    def get_langgraph_task(self, context_from_async_tasks=None, context_from_sync_tasks=None) -> Task:
         context = []
         if context_from_async_tasks:
             context.extend(context_from_async_tasks)
@@ -47,9 +47,11 @@ class MyTask:
             context.extend(context_from_sync_tasks)
         
         if context:
-            return Task(description=self.description, expected_output=self.expected_output, async_execution=self.async_execution, agent=self.agent.get_crewai_agent(), context=context)  # type: ignore
+            return # Task migrated to node in StateGraph
+        # Original params: description=self.description, expected_output=self.expected_output, async_execution=self.async_execution, agent=self.agent.get_langgraph_agent(, context=context)  # type: ignore
         else:
-            return Task(description=self.description, expected_output=self.expected_output, async_execution=self.async_execution, agent=self.agent.get_crewai_agent())  # type: ignore
+            return # Task migrated to node in StateGraph
+        # Original params: description=self.description, expected_output=self.expected_output, async_execution=self.async_execution, agent=self.agent  # type: ignore
 
     def delete(self):
         ss.tasks = [task for task in ss.tasks if task.id != self.id]

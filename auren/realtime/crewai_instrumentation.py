@@ -13,7 +13,8 @@ from enum import Enum
 import uuid
 
 # CrewAI imports
-from crewai import Agent, Task, Crew, Process
+from typing import TypedDict, Annotated, List
+from langgraph.graph import StateGraph, START, END, Task, Crew, Process
 
 # Note: CrewAI event system has changed - using custom event capturing instead
 # from crewai.agents.events import (

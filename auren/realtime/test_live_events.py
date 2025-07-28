@@ -6,7 +6,7 @@ This will make the dashboard come alive with actual data!
 import asyncio
 import random
 from datetime import datetime, timezone
-from auren.realtime.crewai_instrumentation import (
+from auren.realtime.langgraph_instrumentation import (
     AURENStreamEvent, 
     AURENEventType,
     AURENPerformanceMetrics

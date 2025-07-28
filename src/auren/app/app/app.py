@@ -16,7 +16,7 @@ def validate_environment():
     critical_paths = [
         'agents/my_agent.py',
         'utils.py',
-        'img/crewai_logo.png'
+        'img/langgraph_logo.png'
     ]
     
     missing_paths = []
@@ -146,7 +146,7 @@ def load_data():
 
 def draw_sidebar():
     with st.sidebar:
-        st.image("../img/crewai_logo.png")
+        st.image("../img/langgraph_logo.png")
 
         if 'page' not in ss:
             ss.page = 'Crews'

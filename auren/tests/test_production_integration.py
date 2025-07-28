@@ -16,7 +16,7 @@ from auren.agents.monitored_orchestrator import ProductionAURENOrchestrator
 from auren.realtime.hybrid_event_streamer import HybridEventStreamer
 from auren.realtime.unified_dashboard_streamer import UnifiedDashboardStreamer
 from auren.realtime.s3_event_archiver import S3EventArchiver
-from auren.realtime.crewai_instrumentation import AURENStreamEvent, AURENEventType
+from auren.realtime.langgraph_instrumentation import AURENStreamEvent, AURENEventType
 
 
 class TestProductionIntegration:

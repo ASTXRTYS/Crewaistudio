@@ -26,7 +26,7 @@ The AUREN framework has achieved remarkable infrastructure maturity (95% operati
 ### Key Findings
 1. **Knowledge Storage**: Infrastructure exists but is completely empty
 2. **Knowledge Injection**: No pathways currently implemented  
-3. **Observability**: World-class monitoring with no documentation on access
+3. **Observability**: World-class monitoring with comprehensive documentation (see AUREN_DOCS/03_OPERATIONS/)
 4. **Security**: Robust PHI protection implemented and validated
 5. **Testing**: Framework ready but requires knowledge injection first
 

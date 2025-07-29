@@ -11,15 +11,16 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, List, TypedDict, Annotated
 from enum import Enum
 import uuid
+from dataclasses import dataclass
 
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, BaseMessage
 from langchain_openai import ChatOpenAI
 from langchain.memory import ConversationSummaryBufferMemory
-from langchain.schema import BaseMessage
 import redis.asyncio as redis
 from pydantic import BaseModel, Field
+import chromadb
 
 # Configure logging
 logging.basicConfig(level="INFO")
@@ -41,6 +42,332 @@ class MemoryTier(str, Enum):
     L1_REALTIME = "L1_REALTIME"      # Immediate conversation context
     L2_WORKING = "L2_WORKING"        # Recent patterns and insights
     L3_LONGTERM = "L3_LONGTERM"      # Persistent user profile
+
+# Protocol Stacks from YAML Phase 4
+@dataclass
+class NeuroStack:
+    """Represents a neuroplastic protocol from YAML Phase 4"""
+    id: str
+    focus: str
+    components: List[str]
+    duration: int  # days
+    metrics: List[str]
+
+class NeuroplasticEngine:
+    """Implements experimental protocol stacks from YAML Phase 4"""
+    
+    def __init__(self):
+        # Load protocols from YAML phase_4_logic
+        self.protocols = {
+            "neurostack_alpha": NeuroStack(
+                id="neurostack_alpha",
+                focus="sleep_latency_reset",
+                components=[
+                    "morning_circadian_anchor",
+                    "9pm_digital_fast", 
+                    "progressive_muscle_relaxation"
+                ],
+                duration=7,
+                metrics=["sleep_latency", "next_day_alertness", "HRV_delta"]
+            ),
+            "neurostack_beta": NeuroStack(
+                id="neurostack_beta",
+                focus="mid_day_cognitive_surge",
+                components=[
+                    "pre-lunch brisk walk",
+                    "cold rinse + peppermint oil",
+                    "5-min light-focused journaling"
+                ],
+                duration=5,
+                metrics=["work_session_focus", "verbal_clarity", "mood_consistency"]
+            ),
+            "neurostack_gamma": NeuroStack(
+                id="neurostack_gamma",
+                focus="stress_recoding_loop",
+                components=[
+                    "4-7-8 breathing after triggers",
+                    "guided reappraisal prompt",
+                    "end-of-day vagal reset"
+                ],
+                duration=10,
+                metrics=["cortisol_smoothing", "heart_rate_recovery", "emotional_variance"]
+            )
+        }
+    
+    async def select_protocol(self, state: NEUROSState) -> Optional[str]:
+        """Select appropriate protocol based on user state"""
+        
+        # Check sleep issues
+        biometrics = state.get("latest_biometrics", {})
+        if biometrics.get("rem_variance", 0) > 30:
+            return "neurostack_alpha"
+        
+        # Check cognitive fatigue
+        if state.get("current_mode") == NEUROSMode.HYPOTHESIS.value:
+            return "neurostack_beta"
+        
+        # Check stress patterns
+        stress = state.get("stress_indicators", [])
+        if stress and max(stress) > 0.6:
+            return "neurostack_gamma"
+        
+        return None
+    
+    def format_protocol_message(self, protocol_id: str, day: int = 1) -> str:
+        """Format protocol as conversational guidance"""
+        protocol = self.protocols[protocol_id]
+        
+        intro = f"I've identified a {protocol.duration}-day protocol that might help with your {protocol.focus.replace('_', ' ')}."
+        
+        components = "\n".join([f"- {comp}" for comp in protocol.components])
+        
+        return f"{intro}\n\nToday's focus:\n{components}\n\nWant to try this together?"
+
+# Three-Tier Memory System
+class ThreeTierMemory:
+    """Complete implementation of YAML Phase 3 memory architecture"""
+    
+    def __init__(self):
+        # L1: Hot tier (Redis) - Already implemented
+        self.redis_client = None  # Will be set later
+        
+        # L2: Warm tier (PostgreSQL) - Already implemented
+        self.pg_checkpointer = None  # Will be set later
+        
+        # L3: Cold tier (ChromaDB) - NEW
+        try:
+            self.chroma_client = chromadb.HttpClient(host='auren-chromadb', port=8001)
+            self.collection = self.chroma_client.get_or_create_collection(
+                name="neuros_memories",
+                metadata={"description": "Long-term semantic memory for NEUROS"}
+            )
+            logger.info("ChromaDB connected for L3 memory")
+        except Exception as e:
+            logger.warning(f"ChromaDB connection failed: {e}")
+            self.chroma_client = None
+            self.collection = None
+    
+    async def promote_to_cold_storage(self, memory_data: dict):
+        """Move important memories to semantic storage after 30 days"""
+        if not self.collection:
+            return
+            
+        # Create embedding-friendly document
+        document = f"""
+        Context: {memory_data.get('context')}
+        User State: {memory_data.get('user_state')}
+        NEUROS Response: {memory_data.get('response')}
+        Outcome: {memory_data.get('outcome')}
+        Mode: {memory_data.get('mode')}
+        """
+        
+        # Store with metadata for retrieval
+        try:
+            self.collection.add(
+                documents=[document],
+                metadatas=[{
+                    "user_id": memory_data.get("user_id"),
+                    "timestamp": memory_data.get("timestamp"),
+                    "mode": memory_data.get("mode"),
+                    "success_metric": memory_data.get("success_metric", 0)
+                }],
+                ids=[f"memory_{memory_data.get('user_id')}_{datetime.now().timestamp()}"]
+            )
+        except Exception as e:
+            logger.error(f"Failed to store in ChromaDB: {e}")
+    
+    async def semantic_recall(self, query: str, user_id: str, n_results: int = 5):
+        """Retrieve relevant memories from cold storage"""
+        if not self.collection:
+            return []
+            
+        try:
+            results = self.collection.query(
+                query_texts=[query],
+                where={"user_id": user_id},
+                n_results=n_results
+            )
+            
+            return results["metadatas"][0] if results["metadatas"] else []
+        except Exception as e:
+            logger.error(f"ChromaDB query failed: {e}")
+            return []
+
+# Phase 5: Meta-Reasoning & Creative Forecasting
+class MetaReasoningEngine:
+    """Implements YAML Phase 5 - synthesis and forecasting"""
+    
+    async def scenario_forecast(self, state: NEUROSState) -> dict:
+        """Forecast scenarios based on current patterns"""
+        forecasts = {
+            "circadian_resilience_window": "next_72_hours",
+            "focus_decay_forecast": "moderate_risk",
+            "stress_tipping_point": 0.65
+        }
+        
+        # Analyze HRV trajectory
+        if state.get("latest_biometrics", {}).get("hrv_delta", 0) < -20:
+            forecasts["recovery_urgency"] = "high"
+            forecasts["suggested_intervention"] = "immediate_rest_protocol"
+        
+        return forecasts
+    
+    def insight_stacking(self, state: NEUROSState) -> List[str]:
+        """Accumulate weak signals across systems"""
+        insights = []
+        
+        # Check for micro-fatigue patterns
+        if state.get("pattern_strength", 0) > 0.5:
+            insights.append("Micro-fatigue patterns detected across multiple sessions")
+        
+        # Check motivation patterns
+        if state.get("conversation_phase") == "support":
+            insights.append("Motivational support needed based on recent interactions")
+        
+        return insights
+
+# Phase 7: Narrative Intelligence
+class NarrativeEngine:
+    """Implements YAML Phase 7 - identity tracking"""
+    
+    def track_identity_arc(self, state: NEUROSState) -> str:
+        """Track user's transformation journey"""
+        # Simple implementation for now
+        if state.get("mode_confidence", 0) > 0.7:
+            return "You're showing strong adaptation to stress - the Strategist emerges"
+        else:
+            return "Your journey continues - each data point adds to your story"
+    
+    def identify_adversaries(self, patterns: list) -> dict:
+        """Name and personify recurring obstacles"""
+        adversaries = {}
+        
+        # Check for common patterns
+        for pattern in patterns:
+            if "Sunday" in str(pattern):
+                adversaries["Sunday Inertia"] = "Your weekly motivation dip"
+            if "caffeine" in str(pattern).lower():
+                adversaries["Caffeine Drift Demon"] = "The afternoon energy thief"
+        
+        return adversaries
+
+# Phase 9: Autonomous Recalibration
+class RecalibrationEngine:
+    """Implements YAML Phase 9 - drift detection and correction"""
+    
+    def detect_protocol_drift(self, state: NEUROSState) -> dict:
+        """Detect deviations from protocol baselines"""
+        drift_indicators = {
+            "biometric_deviation": False,
+            "behavior_deviation": False,
+            "rhythm_desync": False
+        }
+        
+        # Check HRV drift
+        if state.get("latest_biometrics", {}).get("hrv_delta", 0) < -30:
+            drift_indicators["biometric_deviation"] = True
+        
+        # Check stress accumulation
+        stress = state.get("stress_indicators", [])
+        if stress and sum(stress[-5:]) / 5 > 0.8:
+            drift_indicators["rhythm_desync"] = True
+        
+        return drift_indicators
+    
+    def suggest_micro_shifts(self, drift: dict) -> List[str]:
+        """Suggest small adjustments to correct drift"""
+        suggestions = []
+        
+        if drift.get("biometric_deviation"):
+            suggestions.append("Shift morning cardio to evening for 3 days")
+        
+        if drift.get("rhythm_desync"):
+            suggestions.append("Try 4-7-8 breathing before each meal")
+        
+        return suggestions
+
+# Phase 10: Autonomous Mission Generation
+class MissionEngine:
+    """Implements YAML Phase 10 - proactive mission suggestions"""
+    
+    def generate_mission(self, state: NEUROSState) -> Optional[dict]:
+        """Generate autonomous missions based on state"""
+        # Check for mission triggers
+        if state.get("pattern_strength", 0) > 0.7:
+            return {
+                "name": "Clarity Reboot",
+                "duration": "3 days",
+                "goals": ["Restore deep sleep", "Reset cortisol rhythm"],
+                "daily_directives": [
+                    "Morning sunlight within 30 min of wake",
+                    "No screens after 9 PM",
+                    "10-minute evening walk"
+                ]
+            }
+        
+        return None
+
+# Phase 11: User Mythology Builder
+class MythologyBuilder:
+    """Creates internal mythology from YAML Phase 11"""
+    
+    def build_mythology(self, state: NEUROSState) -> dict:
+        """Build user's personal mythology"""
+        mythology = {
+            "archetype": self._identify_archetype(state),
+            "current_chapter": "The Testing",
+            "motifs": []
+        }
+        
+        # Add relevant motifs
+        if state.get("recovery_markers"):
+            mythology["motifs"].append("The Comeback")
+        
+        if state.get("mode") == NEUROSMode.HYPOTHESIS:
+            mythology["motifs"].append("The Seeker")
+        
+        return mythology
+    
+    def _identify_archetype(self, state: NEUROSState) -> str:
+        """Identify user's dominant archetype"""
+        if state.get("mode_confidence", 0) > 0.8:
+            return "The Analyst"
+        elif state.get("stress_indicators") and max(state.get("stress_indicators", [0])) > 0.7:
+            return "The Warrior"
+        else:
+            return "The Sentinel"
+
+# Phase 13: Proactive Autonomy
+class ProactiveAutonomyEngine:
+    """Implements YAML Phase 13 - pre-symptom intervention"""
+    
+    def detect_pre_symptoms(self, state: NEUROSState) -> List[str]:
+        """Detect issues before they manifest"""
+        pre_symptoms = []
+        
+        # Check for early HRV decline
+        hrv_delta = state.get("latest_biometrics", {}).get("hrv_delta", 0)
+        if -15 < hrv_delta < -5:
+            pre_symptoms.append("Early HRV decline detected - not critical yet")
+        
+        # Check for sleep quality drift
+        rem_variance = state.get("latest_biometrics", {}).get("rem_variance", 0)
+        if 15 < rem_variance < 25:
+            pre_symptoms.append("Sleep architecture showing early drift")
+        
+        return pre_symptoms
+    
+    def suggest_gentle_nudges(self, pre_symptoms: List[str]) -> List[str]:
+        """Provide gentle interventions"""
+        nudges = []
+        
+        for symptom in pre_symptoms:
+            if "HRV" in symptom:
+                nudges.append("Consider a 5-minute breathing session this afternoon")
+            elif "sleep" in symptom:
+                nudges.append("Try dimming lights 30 minutes earlier tonight")
+        
+        return nudges
 
 # State Definition
 class NEUROSState(TypedDict):
@@ -90,6 +417,20 @@ class NEUROSCore:
         
         # PostgreSQL checkpointer for state persistence
         self.checkpointer = None
+        
+        # Initialize protocol engine
+        self.protocol_engine = NeuroplasticEngine()
+        
+        # Initialize three-tier memory system
+        self.memory = ThreeTierMemory()
+        
+        # Initialize additional YAML phase engines
+        self.meta_reasoning = MetaReasoningEngine()
+        self.narrative = NarrativeEngine()
+        self.recalibration = RecalibrationEngine()
+        self.mission = MissionEngine()
+        self.mythology = MythologyBuilder()
+        self.proactive = ProactiveAutonomyEngine()
         
         # Build the cognitive graph
         self.graph = self._build_graph()
@@ -176,6 +517,9 @@ class NEUROSCore:
         """Analyze and determine optimal NEUROS mode"""
         logger.info(f"NEUROS Mode Analysis: Current mode {state['current_mode']}")
         
+        # First check biometric triggers (highest priority)
+        biometric_mode = await self.evaluate_biometric_triggers(state)
+        
         latest_msg = state["messages"][-1].content if state["messages"] else ""
         
         # Mode determination with confidence scoring
@@ -190,21 +534,59 @@ class NEUROSCore:
         
         # Select mode with highest confidence
         best_mode = max(mode_scores, key=mode_scores.get)
-        state["current_mode"] = best_mode
-        state["mode_confidence"] = mode_scores[best_mode]
+        
+        # Biometric triggers override text analysis
+        if biometric_mode != NEUROSMode.BASELINE.value:
+            state["current_mode"] = NEUROSMode(biometric_mode)
+            state["mode_confidence"] = 0.9  # High confidence for biometric triggers
+            logger.info(f"Biometric override: {biometric_mode}")
+        else:
+            state["current_mode"] = best_mode
+            state["mode_confidence"] = mode_scores[best_mode]
         
         # Update conversation phase
-        if best_mode == NEUROSMode.HYPOTHESIS:
+        current_mode = state["current_mode"]
+        if current_mode == NEUROSMode.HYPOTHESIS:
             state["conversation_phase"] = "exploration"
-        elif best_mode in [NEUROSMode.COACH, NEUROSMode.PROVOCATEUR]:
+        elif current_mode in [NEUROSMode.COACH, NEUROSMode.PROVOCATEUR]:
             state["conversation_phase"] = "action_planning"
-        elif best_mode == NEUROSMode.COMPANION:
+        elif current_mode == NEUROSMode.COMPANION:
             state["conversation_phase"] = "support"
         else:
             state["conversation_phase"] = "analysis"
         
-        logger.info(f"Mode selected: {best_mode} (confidence: {state['mode_confidence']})")
+        logger.info(f"Mode selected: {current_mode} (confidence: {state['mode_confidence']})")
         return state
+    
+    async def evaluate_biometric_triggers(self, state: NEUROSState) -> str:
+        """Implement mode_switch_triggers from YAML Phase 2"""
+        
+        # Get latest biometrics from state
+        biometrics = state.get("latest_biometrics", {})
+        
+        # HRV drop > 25ms in 48h → reflex mode (maps to HYPOTHESIS)
+        if biometrics.get("hrv_delta", 0) < -25:
+            logger.info("Biometric trigger: HRV drop > 25ms → HYPOTHESIS mode")
+            return NEUROSMode.HYPOTHESIS.value
+        
+        # REM sleep variance > 30% → hypothesis (maps to SYNTHESIS)
+        if biometrics.get("rem_variance", 0) > 30:
+            logger.info("Biometric trigger: REM variance > 30% → SYNTHESIS mode")
+            return NEUROSMode.SYNTHESIS.value
+        
+        # Stress indicators high → sentinel (maps to COACH mode)
+        stress = state.get("stress_indicators", [])
+        if stress and max(stress) > 0.7:
+            logger.info("Biometric trigger: High stress → COACH mode")
+            return NEUROSMode.COACH.value
+        
+        # Recovery low → companion mode
+        recovery = state.get("recovery_markers", [])
+        if recovery and min(recovery) < 0.3:
+            logger.info("Biometric trigger: Low recovery → COMPANION mode")
+            return NEUROSMode.COMPANION.value
+        
+        return state.get("current_mode", NEUROSMode.BASELINE.value)
     
     def _score_companion_mode(self, state: NEUROSState, message: str) -> float:
         """Score likelihood of COMPANION mode"""
@@ -320,6 +702,18 @@ class NEUROSCore:
         # L3: Load long-term insights (from PostgreSQL via checkpointer)
         # This would integrate with the checkpoint system
         
+        # L3: ChromaDB semantic search for relevant memories
+        if state["messages"]:
+            latest_msg = state["messages"][-1].content
+            semantic_memories = await self.memory.semantic_recall(
+                query=latest_msg,
+                user_id=state["user_id"],
+                n_results=3
+            )
+            if semantic_memories:
+                state["l3_memory"]["semantic_context"] = semantic_memories
+                logger.info(f"Retrieved {len(semantic_memories)} semantic memories")
+        
         return state
     
     async def pattern_synthesis_node(self, state: NEUROSState) -> NEUROSState:
@@ -346,6 +740,36 @@ class NEUROSCore:
         if state["pattern_strength"] > 0.6 and state["current_mode"] == NEUROSMode.HYPOTHESIS:
             state["hypothesis_active"] = "Your recovery patterns suggest a correlation between morning light exposure and afternoon energy levels."
         
+        # Check if protocol needed
+        protocol_id = await self.protocol_engine.select_protocol(state)
+        if protocol_id and not state.get("next_protocol"):
+            state["next_protocol"] = protocol_id
+            logger.info(f"Protocol selected: {protocol_id}")
+        
+        # Run meta-reasoning for forecasting
+        forecasts = await self.meta_reasoning.scenario_forecast(state)
+        if forecasts.get("recovery_urgency") == "high":
+            state["hypothesis_active"] = f"Recovery urgently needed: {forecasts.get('suggested_intervention')}"
+        
+        # Check for drift detection
+        drift = self.recalibration.detect_protocol_drift(state)
+        if any(drift.values()):
+            micro_shifts = self.recalibration.suggest_micro_shifts(drift)
+            if micro_shifts:
+                logger.info(f"Protocol drift detected, suggesting: {micro_shifts}")
+        
+        # Check for pre-symptoms
+        pre_symptoms = self.proactive.detect_pre_symptoms(state)
+        if pre_symptoms:
+            nudges = self.proactive.suggest_gentle_nudges(pre_symptoms)
+            logger.info(f"Pre-symptoms detected: {pre_symptoms}, nudges: {nudges}")
+        
+        # Generate mission if appropriate
+        mission = self.mission.generate_mission(state)
+        if mission and not state.get("active_mission"):
+            state["active_mission"] = mission
+            logger.info(f"Mission generated: {mission['name']}")
+        
         return state
     
     async def response_generation_node(self, state: NEUROSState) -> NEUROSState:
@@ -365,6 +789,11 @@ class NEUROSCore:
         # Add mode-specific instruction
         mode_instruction = self._get_mode_instruction(state["current_mode"], state)
         messages.append(SystemMessage(content=mode_instruction))
+        
+        # Add protocol suggestion if available
+        if state.get("next_protocol"):
+            protocol_msg = self.protocol_engine.format_protocol_message(state["next_protocol"])
+            messages.append(SystemMessage(content=f"Consider suggesting this protocol: {protocol_msg}"))
         
         # Generate response
         try:
@@ -412,6 +841,23 @@ MEMORY CONTEXT:
 ACTIVE HYPOTHESIS: {state.get('hypothesis_active', 'None')}
 
 Remember: Lead with curiosity, translate data to meaning, and collaborate on optimization."""
+        
+        # Add narrative elements if available
+        if hasattr(self, 'narrative'):
+            identity_arc = self.narrative.track_identity_arc(state)
+            prompt += f"\n\nIDENTITY ARC: {identity_arc}"
+        
+        # Add mythology if available
+        if hasattr(self, 'mythology'):
+            mythology = self.mythology.build_mythology(state)
+            prompt += f"\n\nUSER ARCHETYPE: {mythology['archetype']}"
+            if mythology.get('motifs'):
+                prompt += f"\nACTIVE MOTIFS: {', '.join(mythology['motifs'])}"
+        
+        # Add active mission if available
+        if state.get('active_mission'):
+            mission = state['active_mission']
+            prompt += f"\n\nACTIVE MISSION: {mission['name']} ({mission['duration']})"
         
         return prompt
     
@@ -467,6 +913,25 @@ Remember: Lead with curiosity, translate data to meaning, and collaborate on opt
         
         # L3 updates would go through PostgreSQL checkpoint system
         
+        # Store significant insights in ChromaDB
+        if state.get("pattern_strength", 0) > 0.7 or state.get("hypothesis_active"):
+            memory_data = {
+                "context": state.get("conversation_phase"),
+                "user_state": {
+                    "mode": state["current_mode"],
+                    "confidence": state["mode_confidence"],
+                    "biometrics": state.get("latest_biometrics", {})
+                },
+                "response": state["messages"][-1].content if state["messages"] else "",
+                "outcome": state.get("hypothesis_active", ""),
+                "mode": state["current_mode"],
+                "user_id": state["user_id"],
+                "timestamp": datetime.now().isoformat(),
+                "success_metric": state.get("pattern_strength", 0)
+            }
+            await self.memory.promote_to_cold_storage(memory_data)
+            logger.info("Stored significant insight to ChromaDB")
+        
         return state
     
     async def initialize(self):
@@ -478,6 +943,8 @@ Remember: Lead with curiosity, translate data to meaning, and collaborate on opt
             )
             await self.redis_client.ping()
             logger.info("Redis connected for memory management")
+            # Set Redis in memory system
+            self.memory.redis_client = self.redis_client
         except Exception as e:
             logger.warning(f"Redis connection failed: {e}")
         
@@ -488,11 +955,49 @@ Remember: Lead with curiosity, translate data to meaning, and collaborate on opt
             )
             await self.checkpointer.setup()
             logger.info("PostgreSQL checkpointer initialized")
+            # Set PostgreSQL in memory system
+            self.memory.pg_checkpointer = self.checkpointer
         except Exception as e:
             logger.warning(f"Checkpointer setup failed: {e}")
     
     async def process_message(self, message: str, thread_id: str, user_id: str) -> Dict[str, Any]:
         """Process a message through the NEUROS cognitive graph"""
+        
+        # Load biometric state from Redis if available
+        latest_biometrics = {}
+        stress_indicators = []
+        recovery_markers = []
+        
+        if self.redis_client:
+            try:
+                state_key = f"neuros:state:{user_id}"
+                
+                # Load HRV data
+                hrv_latest = await self.redis_client.hget(state_key, "hrv_latest")
+                hrv_delta = await self.redis_client.hget(state_key, "hrv_delta")
+                if hrv_latest:
+                    latest_biometrics["hrv_latest"] = float(hrv_latest)
+                if hrv_delta:
+                    latest_biometrics["hrv_delta"] = float(hrv_delta)
+                
+                # Load REM variance
+                rem_variance = await self.redis_client.hget(state_key, "rem_variance")
+                if rem_variance:
+                    latest_biometrics["rem_variance"] = float(rem_variance)
+                
+                # Load stress indicators
+                stress_data = await self.redis_client.lrange(f"{state_key}:stress_indicators", 0, 9)
+                stress_indicators = [float(s) for s in stress_data]
+                
+                # Load recovery markers
+                recovery_data = await self.redis_client.lrange(f"{state_key}:recovery_markers", 0, 9)
+                recovery_markers = [float(r) for r in recovery_data]
+                
+                logger.info(f"Loaded biometric state for user {user_id}: HRV delta={latest_biometrics.get('hrv_delta')}, REM variance={latest_biometrics.get('rem_variance')}")
+                
+            except Exception as e:
+                logger.error(f"Failed to load biometric state: {e}")
+        
         # Initialize state
         initial_state = NEUROSState(
             messages=[HumanMessage(content=message)],
@@ -505,9 +1010,9 @@ Remember: Lead with curiosity, translate data to meaning, and collaborate on opt
             mode_confidence=0.5,
             cognitive_load=0.0,
             pattern_strength=0.0,
-            latest_biometrics={},
-            stress_indicators=[],
-            recovery_markers=[],
+            latest_biometrics=latest_biometrics,
+            stress_indicators=stress_indicators,
+            recovery_markers=recovery_markers,
             hypothesis_active=None,
             next_protocol=None,
             conversation_phase="opening"

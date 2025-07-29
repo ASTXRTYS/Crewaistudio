@@ -31,6 +31,7 @@ class NEUROSKafkaConsumer:
         self.kafka_bootstrap = "kafka:9092"
         self.consumer_group = "neuros-chat-consumer"
         self.topic = "user-interactions"
+        self.biometric_topic = "biometric-events"  # Add biometric topic
         
         # NEUROS API configuration (running in same container network)
         self.neuros_url = "http://neuros-api:8001"
@@ -53,9 +54,10 @@ class NEUROSKafkaConsumer:
             await self.redis_client.ping()
             logger.info("Redis connection established")
             
-            # Initialize Kafka consumer
+            # Initialize Kafka consumer for both topics
             self.consumer = KafkaConsumer(
                 self.topic,
+                self.biometric_topic,
                 bootstrap_servers=self.kafka_bootstrap,
                 group_id=self.consumer_group,
                 value_deserializer=lambda m: json.loads(m.decode('utf-8')),
@@ -63,7 +65,7 @@ class NEUROSKafkaConsumer:
                 enable_auto_commit=True,
                 max_poll_records=10
             )
-            logger.info(f"Kafka consumer initialized for topic: {self.topic}")
+            logger.info(f"Kafka consumer initialized for topics: {self.topic}, {self.biometric_topic}")
             
         except Exception as e:
             logger.error(f"Failed to initialize connections: {e}")
@@ -169,6 +171,86 @@ class NEUROSKafkaConsumer:
         except Exception as e:
             logger.error(f"Failed to send error response: {e}")
     
+    async def process_biometric_event(self, event: dict):
+        """Process biometric events and update NEUROS state"""
+        try:
+            # Parse biometric event
+            event_type = event.get("event_type")
+            user_id = event.get("user_id")
+            
+            if not user_id:
+                return
+            
+            # Update NEUROS state via Redis
+            state_key = f"neuros:state:{user_id}"
+            
+            if event_type == "readiness.updated":
+                # Oura HRV data
+                hrv_value = event.get("data", {}).get("hrv", {}).get("value")
+                if hrv_value:
+                    await self.redis_client.hset(state_key, "hrv_latest", hrv_value)
+                    await self.redis_client.hset(state_key, "hrv_timestamp", datetime.now().isoformat())
+                    
+                    # Calculate HRV delta
+                    previous_hrv = await self.redis_client.hget(state_key, "hrv_previous")
+                    if previous_hrv:
+                        delta = hrv_value - float(previous_hrv)
+                        await self.redis_client.hset(state_key, "hrv_delta", delta)
+                    
+                    # Store current as previous for next comparison
+                    await self.redis_client.hset(state_key, "hrv_previous", hrv_value)
+            
+            elif event_type == "recovery.updated":
+                # WHOOP recovery score
+                recovery_score = event.get("data", {}).get("recovery_score")
+                if recovery_score:
+                    await self.redis_client.lpush(f"{state_key}:recovery_markers", recovery_score)
+                    # Keep only last 10 recovery scores
+                    await self.redis_client.ltrim(f"{state_key}:recovery_markers", 0, 9)
+                
+            elif event_type == "sleep.analyzed":
+                # Sleep metrics
+                sleep_data = event.get("data", {})
+                rem_percentage = sleep_data.get("rem_percentage")
+                if rem_percentage:
+                    # Calculate variance from baseline (20% is normal REM)
+                    rem_variance = abs(rem_percentage - 20)
+                    await self.redis_client.hset(state_key, "rem_variance", rem_variance)
+            
+            elif event_type == "stress.detected":
+                # Stress indicators
+                stress_level = event.get("data", {}).get("stress_level", 0) / 100  # Normalize to 0-1
+                await self.redis_client.lpush(f"{state_key}:stress_indicators", stress_level)
+                # Keep only last 10 stress indicators
+                await self.redis_client.ltrim(f"{state_key}:stress_indicators", 0, 9)
+            
+            logger.info(f"Processed biometric event: {event_type} for user {user_id}")
+            
+            # If significant change, trigger NEUROS re-evaluation
+            if event_type in ["readiness.updated", "stress.detected"]:
+                await self.publish_mode_reevaluation(user_id)
+                
+        except Exception as e:
+            logger.error(f"Error processing biometric event: {e}")
+    
+    async def publish_mode_reevaluation(self, user_id: str):
+        """Publish event to trigger NEUROS mode re-evaluation"""
+        try:
+            reevaluation_event = {
+                "type": "biometric_trigger",
+                "user_id": user_id,
+                "timestamp": datetime.now().isoformat(),
+                "action": "reevaluate_mode"
+            }
+            
+            await self.redis_client.publish(
+                f"neuros:triggers:{user_id}",
+                json.dumps(reevaluation_event)
+            )
+            logger.info(f"Published mode re-evaluation for user {user_id}")
+        except Exception as e:
+            logger.error(f"Failed to publish re-evaluation: {e}")
+    
     async def consume_messages(self):
         """Main consumer loop"""
         logger.info("Starting Kafka consumer loop...")
@@ -185,8 +267,12 @@ class NEUROSKafkaConsumer:
                 
                 # Process each message
                 for topic_partition, messages in raw_messages.items():
+                    topic = topic_partition.topic
                     for message in messages:
-                        await self.process_message(message.value)
+                        if topic == self.biometric_topic:
+                            await self.process_biometric_event(message.value)
+                        else:
+                            await self.process_message(message.value)
                         
             except Exception as e:
                 logger.error(f"Error in consumer loop: {e}")

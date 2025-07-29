@@ -1,11 +1,12 @@
 # NEUROS Cognitive Service Requirements
 # Production dependencies for biometric-aware AI personality system
 
-# Core LangGraph/LangChain
-langgraph>=0.0.39
-langchain>=0.1.0
-langchain-core>=0.1.0
-langchain-community>=0.0.10
+# Core LangGraph/LangChain - FIXED VERSIONS
+langgraph==0.2.56
+langchain==0.3.17
+langchain-openai==0.3.28  # UPGRADED from 0.1.23
+langchain-core==0.3.72
+langgraph-checkpoint-redis==0.0.8  # Added official Redis checkpoint support
 
 # Async support
 asyncio>=3.4.3
@@ -54,3 +55,6 @@ sentry-sdk>=1.39.1
 pytest>=7.4.3
 pytest-asyncio>=0.21.1
 pytest-cov>=4.1.0 
+
+# ChromaDB for L3 semantic memory
+chromadb==0.4.22 

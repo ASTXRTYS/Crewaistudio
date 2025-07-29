@@ -21,12 +21,12 @@ echo "🔧 Deploying on server..."
 sshpass -p '.HvddX+@6dArsKd' ssh -o StrictHostKeyChecking=no root@144.126.215.218 << 'EOF'
 # Backup current website
 echo "Creating backup..."
-cd /var/www
+cd /usr/share/nginx
 tar -czf html-backup-$(date +%Y%m%d-%H%M%S).tar.gz html/
 
 # Extract new website
 echo "Extracting new files..."
-cd /var/www/html
+cd /usr/share/nginx/html
 tar -xzf /tmp/neuros-website-update.tar.gz
 
 # Restart nginx to ensure changes take effect

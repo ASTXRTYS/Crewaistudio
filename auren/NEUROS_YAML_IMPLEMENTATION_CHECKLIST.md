@@ -1,0 +1,2 @@
+- Phase 1: Connect Biometric Event Processing ✅ Verified in neuros_langgraph.py with evaluate_biometric_triggers; tested via simulated webhook.
+- Phase 2: Implement Protocol Stacks ✅ Verified NeuroplasticEngine in code; protocol selection logic present. 

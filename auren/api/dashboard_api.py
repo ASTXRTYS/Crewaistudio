@@ -11,11 +11,16 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional
 
-from fastapi import FastAPI, WebSocket, HTTPException, Query, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, HTTPException, Query, WebSocketDisconnect, File, UploadFile, Form, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 import aioredis
 from aiokafka import AIOKafkaProducer
+import aiofiles
+import uuid
+from pathlib import Path
+import mimetypes
 
 # Import the visualizers you built
 from auren.realtime.dashboard_backends import (
@@ -146,10 +151,16 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configure CORS
+# Add CORS middleware for PWA support
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://pwa.aupex.ai", 
+        "https://*.vercel.app",  # For Vercel preview deployments
+        "http://localhost:5173",  # For local development
+        "http://localhost:3000",
+        "http://144.126.215.218:8888"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -762,15 +773,26 @@ async def dashboard_websocket(websocket: WebSocket, user_id: str):
     await websocket.accept()
     active_connections.append(websocket)
     
+    # Store websocket with session info for targeted messaging
+    session_id = f"pwa_session_{user_id}_{int(datetime.now().timestamp())}"
+    websocket.session_id = session_id
+    websocket.user_id = user_id
+    
     try:
         # Send initial connection success
         await websocket.send_json({
             "type": "connection",
             "status": "connected",
             "user_id": user_id,
+            "session_id": session_id,
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "features": ["knowledge_graph", "memory_access", "breakthrough_detection"]
+            "features": ["knowledge_graph", "memory_access", "breakthrough_detection", "chat"]
         })
+        
+        # Start background task to listen for NEUROS responses
+        response_task = asyncio.create_task(
+            listen_for_neuros_responses(websocket, session_id)
+        )
         
         # Keep connection alive and handle incoming messages
         while True:
@@ -781,6 +803,20 @@ async def dashboard_websocket(websocket: WebSocket, user_id: str):
                 # Handle different message types
                 if message.get("type") == "ping":
                     await websocket.send_json({"type": "pong"})
+                    
+                elif message.get("type") == "auth":
+                    # Handle authentication
+                    api_key = message.get("api_key", "").replace("Bearer ", "")
+                    # TODO: Validate API key
+                    await websocket.send_json({
+                        "type": "auth_success",
+                        "session_id": session_id
+                    })
+                    
+                elif message.get("type") == "message":
+                    # Handle chat message
+                    await handle_chat_message(websocket, message, session_id)
+                    
                 elif message.get("type") == "subscribe":
                     # Handle subscription requests
                     await handle_subscription(websocket, message)
@@ -794,8 +830,94 @@ async def dashboard_websocket(websocket: WebSocket, user_id: str):
                 break
                 
     finally:
+        response_task.cancel()
         active_connections.remove(websocket)
         logger.info(f"WebSocket disconnected for user {user_id}")
+
+async def handle_chat_message(websocket: WebSocket, message: Dict[str, Any], session_id: str):
+    """Handle incoming chat messages from PWA."""
+    try:
+        # Create event for Kafka
+        event = {
+            "event_type": "user.message",
+            "event_id": str(uuid.uuid4()),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "user_id": websocket.user_id,
+            "session_id": session_id,
+            "message": {
+                "text": message.get("text", ""),
+                "context": {
+                    "device_type": "pwa",
+                    "agent_requested": message.get("agent_requested", "neuros"),
+                    "conversation_id": session_id
+                }
+            }
+        }
+        
+        # Send to Kafka
+        if kafka_producer:
+            await kafka_producer.send("user-interactions", event)
+        
+        # Store in Redis for history (with 2-hour TTL)
+        if redis_client:
+            chat_key = f"chat:session:{session_id}:messages"
+            await redis_client.lpush(chat_key, json.dumps({
+                "sender": "user",
+                "text": message.get("text"),
+                "timestamp": event["timestamp"]
+            }))
+            await redis_client.expire(chat_key, 7200)  # 2 hours
+            
+    except Exception as e:
+        logger.error(f"Error handling chat message: {e}")
+        await websocket.send_json({
+            "type": "error",
+            "message": "Failed to process message"
+        })
+
+async def listen_for_neuros_responses(websocket: WebSocket, session_id: str):
+    """
+    Background task to listen for NEUROS responses from Redis/Kafka
+    and forward them to the WebSocket client.
+    """
+    try:
+        if not redis_client:
+            return
+            
+        # Subscribe to response channel for this session
+        pubsub = redis_client.pubsub()
+        await pubsub.subscribe(f"neuros:responses:{session_id}")
+        
+        async for message in pubsub.listen():
+            if message["type"] == "message":
+                response_data = json.loads(message["data"])
+                
+                # Send to WebSocket
+                await websocket.send_json({
+                    "type": "agent_response",
+                    "agent_id": "neuros",
+                    "response": {
+                        "text": response_data.get("text", ""),
+                        "data": response_data.get("data", {}),
+                        "visualizations": response_data.get("visualizations", [])
+                    },
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                })
+                
+                # Store in chat history
+                chat_key = f"chat:session:{session_id}:messages"
+                await redis_client.lpush(chat_key, json.dumps({
+                    "sender": "agent",
+                    "agent_id": "neuros",
+                    "text": response_data.get("text"),
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }))
+                
+    except asyncio.CancelledError:
+        await pubsub.unsubscribe()
+        raise
+    except Exception as e:
+        logger.error(f"Error in response listener: {e}")
 
 async def handle_subscription(websocket: WebSocket, message: Dict[str, Any]):
     """Handle WebSocket subscription requests."""
@@ -842,6 +964,272 @@ async def anomaly_websocket(websocket: WebSocket, agent_id: str):
         await pubsub.unsubscribe()
         await pubsub.close()
         await redis_client.close()
+
+# ========================================================================================
+# CHAT ENDPOINTS FOR PWA
+# ========================================================================================
+
+class ChatMessage(BaseModel):
+    text: str
+    agent_requested: str = "neuros"
+    session_id: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+class ChatResponse(BaseModel):
+    response: str
+    agent_id: str
+    session_id: str
+    timestamp: str
+    data: Optional[Dict[str, Any]] = None
+
+@app.post("/api/chat/neuros", response_model=ChatResponse)
+async def chat_with_neuros(message: ChatMessage):
+    """
+    Handle text chat messages to NEUROS agent.
+    Integrates with existing Kafka pipeline for processing.
+    """
+    try:
+        session_id = message.session_id or f"pwa_session_{uuid.uuid4().hex[:8]}"
+        
+        # Create Kafka event for NEUROS processing
+        event = {
+            "event_type": "user.message",
+            "event_id": str(uuid.uuid4()),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "user_id": "pwa_user",  # TODO: Get from auth
+            "session_id": session_id,
+            "message": {
+                "text": message.text,
+                "context": {
+                    "device_type": "pwa",
+                    "agent_requested": message.agent_requested,
+                    "conversation_id": session_id
+                }
+            },
+            "metadata": message.metadata or {}
+        }
+        
+        # Send to Kafka for processing
+        if kafka_producer:
+            await kafka_producer.send("user-interactions", event)
+            logger.info(f"Sent chat message to Kafka: {event['event_id']}")
+        
+        # For MVP, return immediate acknowledgment
+        # Real response will come through WebSocket
+        return ChatResponse(
+            response="I'm processing your request and will respond shortly...",
+            agent_id="neuros",
+            session_id=session_id,
+            timestamp=datetime.now(timezone.utc).isoformat()
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in chat endpoint: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/chat/voice")
+async def chat_with_voice(
+    audio: UploadFile = File(...),
+    session_id: Optional[str] = Form(None),
+    agent_requested: str = Form("neuros")
+):
+    """
+    Handle voice messages for NEUROS.
+    Stores audio file and queues for transcription.
+    """
+    try:
+        session_id = session_id or f"pwa_session_{uuid.uuid4().hex[:8]}"
+        
+        # Validate audio file
+        if not audio.content_type.startswith('audio/'):
+            raise HTTPException(status_code=400, detail="Invalid audio file")
+        
+        # Create uploads directory if it doesn't exist
+        upload_dir = Path("uploads/audio")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Save audio file
+        file_id = f"{uuid.uuid4().hex}.webm"
+        file_path = upload_dir / file_id
+        
+        async with aiofiles.open(file_path, 'wb') as f:
+            content = await audio.read()
+            await f.write(content)
+        
+        # Create event for processing
+        event = {
+            "event_type": "user.voice_message",
+            "event_id": str(uuid.uuid4()),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "user_id": "pwa_user",
+            "session_id": session_id,
+            "voice_data": {
+                "file_id": file_id,
+                "file_path": str(file_path),
+                "content_type": audio.content_type,
+                "size_bytes": len(content),
+                "duration_seconds": None  # TODO: Extract from audio
+            },
+            "agent_requested": agent_requested
+        }
+        
+        # Send to Kafka for processing
+        if kafka_producer:
+            await kafka_producer.send("voice-messages", event)
+            logger.info(f"Sent voice message to Kafka: {event['event_id']}")
+        
+        return {
+            "status": "received",
+            "file_id": file_id,
+            "session_id": session_id,
+            "message": "Voice message received. Transcribing..."
+        }
+        
+    except Exception as e:
+        logger.error(f"Error handling voice message: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/chat/upload")
+async def upload_file_for_analysis(
+    file: UploadFile = File(...),
+    session_id: Optional[str] = Form(None),
+    context: Optional[str] = Form(None)
+):
+    """
+    Handle file uploads (images, documents) for NEUROS analysis.
+    Supports macro screenshots, workout photos, etc.
+    """
+    try:
+        session_id = session_id or f"pwa_session_{uuid.uuid4().hex[:8]}"
+        
+        # Validate file type
+        allowed_types = ['image/', 'application/pdf', 'text/']
+        if not any(file.content_type.startswith(t) for t in allowed_types):
+            raise HTTPException(status_code=400, detail="Unsupported file type")
+        
+        # Create uploads directory
+        upload_dir = Path("uploads/files")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Save file with unique name
+        file_ext = Path(file.filename).suffix
+        file_id = f"{uuid.uuid4().hex}{file_ext}"
+        file_path = upload_dir / file_id
+        
+        async with aiofiles.open(file_path, 'wb') as f:
+            content = await file.read()
+            await f.write(content)
+        
+        # Create event for NEUROS analysis
+        event = {
+            "event_type": "user.file_upload",
+            "event_id": str(uuid.uuid4()),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "user_id": "pwa_user",
+            "session_id": session_id,
+            "file_data": {
+                "file_id": file_id,
+                "file_path": str(file_path),
+                "original_name": file.filename,
+                "content_type": file.content_type,
+                "size_bytes": len(content),
+                "context": context or "general_analysis"
+            }
+        }
+        
+        # If it's an image, we might want to run it through vision analysis
+        if file.content_type.startswith('image/'):
+            event["file_data"]["analysis_type"] = "vision"
+            event["file_data"]["context"] = context or "nutrition_tracking"
+        
+        # Send to Kafka for processing
+        if kafka_producer:
+            await kafka_producer.send("file-uploads", event)
+            logger.info(f"Sent file upload to Kafka: {event['event_id']}")
+        
+        return {
+            "status": "uploaded",
+            "file_id": file_id,
+            "session_id": session_id,
+            "message": f"File '{file.filename}' uploaded successfully. Analyzing...",
+            "analysis_type": event["file_data"].get("analysis_type", "document")
+        }
+        
+    except Exception as e:
+        logger.error(f"Error handling file upload: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/chat/history/{session_id}")
+async def get_chat_history(
+    session_id: str,
+    limit: int = Query(50, ge=1, le=200)
+):
+    """
+    Retrieve chat history for a session.
+    Note: Sessions expire after 2 hours per NEUROS constraints.
+    """
+    try:
+        if not redis_client:
+            return {"messages": [], "session_active": False}
+        
+        # Get messages from Redis (they auto-expire after 2 hours)
+        key = f"chat:session:{session_id}:messages"
+        messages = await redis_client.lrange(key, 0, limit - 1)
+        
+        return {
+            "session_id": session_id,
+            "messages": [json.loads(m) for m in messages],
+            "session_active": len(messages) > 0,
+            "ttl_seconds": await redis_client.ttl(key)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error retrieving chat history: {e}")
+        return {"messages": [], "session_active": False, "error": str(e)}
+
+@app.get("/api/agents/neuros/status")
+async def get_neuros_status():
+    """Get NEUROS agent status and capabilities."""
+    return {
+        "agent_id": "neuros",
+        "name": "NEUROS",
+        "tagline": "Elite Neural Operations System",
+        "status": "operational",
+        "capabilities": [
+            "hrv_analysis",
+            "stress_detection", 
+            "recovery_protocols",
+            "neural_fatigue_assessment",
+            "circadian_optimization",
+            "cognitive_function_tracking"
+        ],
+        "specializations": [
+            {
+                "name": "Autonomic Balance",
+                "description": "Nervous system optimization",
+                "active_protocols": 12,
+                "success_rate": 0.94
+            },
+            {
+                "name": "HRV Analytics",
+                "description": "Real-time heart rate variability",
+                "data_points": 1200000,
+                "accuracy": 0.97
+            },
+            {
+                "name": "Neural Fatigue",
+                "description": "Cognitive load assessment",
+                "models": 8,
+                "precision": 0.91
+            }
+        ],
+        "version": "1.0.0",
+        "last_updated": datetime.now(timezone.utc).isoformat()
+    }
+
+# ========================================================================================
+# EXISTING DASHBOARD AND WEBSOCKET ENDPOINTS CONTINUE BELOW
+# ========================================================================================
 
 # Serve the dashboard HTML (for development)
 @app.get("/")

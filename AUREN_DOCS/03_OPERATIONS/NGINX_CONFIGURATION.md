@@ -2,7 +2,8 @@
 ## Critical Information for Website Deployments
 
 *Created: January 28, 2025*  
-*Purpose: Prevent wrong directory deployments*
+*Updated: January 29, 2025 - API proxy updated for NEUROS*  
+*Purpose: Prevent wrong directory deployments and document API routing*
 
 ---
 
@@ -23,6 +24,30 @@ server {
     
     location / {
         try_files $uri $uri/ =404;
+    }
+    
+    # API proxy - Updated to NEUROS on port 8000
+    location /api/ {
+        proxy_pass http://localhost:8000/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # WebSocket headers
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+    
+    # WebSocket endpoint - Updated to NEUROS on port 8000
+    location /ws {
+        proxy_pass http://localhost:8000/ws;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_read_timeout 86400;
     }
 }
 ```

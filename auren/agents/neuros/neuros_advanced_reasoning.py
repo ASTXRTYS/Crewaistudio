@@ -35,11 +35,11 @@ from collections import defaultdict, deque
 
 # LangGraph imports (replacing CrewAI)
 from langgraph.graph import StateGraph, END
-from langgraph.checkpoint import PostgresSaver
+from langgraph.checkpoint.postgres import PostgresSaver
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from langchain.schema import Document
-from langchain.embeddings import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 
 # PostgreSQL for narrative storage (replacing ChromaDB)
 import asyncpg

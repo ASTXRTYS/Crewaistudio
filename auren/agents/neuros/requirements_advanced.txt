@@ -1,0 +1,33 @@
+# NEUROS Advanced Reasoning Requirements
+# LangGraph and core dependencies
+langgraph>=0.0.32
+langchain>=0.1.0
+langchain-openai>=0.0.5
+langchain-core>=0.1.0
+
+# Database and storage
+asyncpg>=0.29.0
+pgvector>=0.2.4
+redis[hiredis]>=5.0.0
+
+# Kafka for event streaming (when pipeline is fixed)
+aiokafka>=0.10.0
+
+# FastAPI for API integration
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.0
+
+# AI and ML
+openai>=1.10.0
+numpy>=1.24.0
+tiktoken>=0.5.0
+
+# Utilities
+python-dotenv>=1.0.0
+pyyaml>=6.0.1
+tqdm>=4.66.0
+
+# Async utilities
+aiofiles>=23.2.1
+httpx>=0.25.0 

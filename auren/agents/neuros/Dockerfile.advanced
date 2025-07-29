@@ -1,0 +1,30 @@
+FROM python:3.11-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements and install dependencies
+COPY requirements_advanced.txt .
+RUN pip install --no-cache-dir -r requirements_advanced.txt
+
+# Copy the implementation files
+COPY neuros_advanced_reasoning.py .
+COPY neuros_advanced_reasoning_simple.py .
+COPY start_advanced.py .
+COPY neuros_config.json ./config/
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV ENVIRONMENT=production
+
+# Expose port
+EXPOSE 8000
+
+# Run the application
+CMD ["python", "start_advanced.py"] 

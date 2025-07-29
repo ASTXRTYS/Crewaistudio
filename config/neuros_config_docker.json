@@ -1,0 +1,22 @@
+{
+  "postgres": {
+    "host": "auren-postgres",
+    "port": 5432,
+    "user": "auren_user",
+    "password": "auren_password_2024",
+    "database": "auren_production"
+  },
+  "redis": {
+    "host": "auren-redis",
+    "port": 6379
+  },
+  "openai": {
+    "api_key": "[REDACTED-OPENAI-API-KEY]"
+  },
+  "llm": {
+    "model": "gpt-4-turbo-preview",
+    "temperature": 0.7
+  },
+  "biometric_pipeline_status": "broken",
+  "environment": "production"
+} 

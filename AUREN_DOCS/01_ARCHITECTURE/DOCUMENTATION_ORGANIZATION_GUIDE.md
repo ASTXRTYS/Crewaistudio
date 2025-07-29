@@ -1,7 +1,29 @@
 # AUREN DOCUMENTATION ORGANIZATION GUIDE
 ## Where Everything Should Live
 
-*Created: July 28, 2025*
+*Created: July 28, 2025*  
+*Last Updated: July 28, 2025 (21:00 UTC)*
+
+---
+
+## 📊 DOCUMENTATION STATUS
+
+**Total Documents**: 28 operational documents across 5 main categories
+- **Quick Start**: 2 documents (credentials, SSH access)
+- **Architecture**: 4 documents (organization, migration, patterns, future-proofing)
+- **Deployment**: 5 documents (clean guide, biometric, sections 11-12, pgvector)
+- **Operations**: 13 documents (Docker, monitoring, troubleshooting, metrics)
+- **Development**: 2 documents (monitoring guide, integration patterns)
+- **Root Level**: 4 documents (README, rules, checkpoint, status report)
+
+**New Today** (July 28, 2025): 
+- ✅ SYSTEM_CHECKPOINT_20250728.md - Complete system state after fixes
+- ✅ AUREN_CLEAN_DEPLOYMENT_GUIDE.md - Definitive deployment guide
+- ✅ DOCKER_REDUNDANCY_CLEANUP_GUIDE.md - Docker cleanup procedures
+- ✅ DOCKER_SAFE_CLEANUP_LIST.md - Verified safe to remove images
+- ✅ WEBHOOK_DATA_STORAGE_ISSUE_RESOLVED.md - Issue resolution history
+- ✅ PROMETHEUS_CONFIGURATION_FIX.md - Network configuration fix
+- ✅ MONITORING_TROUBLESHOOTING_COMPLETE_GUIDE.md - Full monitoring fixes
 
 ---
 
@@ -19,7 +41,8 @@ AUREN-Studio-main/
 │   │   └── DOCUMENTATION_ORGANIZATION_GUIDE.md  # This file - table of contents
 │   │
 │   ├── 02_DEPLOYMENT/
-│   │   ├── BIOMETRIC_SYSTEM_DEPLOYMENT_GUIDE.md  ✅ Complete deployment guide
+│   │   ├── AUREN_CLEAN_DEPLOYMENT_GUIDE.md      ✅ Definitive deployment guide 🆕
+│   │   ├── BIOMETRIC_SYSTEM_DEPLOYMENT_GUIDE.md ✅ Complete deployment guide
 │   │   ├── SECTION_11_ENHANCEMENT_GUIDE.md      ✅ Event sourcing & real-time
 │   │   ├── SECTION_12_MAIN_EXECUTION_GUIDE.md   ✅ Production runtime layer
 │   │   └── PGVECTOR_MIGRATION_DESIGN.md         ✅ ChromaDB to pgvector plan
@@ -28,7 +51,12 @@ AUREN-Studio-main/
 │   │   ├── SERVICE_ACCESS_GUIDE.md   ✅ All DevOps tools
 │   │   ├── NGINX_CONFIGURATION.md    ✅ Website deployment
 │   │   ├── DOCKER_NAVIGATION_GUIDE.md ✅ Container navigation & troubleshooting
+│   │   ├── DOCKER_REDUNDANCY_CLEANUP_GUIDE.md  ✅ Docker cleanup procedures 🆕
+│   │   ├── DOCKER_SAFE_CLEANUP_LIST.md         ✅ Verified safe images 🆕
+│   │   ├── WEBHOOK_DATA_STORAGE_ISSUE_RESOLVED.md ✅ Troubleshooting history 🆕
 │   │   ├── PROMETHEUS_TROUBLESHOOTING_PLAYBOOK.md ✅ Prometheus fix history
+│   │   ├── PROMETHEUS_CONFIGURATION_FIX.md      ✅ Network config fix 🆕
+│   │   ├── MONITORING_TROUBLESHOOTING_COMPLETE_GUIDE.md ✅ Full monitoring fixes 🆕
 │   │   ├── METRICS_CATALOG.md      ✅ Complete AUREN metrics reference
 │   │   ├── GRAFANA_QUERY_LIBRARY.md ✅ Ready-to-use PromQL queries
 │   │   ├── OBSERVABILITY_RUNBOOK.md ✅ Daily monitoring procedures
@@ -43,6 +71,9 @@ AUREN-Studio-main/
 │   │   ├── MONITORING_GUIDE.md      ✅ Complete monitoring setup
 │   │   └── INTEGRATION_PATTERNS.md  ✅ Best practices for new features
 │   │
+│   ├── AI_ASSISTANT_RULES.md     # Operational rules for AI sessions 🆕
+│   ├── SYSTEM_CHECKPOINT_20250728.md # System state after fixes 🆕
+│   ├── AUREN_DOCUMENTATION_STATUS_REPORT.md # Doc assessment
 │   └── README.md                  # Navigation hub with all links
 │
 ├── app/                           # Application UI and integration
@@ -320,6 +351,42 @@ Create `README.md` in each folder explaining what goes there
 - Well Organized: 95%
 - Up to Date: 90%
 - Easily Findable: 95%
+
+---
+
+## 🌐 SYSTEM OVERVIEW & CURRENT STATUS
+
+### Production Infrastructure (July 28, 2025)
+```
+Server: 144.126.215.218 (DigitalOcean)
+Status: FULLY OPERATIONAL ✅
+Disk: 68% (cleaned up from 94%)
+Services: 9/9 Docker containers healthy
+CI/CD: GitHub Actions passing
+```
+
+### Live Endpoints:
+- **API**: http://144.126.215.218:8888 (health, metrics, webhooks)
+- **Grafana**: http://144.126.215.218:3000 (admin/auren_grafana_2025)
+- **Prometheus**: http://144.126.215.218:9090
+- **Website**: aupex.ai (professional multi-page site)
+
+### Key Components:
+1. **Biometric Bridge** - Receives data from Oura/WHOOP/Apple Health
+2. **PostgreSQL** - Stores all biometric events with TimescaleDB
+3. **Redis** - Caching and session management
+4. **Kafka** - Event streaming infrastructure
+5. **NEUROS** - AI agent for health optimization (ready for integration)
+6. **Monitoring Stack** - Prometheus + Grafana with custom dashboards
+
+### Data Flow:
+```
+Wearable Device → Webhook → Biometric API → PostgreSQL
+                                ↓
+                           Prometheus ← Grafana (Visualization)
+                                ↓
+                            NEUROS (AI Analysis)
+```
 
 ---
 

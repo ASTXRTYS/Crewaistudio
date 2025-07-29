@@ -55,6 +55,7 @@
 - ✅ [Monitoring Stability Guide](03_OPERATIONS/MONITORING_STABILITY_GUIDE.md) - Prevention & recovery procedures
 - ✅ [Prometheus Configuration Fix](03_OPERATIONS/PROMETHEUS_CONFIGURATION_FIX.md) - Network configuration fix 🆕
 - ✅ [**Monitoring Troubleshooting Complete Guide**](03_OPERATIONS/MONITORING_TROUBLESHOOTING_COMPLETE_GUIDE.md) - **EVERYTHING TO FIX MONITORING** 🆕🔥
+- ✅ [Webhook Data Storage Issue Resolved](03_OPERATIONS/WEBHOOK_DATA_STORAGE_ISSUE_RESOLVED.md) - Backend fix documentation 🆕
 - ❌ Daily Checklist - **COMING SOON**
 - ❌ Troubleshooting - **COMING SOON**
 
@@ -79,7 +80,7 @@
 ## 📊 Documentation Status Reports
 
 - ✅ [Documentation Status Report](AUREN_DOCUMENTATION_STATUS_REPORT.md) - Complete assessment of all docs
-- ✅ [Documentation Organization Guide](DOCUMENTATION_ORGANIZATION_GUIDE.md) - Where everything should live
+- ✅ [Documentation Organization Guide](01_ARCHITECTURE/DOCUMENTATION_ORGANIZATION_GUIDE.md) - Where everything should live & system overview
 - ✅ **[SYSTEM CHECKPOINT 20250728](SYSTEM_CHECKPOINT_20250728.md)** - Complete system state after cleanup and fixes 🆕
 
 ---

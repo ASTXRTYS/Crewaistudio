@@ -24,13 +24,13 @@ Actual implementation files and visual documentation.
 - **index.html** - Main landing page
 - **agents/** - Agent-specific pages
   - `index.html` - Agents listing
-  - `neuroscientist.html` - Neuroscientist dashboard
+  - `neuros.html` - NEUROS dashboard
 - **styles/** - CSS files
   - `main.css` - Global styles
-  - `neuroscientist.css` - Agent-specific styles
+  - `neuros.css` - NEUROS-specific styles
 - **js/** - JavaScript files
   - `main.js` - Homepage animations
-  - `neuroscientist.js` - Dashboard logic
+  - `neuros.js` - NEUROS dashboard logic
 - **API_DOCUMENTATION.md** - Complete API reference ✨ NEW
 - **VISUAL_GUIDE.md** - What users should see
 - **DASHBOARD_ENHANCEMENTS_SUMMARY.md** - Enhancement details
@@ -64,7 +64,7 @@ Current status and completion reports.
 ### Live URLs:
 - **Homepage**: http://aupex.ai/
 - **Agents Listing**: http://aupex.ai/agents/
-- **Neuroscientist Dashboard**: http://aupex.ai/agents/neuroscientist.html
+- **NEUROS Dashboard**: http://aupex.ai/agents/neuros.html
 - **API Health**: http://aupex.ai/api/health
 - **WebSocket**: ws://aupex.ai/ws/
 

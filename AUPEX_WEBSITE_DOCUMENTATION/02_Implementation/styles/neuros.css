@@ -467,3 +467,150 @@ body {
     background: var(--neuros-neural) !important;
     box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
 } 
+
+/* Core Specializations Section */
+.specializations {
+    padding: 80px 0;
+    background: var(--neuros-black);
+    position: relative;
+}
+
+.specializations h2 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 3rem;
+    background: linear-gradient(to right, var(--neuros-text), var(--neuros-neural));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.spec-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.spec-card {
+    background: var(--neuros-steel);
+    border: 1px solid var(--neuros-steel-light);
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.spec-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, transparent 0%, rgba(74, 158, 255, 0.1) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.spec-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--neuros-accent);
+    box-shadow: 0 10px 40px rgba(74, 158, 255, 0.2);
+}
+
+.spec-card:hover::before {
+    opacity: 1;
+}
+
+.spec-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(74, 158, 255, 0.1);
+    border-radius: 20px;
+    color: var(--neuros-neural);
+    transition: all 0.3s ease;
+}
+
+.spec-card:hover .spec-icon {
+    background: rgba(0, 212, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.spec-card h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--neuros-text);
+}
+
+.spec-card p {
+    font-size: 0.9rem;
+    color: var(--neuros-text-dim);
+    margin-bottom: 1.5rem;
+}
+
+.spec-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--neuros-steel-light);
+}
+
+.spec-metrics .metric-label {
+    font-size: 0.75rem;
+    color: var(--neuros-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.spec-metrics .metric-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--neuros-neural);
+}
+
+/* Specialization-specific colors */
+.spec-card[data-spec="autonomic"] .spec-icon {
+    color: #00D9FF;
+    background: rgba(0, 217, 255, 0.1);
+}
+
+.spec-card[data-spec="hrv"] .spec-icon {
+    color: #FF6B6B;
+    background: rgba(255, 107, 107, 0.1);
+}
+
+.spec-card[data-spec="fatigue"] .spec-icon {
+    color: #9945FF;
+    background: rgba(153, 69, 255, 0.1);
+}
+
+.spec-card[data-spec="recovery"] .spec-icon {
+    color: #00FF88;
+    background: rgba(0, 255, 136, 0.1);
+}
+
+.spec-card[data-spec="stress"] .spec-icon {
+    color: #FFB800;
+    background: rgba(255, 184, 0, 0.1);
+}
+
+.spec-card[data-spec="circadian"] .spec-icon {
+    color: #FF45FF;
+    background: rgba(255, 69, 255, 0.1);
+}
+
+.spec-card[data-spec="cognitive"] .spec-icon {
+    color: #45FFFF;
+    background: rgba(69, 255, 255, 0.1);
+} 

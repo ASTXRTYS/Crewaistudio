@@ -226,4 +226,111 @@ document.addEventListener('DOMContentLoaded', () => {
     init3DKnowledgeGraph();
     initBiometricCharts();
     initWebSocket();
-}); 
+    initSpecializations(); // Add this new function
+});
+
+// Specialization card interactions
+function initSpecializations() {
+    const specCards = document.querySelectorAll('.spec-card');
+    
+    specCards.forEach(card => {
+        // Add hover effects
+        card.addEventListener('mouseenter', function() {
+            // Animate metrics
+            const metrics = this.querySelectorAll('.metric-value');
+            metrics.forEach(metric => {
+                const original = metric.textContent;
+                metric.style.transition = 'all 0.3s ease';
+                
+                // Add pulsing effect
+                metric.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    metric.style.transform = 'scale(1)';
+                }, 300);
+            });
+        });
+        
+        // Add click handler
+        card.addEventListener('click', function() {
+            const spec = this.getAttribute('data-spec');
+            showSpecializationDetails(spec);
+        });
+    });
+    
+    // Animate metrics on scroll
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateSpecMetrics(entry.target);
+            }
+        });
+    }, { threshold: 0.5 });
+    
+    specCards.forEach(card => {
+        observer.observe(card);
+    });
+}
+
+// Animate specialization metrics
+function animateSpecMetrics(card) {
+    const metrics = card.querySelectorAll('.metric-value');
+    
+    metrics.forEach(metric => {
+        const finalValue = metric.textContent;
+        const isPercentage = finalValue.includes('%');
+        const isNumber = /^\d+$/.test(finalValue);
+        const hasK = finalValue.includes('K');
+        const hasM = finalValue.includes('M');
+        
+        if (isPercentage) {
+            const value = parseInt(finalValue);
+            animateValue(metric, 0, value, 1000, '%');
+        } else if (hasK) {
+            const value = parseFloat(finalValue);
+            animateValue(metric, 0, value, 1000, 'K');
+        } else if (hasM) {
+            const value = parseFloat(finalValue);
+            animateValue(metric, 0, value, 1000, 'M');
+        } else if (isNumber) {
+            const value = parseInt(finalValue);
+            animateValue(metric, 0, value, 1000, '');
+        }
+    });
+}
+
+// Animate value counter
+function animateValue(element, start, end, duration, suffix) {
+    const startTime = performance.now();
+    
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Easing function
+        const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+        const current = start + (end - start) * easeOutQuart;
+        
+        element.textContent = current.toFixed(suffix === 'K' || suffix === 'M' ? 1 : 0) + suffix;
+        
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        }
+    }
+    
+    requestAnimationFrame(update);
+}
+
+// Show specialization details (placeholder for future modal/expansion)
+function showSpecializationDetails(spec) {
+    console.log(`Showing details for: ${spec}`);
+    
+    // Add a temporary highlight effect
+    const card = document.querySelector(`[data-spec="${spec}"]`);
+    card.style.borderColor = 'var(--neuros-neural)';
+    card.style.boxShadow = '0 0 30px rgba(0, 212, 255, 0.5)';
+    
+    setTimeout(() => {
+        card.style.borderColor = '';
+        card.style.boxShadow = '';
+    }, 1000);
+} 

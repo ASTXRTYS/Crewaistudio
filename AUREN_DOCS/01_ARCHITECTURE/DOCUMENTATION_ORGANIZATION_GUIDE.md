@@ -8,7 +8,7 @@
 
 ## 📊 DOCUMENTATION STATUS
 
-**Total Documents**: 28 operational documents across 5 main categories
+**Total Documents**: 29 operational documents across 5 main categories
 - **Quick Start**: 2 documents (credentials, SSH access)
 - **Architecture**: 4 documents (organization, migration, patterns, future-proofing)
 - **Deployment**: 5 documents (clean guide, biometric, sections 11-12, pgvector)
@@ -136,6 +136,7 @@ AUREN-Studio-main/
 │
 └── [Root Level Documents]
     ├── CURRENT_PRIORITIES.md      # Active task tracking
+    ├── NEUROS_WEBSITE_IMPLEMENTATION_PLAN.md  ✅ Feature roadmap 🆕
     ├── PROMETHEUS_ISSUE_FOR_EXECUTIVE_ENGINEER.md
     ├── NEUROS_MEMORY_TIER_CAPABILITY_AUDIT.md
     ├── NEUROS_MEMORY_ENHANCEMENT_SUMMARY.md

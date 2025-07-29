@@ -60,6 +60,7 @@
 - ❌ Troubleshooting - **COMING SOON**
 
 ### 💻 Development
+- ✅ [NEUROS v3.1 Deployment Report](../auren/agents/neuros/NEUROS_V3.1_DEPLOYMENT_REPORT.md) - **LATEST** 🆕
 - ✅ [NEUROS Memory Enhancement](../NEUROS_MEMORY_ENHANCEMENT_SUMMARY.md) - Memory tier awareness
 - ✅ [Memory Management Tools](../auren/tools/memory_management_tools.py) - Implementation examples
 - ✅ [Monitoring Guide](03_DEVELOPMENT/MONITORING_GUIDE.md) - Prometheus & Grafana setup

@@ -1,0 +1,31 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY section_8_neuros_graph.py .
+COPY main.py .
+COPY kafka_consumer_prod.py kafka_consumer.py
+
+# Copy YAML configuration
+COPY neuros_agent_profile.yaml /config/
+
+# Environment variables for production
+ENV POSTGRES_URL=postgresql://auren_user:auren_password_2024@postgres:5432/auren_production
+ENV REDIS_URL=redis://redis:6379
+ENV NEUROS_YAML_PATH=/config/neuros_agent_profile.yaml
+ENV PYTHONUNBUFFERED=1
+
+EXPOSE 8001
+
+CMD ["python", "main.py"]

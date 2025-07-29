@@ -1,0 +1,78 @@
+.input-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: var(--neuros-steel);
+  border-top: 1px solid var(--border-color);
+}
+
+.message-input {
+  flex: 1;
+  background: var(--neuros-black);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 0.75rem 1rem;
+  color: var(--neuros-text);
+  font-family: inherit;
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s;
+  min-height: 44px;
+}
+
+.message-input:focus {
+  border-color: var(--neuros-accent);
+}
+
+.icon-button,
+.send-button {
+  background: none;
+  border: none;
+  color: var(--neuros-text-dim);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-button:hover:not(:disabled),
+.send-button:hover {
+  color: var(--neuros-accent);
+  background: rgba(74, 158, 255, 0.1);
+}
+
+.icon-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.send-button {
+  color: var(--neuros-accent);
+}
+
+.audio-recorder-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+/* Override audio recorder styles */
+.audio-recorder-wrapper :global(.audio-recorder) {
+  background: transparent !important;
+}
+
+.audio-recorder-wrapper :global(.audio-recorder-mic) {
+  background: var(--neuros-accent) !important;
+  border: none !important;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 8px !important;
+}
+
+.audio-recorder-wrapper :global(.audio-recorder-stop) {
+  background: #ff4444 !important;
+  border: none !important;
+} 

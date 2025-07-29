@@ -1,7 +1,45 @@
+/* NEUROS Specific Colors - Black Steel and Space Theme */
+:root {
+    --neuros-black: #0A0A0B;
+    --neuros-steel: #1C1E26;
+    --neuros-steel-light: #2A2D3A;
+    --neuros-space: #0F1419;
+    --neuros-accent: #4A9EFF;
+    --neuros-neural: #00D4FF;
+    --neuros-text: #E7E9EA;
+    --neuros-text-dim: #71767B;
+}
+
+/* NEUROS Page Specific Styling */
+body {
+    background: var(--neuros-black) !important;
+    color: var(--neuros-text) !important;
+}
+
+/* Gradient for neural effects */
+.neural-gradient {
+    background: linear-gradient(135deg, 
+        var(--neuros-space) 0%, 
+        var(--neuros-steel) 50%, 
+        var(--neuros-black) 100%
+    );
+}
+
+/* NEUROS Typography */
+.neuros-page {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 
+                 "Helvetica Neue", Arial, sans-serif;
+    background: var(--neuros-black);
+    color: var(--neuros-text);
+}
+
 /* Agent Header */
 .agent-header {
     padding: 120px 0 60px;
-    background: linear-gradient(180deg, rgba(0, 217, 255, 0.1) 0%, transparent 100%);
+    background: linear-gradient(180deg, 
+        var(--neuros-steel) 0%, 
+        var(--neuros-black) 100%
+    );
     position: relative;
     overflow: hidden;
 }
@@ -49,7 +87,78 @@
     background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    background-clip: text;
+    letter-spacing: -0.02em;
+}
+
+/* NEUROS Enhanced Styles */
+.agent-name {
+    font-size: 4rem !important;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    background: linear-gradient(to right, 
+        #E7E9EA 0%, 
+        #00D4FF 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+}
+
+.agent-description {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: rgba(255, 255, 255, 0.8);
+    max-width: 600px;
+    margin: 1.5rem 0;
+    font-weight: 400;
+}
+
+.agent-meta {
+    display: flex;
+    gap: 2rem;
+    margin: 2rem 0;
+    font-size: 0.9rem;
+}
+
+.agent-meta span {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.agent-meta .version {
+    background: rgba(0, 217, 255, 0.1);
+    border-color: rgba(0, 217, 255, 0.3);
+    color: var(--accent-blue);
+}
+
+.agent-meta .framework {
+    background: rgba(153, 69, 255, 0.1);
+    border-color: rgba(153, 69, 255, 0.3);
+    color: var(--accent-purple);
+}
+
+.agent-meta .status {
+    background: rgba(0, 255, 136, 0.1);
+    border-color: rgba(0, 255, 136, 0.3);
+    color: var(--accent-green);
+    font-weight: 600;
+}
+
+.agent-meta .status.live::before {
+    content: '●';
+    margin-right: 0.5rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
 }
 
 .agent-tagline {
@@ -102,19 +211,30 @@
     gap: 2rem;
 }
 
+/* Dashboard Cards - Updated for NEUROS Theme */
 .dashboard-card {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--border-color);
+    background: var(--neuros-steel);
+    border: 1px solid var(--neuros-steel-light);
     border-radius: 20px;
     padding: 2rem;
     position: relative;
     overflow: hidden;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.dashboard-card:hover {
+    background: var(--neuros-steel-light);
+    border-color: var(--neuros-accent);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 40px rgba(74, 158, 255, 0.1);
 }
 
 .dashboard-card h3 {
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-size: 1.25rem;
+    font-weight: 600;
     margin-bottom: 1.5rem;
+    color: var(--neuros-text);
 }
 
 /* Metrics Card */
@@ -319,4 +439,31 @@
     .metrics-grid {
         grid-template-columns: 1fr;
     }
+} 
+
+/* NEUROS Navigation Override */
+.main-nav {
+    background: var(--neuros-black) !important;
+    border-bottom: 1px solid var(--neuros-steel-light);
+}
+
+.nav-link {
+    color: var(--neuros-text-dim) !important;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: var(--neuros-neural) !important;
+}
+
+.nav-cta {
+    background: var(--neuros-accent) !important;
+    color: white !important;
+    border: none;
+}
+
+.nav-cta:hover {
+    background: var(--neuros-neural) !important;
+    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
 } 

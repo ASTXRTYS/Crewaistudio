@@ -34,6 +34,17 @@ function App() {
     scrollToBottom();
   }, [messages]);
 
+  // Fix input focus issue - restore focus when tab switches back to chat
+  useEffect(() => {
+    if (activeTab === 'chat' && inputRef.current) {
+      // Small delay to ensure the component is rendered
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab]);
+
   // Monitor connection status
   useEffect(() => {
     const handleOnline = () => setIsConnected(true);
@@ -214,9 +225,9 @@ function App() {
 
       {/* Conditional rendering based on active tab */}
       {activeTab === 'chat' ? (
-        <NeurosChat />
+        <NeurosChat key="neuros-chat" />
       ) : (
-        <BiometricConnect userId={userId} />
+        <BiometricConnect key="biometric-connect" userId={userId} />
       )}
     </div>
   );

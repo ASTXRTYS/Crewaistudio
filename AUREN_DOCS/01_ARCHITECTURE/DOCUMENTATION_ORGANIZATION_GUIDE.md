@@ -61,6 +61,7 @@ AUREN-Studio-main/
 │   │   ├── PROMETHEUS_CONFIGURATION_FIX.md      ✅ Network config fix 🆕
 │   │   ├── MONITORING_TROUBLESHOOTING_COMPLETE_GUIDE.md ✅ Full monitoring fixes 🆕
 │   │   ├── PWA_NEUROS_DEPLOYMENT_TROUBLESHOOTING.md ✅ **NEW** PWA/NEUROS deployment SOP 🆕
+│   │   ├── NEUROS_TECHNICAL_CONTEXT_ANSWERS.md ✅ **NEW** Live server diagnostics 🆕
 │   │   ├── METRICS_CATALOG.md      ✅ Complete AUREN metrics reference
 │   │   ├── GRAFANA_QUERY_LIBRARY.md ✅ Ready-to-use PromQL queries
 │   │   ├── OBSERVABILITY_RUNBOOK.md ✅ Daily monitoring procedures

@@ -34,8 +34,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom'],
-          audio: ['react-audio-voice-recorder', 'react-audio-visualize']
+          vendor: ['react', 'react-dom']
         }
       }
     }

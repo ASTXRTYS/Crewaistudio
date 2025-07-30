@@ -49,6 +49,7 @@ CrewAI-Studio-main/
 │   │
 │   ├── 02_DEPLOYMENT/
 │   │   ├── BIOMETRIC_SYSTEM_DEPLOYMENT_GUIDE.md  # Original deployment
+│   │   ├── AUREN_ENTERPRISE_BRIDGE_SETUP_REPORT.md  # NEW: Enterprise bridge setup
 │   │   └── [OTHER DEPLOYMENT DOCS]
 │   │
 │   ├── 03_OPERATIONS/

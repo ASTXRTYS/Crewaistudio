@@ -1,0 +1,239 @@
+/* BiometricConnect Component Styles */
+.biometric-connect-container {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #0a0a0a;
+  color: #ffffff;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.bc-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.bc-header h1 {
+  font-size: 48px;
+  font-weight: 300;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #00ff88 0%, #00aaff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.bc-header p {
+  font-size: 18px;
+  color: #888;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.bc-devices-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+  margin-bottom: 60px;
+}
+
+.bc-device-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.bc-device-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at center, transparent 0%, rgba(0, 255, 136, 0.05) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.bc-device-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(0, 255, 136, 0.3);
+  box-shadow: 0 10px 40px rgba(0, 255, 136, 0.1);
+}
+
+.bc-device-card:hover::before {
+  opacity: 1;
+}
+
+.bc-device-card.bc-connected {
+  border-color: rgba(0, 255, 136, 0.5);
+  background: rgba(0, 255, 136, 0.05);
+}
+
+.bc-device-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+}
+
+.bc-device-name {
+  font-size: 24px;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
+.bc-device-status {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 20px;
+}
+
+.bc-device-card.bc-connected .bc-device-status {
+  color: #00ff88;
+}
+
+.bc-connect-btn {
+  background: linear-gradient(135deg, #00ff88 0%, #00aaff 100%);
+  color: #000;
+  border: none;
+  padding: 12px 32px;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.bc-connect-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 20px rgba(0, 255, 136, 0.3);
+}
+
+.bc-connect-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.bc-connected-devices {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 40px;
+}
+
+.bc-connected-devices h2 {
+  font-size: 28px;
+  font-weight: 400;
+  margin-bottom: 30px;
+}
+
+.bc-device-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.bc-device-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+}
+
+.bc-device-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.bc-device-mini-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  background: rgba(0, 255, 136, 0.1);
+  border-radius: 10px;
+}
+
+.bc-device-details h3 {
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+.bc-device-details p {
+  font-size: 14px;
+  color: #888;
+}
+
+.bc-sync-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #00ff88;
+}
+
+.bc-sync-icon {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #00ff88;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: bc-spin 1s linear infinite;
+}
+
+@keyframes bc-spin {
+  to { transform: rotate(360deg); }
+}
+
+.bc-coming-soon {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.bc-coming-soon .bc-device-status {
+  color: #666;
+}
+
+.bc-beta-badge {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 170, 0, 0.2);
+  color: #ffaa00;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .bc-header h1 {
+    font-size: 36px;
+  }
+  
+  .bc-devices-grid {
+    grid-template-columns: 1fr;
+  }
+} 

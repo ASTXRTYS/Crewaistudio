@@ -1,9 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Loader2 } from 'lucide-react';
 import { chatAPI } from './utils/api';
+import BiometricConnect from './components/BiometricConnect';
 import './App.css';
+import './styles/BiometricConnect.css';
 
 function App() {
+  // Tab management state
+  const [activeTab, setActiveTab] = useState('chat');
+  
+  // Existing NEUROS chat state - preserved completely
   const [messages, setMessages] = useState([
     { 
       id: 1, 
@@ -16,6 +22,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(true);
   const [sessionId] = useState(() => `session_${Date.now()}`);
+  const [userId] = useState(() => `user_${Date.now()}`);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -96,22 +103,9 @@ function App() {
     });
   };
 
-  return (
-    <div className="app-container">
-      {/* Header */}
-      <header className="app-header">
-        <div className="header-content">
-          <h1>AUREN</h1>
-          <span className="header-subtitle">AI Health Companion</span>
-        </div>
-        {!isConnected && (
-          <div className="connection-status">
-            <div className="offline-indicator" />
-            Offline
-          </div>
-        )}
-      </header>
-
+  // NEUROS Chat Component (preserved existing functionality)
+  const NeurosChat = () => (
+    <>
       {/* Messages Container */}
       <div className="messages-container">
         <div className="messages-scroll">
@@ -183,6 +177,47 @@ function App() {
           </button>
         </div>
       </div>
+    </>
+  );
+
+  return (
+    <div className="app-container">
+      {/* Header */}
+      <header className="app-header">
+        <div className="header-content">
+          <h1>AUREN</h1>
+          <span className="header-subtitle">AI Health Companion</span>
+        </div>
+        {!isConnected && (
+          <div className="connection-status">
+            <div className="offline-indicator" />
+            Offline
+          </div>
+        )}
+      </header>
+
+      {/* Tab Navigation */}
+      <div className="app-navigation">
+        <button 
+          className={`nav-tab ${activeTab === 'chat' ? 'active' : ''}`}
+          onClick={() => setActiveTab('chat')}
+        >
+          <span>💬</span> NEUROS
+        </button>
+        <button 
+          className={`nav-tab ${activeTab === 'devices' ? 'active' : ''}`}
+          onClick={() => setActiveTab('devices')}
+        >
+          <span>⌚</span> Devices
+        </button>
+      </div>
+
+      {/* Conditional rendering based on active tab */}
+      {activeTab === 'chat' ? (
+        <NeurosChat />
+      ) : (
+        <BiometricConnect userId={userId} />
+      )}
     </div>
   );
 }

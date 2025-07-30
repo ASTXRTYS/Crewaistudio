@@ -1,63 +1,81 @@
 version: '3.8'
+
 services:
-  redis:
-    image: redis:alpine
-    container_name: redis
+  biometric-bridge:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: auren-biometric-bridge:production
+    container_name: biometric-bridge
+    restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "8889:8889"
     networks:
-      - neuros_network
-    
-  postgres:
-    image: postgres:16
-    container_name: postgres
+      - auren-network
     environment:
-      - POSTGRES_PASSWORD=example
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=neuros
-    ports:
-      - "5432:5432"
-    networks:
-      - neuros_network
+      # Core Infrastructure
+      - REDIS_URL=redis://auren-redis:6379
+      - POSTGRES_URL=postgresql://auren_user:auren_secure_2025@auren-postgres:5432/auren_production
+      - KAFKA_BOOTSTRAP_SERVERS=auren-kafka:9092
       
-  # Add Kafka for biometric events
-  zookeeper:
-    image: confluentinc/cp-zookeeper:latest
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-    networks:
-      - neuros_network
+      # Terra Integration (update when credentials are available)
+      - TERRA_DEV_ID=pending
+      - TERRA_API_KEY=pending
+      - TERRA_WEBHOOK_SECRET=pending
       
-  kafka:
-    image: confluentinc/cp-kafka:latest
-    depends_on:
-      - zookeeper
-    environment:
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    networks:
-      - neuros_network
+      # Wearable APIs (for future direct integrations)
+      - OURA_ACCESS_TOKEN=pending
+      - WHOOP_CLIENT_ID=pending
+      - WHOOP_CLIENT_SECRET=pending
+      - WHOOP_WEBHOOK_SECRET=pending
+      - OURA_WEBHOOK_SECRET=pending
+      
+      # Service Configuration
+      - SERVICE_NAME=biometric-bridge
+      - LOG_LEVEL=INFO
+      - WORKERS=1
+      - PORT=8889
+      
+      # CORS Configuration
+      - CORS_ORIGINS=["https://auren-omacln1ad-jason-madrugas-projects.vercel.app", "http://localhost:3000", "http://localhost:5173"]
+      
+      # Additional Settings
+      - MAX_CONCURRENT_WEBHOOKS=50
+      - REDIS_TTL_SECONDS=86400
+      - MAX_TIMESERIES_ENTRIES=10000
+      - HEALTHKIT_ENABLED=true
+      - PG_POOL_MIN_SIZE=5
+      - PG_POOL_MAX_SIZE=20
+      - AIOHTTP_CONNECTOR_LIMIT=100
+      - OAUTH_LOCK_TTL_SECONDS=20
     
-  neuros:
-    build: .
-    container_name: neuros
-    depends_on:
-      - redis
-      - postgres
-      - kafka
-    environment:
-      - REDIS_URL=redis://redis:6379
-      - DATABASE_URI=postgresql://postgres:example@postgres:5432/neuros
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - NEUROS_ENV=development
-    ports:
-      - "8000:8000"
-    networks:
-      - neuros_network
     volumes:
-      - ./config:/app/config  # Mount config directory for YAML files
+      - ./logs:/app/logs
+    
+    depends_on:
+      - auren-redis
+      - auren-postgres
+      - auren-kafka
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8889/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
 
 networks:
-  neuros_network: 
+  auren-network:
+    external: true
+
+# Note: This docker-compose.yml assumes the auren-network and infrastructure 
+# containers (auren-redis, auren-postgres, auren-kafka) already exist.
+# 
+# To deploy:
+# docker-compose up -d
+#
+# To view logs:
+# docker-compose logs -f biometric-bridge
+#
+# To stop:
+# docker-compose down 

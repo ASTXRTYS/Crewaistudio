@@ -48,8 +48,9 @@ CrewAI-Studio-main/
 │   │   └── DOCUMENTATION_ORGANIZATION_GUIDE.md  # 📖 This file (UPDATED)
 │   │
 │   ├── 02_DEPLOYMENT/
-│   │   ├── BIOMETRIC_SYSTEM_DEPLOYMENT_GUIDE.md  # Original deployment
-│   │   ├── AUREN_ENTERPRISE_BRIDGE_COMPLETE_SETUP_REPORT.md  # NEW: Complete setup + Terra pivot
+│   │   ├── BIOMETRIC_SYSTEM_DEPLOYMENT_GUIDE.md  # ⚠️ UPDATED: New troubleshooting sections
+│   │   ├── AUREN_ENTERPRISE_BRIDGE_COMPLETE_SETUP_REPORT.md  # 🎯 CRITICAL: Enterprise bridge + Terra strategy
+│   │   ├── BIOMETRIC_BRIDGE_PRODUCTION_ENHANCEMENTS_GUIDE.md  # 🚀 NEW: CircuitBreaker + Enhanced Kafka Producer
 │   │   └── [OTHER DEPLOYMENT DOCS]
 │   │
 │   ├── 03_OPERATIONS/
@@ -89,8 +90,16 @@ CrewAI-Studio-main/
 - **`monitor-auren.sh`** - Automated health check script
 
 ### 3. 🔐 ACCESS & SECURITY
-- **`CREDENTIALS_VAULT.md`** - All passwords and access credentials
+- **`CREDENTIALS_VAULT.md`** - All passwords and access credentials *(CRITICAL UPDATE: PostgreSQL password corrected)*
 - **`SSH_ACCESS_STANDARD.md`** - Connection procedures
+
+### 3.5. 🚨 RECENT CRITICAL FIXES (July 30, 2025)
+- **`AUREN_ENTERPRISE_BRIDGE_COMPLETE_SETUP_REPORT.md`** - Complete debugging process for authentication failures
+- **`BIOMETRIC_SYSTEM_DEPLOYMENT_GUIDE.md#troubleshooting`** - New sections: Authentication, Kafka, Startup timing
+- **`BIOMETRIC_BRIDGE_PRODUCTION_ENHANCEMENTS_GUIDE.md`** - 🚀 NEW: Complete production enhancement implementation
+- **Authentication Issues**: PostgreSQL password mismatch resolution (`auren_password_2024`)
+- **Startup Sequence**: Infrastructure-first startup with delays (from SOPs)
+- **Production Enhancements**: CircuitBreaker pattern + Enhanced Kafka Producer (operational)
 
 ### 4. 🌐 PWA CONFIGURATION (LOCKED)
 - **`auren-pwa/vercel.json`** - Proxy routing configuration

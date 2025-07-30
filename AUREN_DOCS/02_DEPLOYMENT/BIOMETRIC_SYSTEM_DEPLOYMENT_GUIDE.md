@@ -260,6 +260,75 @@ docker exec -e PGPASSWORD='auren_secure_2025' auren-postgres psql -U auren_user 
      ```
    - Note: Re-enable OpenAI API only for real alpha testing
 
+5. **Enterprise Bridge Authentication Issues** 🆕 *(Added: July 30, 2025)*
+   - **Issue**: `password authentication failed for user "auren_user"`
+   - **Root Cause**: Password mismatch between credentials vault and deployment guide
+   - **Solution**:
+     ```bash
+     # Step 1: Fix PostgreSQL user password in database
+     docker exec auren-postgres psql -U auren_user -d auren_production -c "ALTER USER auren_user WITH PASSWORD 'auren_password_2024';"
+     
+     # Step 2: Update bridge .env file
+     sed -i "s/auren_secure_2025/auren_password_2024/g" /root/auren-biometric-bridge/.env
+     
+     # Step 3: Use proper startup sequence (infrastructure first)
+     docker restart auren-postgres auren-redis && sleep 10 && docker restart auren-kafka && sleep 10
+     ```
+
+6. **Kafka Producer Configuration Issues** 🆝 *(Added: July 30, 2025)*
+   - **Issue**: `TypeError: AIOKafkaProducer.__init__() got an unexpected keyword argument 'batch_size'`
+   - **Root Cause**: Incompatible parameters with aiokafka version
+   - **Solution**: Remove incompatible parameters from producer initialization:
+     ```python
+     # REMOVE these parameters from AIOKafkaProducer:
+     # batch_size, compression_type, linger_ms, retries, retry_backoff_ms
+     producer = AIOKafkaProducer(
+         bootstrap_servers=settings.kafka_bootstrap_servers
+         # Only keep compatible parameters
+     )
+     ```
+
+7. **Container Startup Timing Issues** 🆝 *(Added: July 30, 2025)*
+   - **Issue**: `socket.gaierror: [Errno -3] Temporary failure in name resolution`
+   - **Root Cause**: Application starting before infrastructure is ready
+   - **Solution**: Follow proper startup sequence with delays:
+     ```bash
+     # ALWAYS start infrastructure first with delays
+     docker start auren-postgres auren-redis
+     sleep 10
+     docker start auren-kafka
+     sleep 10
+     # THEN start application containers
+     docker start biometric-bridge
+     ```
+
+8. **Production Enhancement Deployment Issues** 🚀 *(Added: July 30, 2025)*
+   - **Issue**: Enhanced bridge container fails to start with production settings
+   - **Root Cause**: Environment configuration or code syntax errors in production enhancements
+   - **Solution**: Follow production enhancement deployment procedure:
+     ```bash
+     # 1. Verify enhanced container status
+     docker ps | grep biometric-bridge
+     
+     # 2. Check enhanced container logs
+     docker logs biometric-bridge --tail 20
+     
+     # 3. Verify production environment settings
+     sshpass -p '.HvddX+@6dArsKd' ssh -o StrictHostKeyChecking=no root@144.126.215.218 'cd /root/auren-biometric-bridge && cat .env | grep -E "WORKERS|MAX_CONCURRENT|PG_POOL"'
+     
+     # 4. Rollback to previous image if needed
+     docker stop biometric-bridge && docker rm biometric-bridge
+     docker run -d --name biometric-bridge --network auren-network \
+       -p 8889:8889 --env-file .env --restart unless-stopped \
+       auren-biometric-bridge:fixed
+     ```
+   - **Production Enhancement Status**: ✅ OPERATIONAL (as of July 30, 2025)
+     - CircuitBreaker Pattern: Lines 182-213 in bridge.py
+     - Enhanced Kafka Producer: Lines 215+ in bridge.py
+     - Production Settings: MAX_CONCURRENT_WEBHOOKS=100, WORKERS=4
+     - Container: `auren-biometric-bridge:production-enhanced`
+   - **Reference**: See `BIOMETRIC_BRIDGE_PRODUCTION_ENHANCEMENTS_GUIDE.md` for complete details
+
 ---
 
 ## 🛡️ SECURITY MEASURES

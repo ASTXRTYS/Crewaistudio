@@ -177,7 +177,8 @@ async def create_redis_client() -> aioredis.Redis:
 async def create_kafka_consumer() -> AIOKafkaConsumer:
     """Create Kafka consumer with proper configuration"""
     consumer = AIOKafkaConsumer(
-        'biometric-events',
+        'biometric-events',         # From enterprise bridge (Oura, WHOOP, Apple)
+        'terra-biometric-events',   # From Terra direct Kafka integration
         'health-events',
         bootstrap_servers=os.getenv("KAFKA_BOOTSTRAP_SERVERS").split(","),
         group_id='neuros-cognitive-processor',

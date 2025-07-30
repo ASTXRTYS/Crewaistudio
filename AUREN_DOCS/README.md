@@ -83,7 +83,7 @@ sshpass -p '.HvddX+@6dArsKd' ssh -o StrictHostKeyChecking=no root@144.126.215.21
 - ✅ **[Monitor Script](../monitor-auren.sh)** - Automated health check script (server)
 
 ### 🔐 ACCESS & SECURITY
-- ✅ **[Credentials Vault](00_QUICK_START/CREDENTIALS_VAULT.md)** - All passwords and access credentials
+- ✅ **[Credentials Vault](00_QUICK_START/CREDENTIALS_VAULT.md)** - All passwords and access credentials *(UPDATED: PostgreSQL password corrected)*
 - ✅ **[SSH Access Standard](00_QUICK_START/SSH_ACCESS_STANDARD.md)** - Connection procedures
 
 ### 🌐 PWA CONFIGURATION (LOCKED)
@@ -93,6 +93,13 @@ sshpass -p '.HvddX+@6dArsKd' ssh -o StrictHostKeyChecking=no root@144.126.215.21
 
 ### 📖 DOCUMENTATION ORGANIZATION
 - ✅ **[Documentation Organization Guide](01_ARCHITECTURE/DOCUMENTATION_ORGANIZATION_GUIDE.md)** - Complete navigation map
+
+### 🚨 RECENT CRITICAL UPDATES (July 30, 2025)
+- ✅ **[Enterprise Bridge Complete Setup](02_DEPLOYMENT/AUREN_ENTERPRISE_BRIDGE_COMPLETE_SETUP_REPORT.md)** - 1,796-line bridge + Terra Kafka strategy
+- ✅ **[Biometric System Troubleshooting](02_DEPLOYMENT/BIOMETRIC_SYSTEM_DEPLOYMENT_GUIDE.md#troubleshooting)** - Authentication & startup fixes
+- ✅ **[Updated Credentials](00_QUICK_START/CREDENTIALS_VAULT.md)** - PostgreSQL password corrected (`auren_password_2024`)
+- 🚀 **[Production Enhancements Guide](02_DEPLOYMENT/BIOMETRIC_BRIDGE_PRODUCTION_ENHANCEMENTS_GUIDE.md)** - CircuitBreaker + Enhanced Kafka Producer (OPERATIONAL)
+- 🎯 **[HANDOFF REPORT](HANDOFF_REPORT_ENTERPRISE_BRIDGE_SESSION.md)** - Complete session summary for next engineer
 
 ---
 

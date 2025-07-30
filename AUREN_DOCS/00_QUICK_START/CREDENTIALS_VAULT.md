@@ -1,7 +1,7 @@
 # AUREN CREDENTIALS VAULT
 ## 🔐 CONFIDENTIAL - AUTHORIZED ACCESS ONLY
 
-*Last Updated: July 28, 2025*  
+*Last Updated: July 30, 2025* *(CRITICAL UPDATE: PostgreSQL password corrected)*  
 *Next Rotation: August 28, 2025*
 
 ---
@@ -37,13 +37,14 @@ sshpass -p '.HvddX+@6dArsKd' ssh -o StrictHostKeyChecking=no root@144.126.215.21
 - **Host (External)**: localhost:5432
 - **Database**: auren_production
 - **Username**: auren_user
-- **Current Password**: `auren_secure_2025`
-- **Previous Password**: `securepwd123!` (DEPRECATED - DO NOT USE)
+- **Current Password**: `auren_password_2024` *(CORRECTED: July 30, 2025 - matches deployment guide standard)*
+- **Previous Password**: `auren_secure_2025` (DEPRECATED - caused authentication failures)
+- **Legacy Password**: `securepwd123!` (DEPRECATED - DO NOT USE)
 - **Port**: 5432
 
 #### Connection String:
 ```
-postgresql://auren_user:auren_secure_2025@auren-postgres:5432/auren_production
+postgresql://auren_user:auren_password_2024@auren-postgres:5432/auren_production
 ```
 
 ### Redis

@@ -147,7 +147,8 @@ class BiometricKafkaConsumer:
     async def start(self):
         """Start consuming from Kafka"""
         self.consumer = aiokafka.AIOKafkaConsumer(
-            'biometric-events',
+            'biometric-events',         # From enterprise bridge (Oura, WHOOP, Apple)
+            'terra-biometric-events',   # From Terra direct Kafka integration
             'user-interactions',
             bootstrap_servers=os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'auren-kafka:9092'),
             group_id='neuros-consumer',

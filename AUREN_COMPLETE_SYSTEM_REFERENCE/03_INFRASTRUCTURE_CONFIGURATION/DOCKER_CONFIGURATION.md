@@ -14,7 +14,7 @@ The AUREN system runs entirely on Docker containers orchestrated on a single Dig
 ### **Container Architecture**
 - **Network**: `auren-network` (bridge network)
 - **Server**: 144.126.215.218 (DigitalOcean Droplet)
-- **Total Containers**: 8 containers (VERIFIED RUNNING as of July 30, 2025)
+- **Total Containers**: 11 containers (VERIFIED RUNNING as of July 30, 2025)
 - **Orchestration**: Docker Compose + manual container management
 
 ---
@@ -48,13 +48,13 @@ CONTAINERS NOT RUNNING (documented but not present):
 ```
 Monitoring Stack (ACTUAL as of July 30, 2025):
 ├── ✅ auren-prometheus           # Metrics collection (Port 9090) - prom/prometheus:latest
-└── ✅ auren-grafana             # Dashboards (Port 3000) - grafana/grafana:latest
-
-EXPORTERS NOT RUNNING (documented but not present):
-├── ❌ node-exporter             # System metrics - not deployed
-├── ❌ redis-exporter            # Redis metrics - not deployed  
-└── ❌ postgres-exporter         # PostgreSQL metrics - not deployed
+├── ✅ auren-grafana             # Dashboards (Port 3000) - grafana/grafana:latest
+├── ✅ auren-node-exporter       # System metrics (Port 9100) - prom/node-exporter:latest
+├── ✅ auren-redis-exporter      # Redis metrics (Port 9121) - oliver006/redis_exporter:latest
+└── ✅ auren-postgres-exporter   # PostgreSQL metrics (Port 9187) - prometheuscommunity/postgres-exporter:latest
 ```
+
+**⚠️ CORRECTION**: These exporters ARE part of the active Prometheus configuration and were mistakenly identified as abandoned. They have been restored.
 
 ---
 

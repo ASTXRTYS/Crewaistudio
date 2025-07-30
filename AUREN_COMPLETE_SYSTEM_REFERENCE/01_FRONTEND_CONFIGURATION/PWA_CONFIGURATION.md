@@ -12,7 +12,7 @@
 The AUREN PWA is a React-based Progressive Web App deployed on Vercel that provides the main user interface for interacting with the NEUROS AI agent and biometric data visualization.
 
 ### **Live Deployment**
-- **Production URL**: https://auren-omacln1ad-jason-madrugas-projects.vercel.app
+- **Production URL**: https://auren-pwa.vercel.app
 - **Status**: ✅ LIVE AND ACCESSIBLE
 - **Framework**: Vite + React
 - **Deployment Platform**: Vercel Cloud

@@ -13,7 +13,7 @@ NEUROS is the core AI agent of the AUREN system, built with LangGraph and OpenAI
 
 ### **Live Deployment** ✅ **FULLY OPERATIONAL**
 - **Production URL**: http://144.126.215.218:8000
-- **Proxy URL**: https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros
+- **Proxy URL**: https://auren-pwa.vercel.app/api/neuros
 - **Container**: `neuros-advanced`
 - **Status**: ✅ **OPERATIONAL AND HEALTHY**
 

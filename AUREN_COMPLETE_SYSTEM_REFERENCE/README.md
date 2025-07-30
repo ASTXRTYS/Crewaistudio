@@ -178,10 +178,11 @@ graph TB
 - **Main Ports**: 8000 (NEUROS), 8888 (Original Biometric), 8889 (Enhanced Bridge)
 
 ### **Live Endpoints**
-- **PWA**: https://auren-omacln1ad-jason-madrugas-projects.vercel.app
-- **NEUROS Health**: https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/health
-- **Biometric Health**: https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/biometric/health
-- **Enhanced Bridge**: http://144.126.215.218:8889/health
+- **PWA**: https://auren-pwa.vercel.app
+- **NEUROS Health**: https://auren-pwa.vercel.app/api/neuros/health
+- **Biometric Health**: https://auren-pwa.vercel.app/api/biometric/health
+- **Enhanced Bridge**: https://auren-pwa.vercel.app/api/bridge/health (proxy)
+- **Enhanced Bridge Direct**: http://144.126.215.218:8889/health
 - **Grafana**: http://144.126.215.218:3000
 - **Prometheus**: http://144.126.215.218:9090
 

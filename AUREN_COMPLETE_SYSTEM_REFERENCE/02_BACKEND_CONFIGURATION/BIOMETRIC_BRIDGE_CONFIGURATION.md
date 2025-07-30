@@ -13,7 +13,7 @@ The Enhanced Biometric Bridge is a production-ready Python application (1,852 li
 
 ### **Live Deployment** ✅ **FULLY OPERATIONAL - ENHANCED v2.0.0**
 - **Production URL**: http://144.126.215.218:8889
-- **Proxy URL**: https://auren-bz9kmrwm1-jason-madrugas-projects.vercel.app/api/bridge
+- **Proxy URL**: https://auren-pwa.vercel.app/api/bridge
 - **Container**: `biometric-bridge`
 - **Image**: `auren-biometric-bridge:production-enhanced`
 - **Status**: ✅ **FULLY OPERATIONAL WITH MAJOR ENHANCEMENTS** 

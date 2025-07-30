@@ -48,6 +48,7 @@ CrewAI-Studio-main/
 │   │   └── SSH_ACCESS_STANDARD.md      # sshpass usage
 │   │
 │   ├── 01_ARCHITECTURE/
+│   │   ├── AUREN_BACKEND_INFRASTRUCTURE_CERTIFICATION.md  # 🏆 NEW: Production Standard Certification (July 30, 2025)
 │   │   └── DOCUMENTATION_ORGANIZATION_GUIDE.md  # 📖 This file (UPDATED)
 │   │
 │   ├── 02_DEPLOYMENT/
@@ -83,6 +84,7 @@ CrewAI-Studio-main/
 ## 🎯 DOCUMENTATION HIERARCHY (LOCKED)
 
 ### 1. 🔐 MASTER REFERENCES (START HERE)
+- **`AUREN_BACKEND_INFRASTRUCTURE_CERTIFICATION.md`** - 🏆 **CERTIFIED PRODUCTION STANDARD** - V1.0 (July 30, 2025)
 - **`FULL_PIPELINE_CONFIG_WITH_PWA.md`** - Complete technical configuration
 - **`AUREN_DOCS/README.md`** - Navigation hub with live endpoints
 - **`SOP-001-MASTER-OPERATIONS-GUIDE.md`** - Daily operational procedures

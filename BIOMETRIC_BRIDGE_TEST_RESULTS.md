@@ -235,6 +235,159 @@ The Enhanced Biometric Bridge v2.0.0 demonstrates **strong infrastructure founda
 
 ---
 
+## 🛠️ **NON-DISRUPTIVE FIX APPROACH**
+
+Based on test results, here's the safest approach to address issues without disturbing working configurations:
+
+### **Priority 1: Zero-Risk Enhancements (No Code Changes)**
+
+#### **1.1 Install Load Testing Tools**
+```bash
+# Simple package installation - no configuration changes
+apt-get update && apt-get install -y wrk
+```
+**Risk Level**: ⭐ **MINIMAL** - Tool installation only  
+**Impact**: Enables performance testing capabilities  
+**Rollback**: `apt-get remove wrk`
+
+#### **1.2 Document Authentication Requirements**
+```bash
+# Create webhook authentication guide
+# No system changes - documentation only
+```
+**Risk Level**: ⭐ **NONE** - Documentation only  
+**Impact**: Enables proper webhook testing
+
+### **Priority 2: Configuration-Only Fixes (No Core Logic Changes)**
+
+#### **2.1 Prometheus Metrics Configuration**
+**Current State**: Metrics endpoint returns placeholder message  
+**Approach**: Add prometheus_client configuration to existing Enhanced Bridge
+
+```python
+# Add to existing Enhanced Bridge configuration (non-breaking)
+from prometheus_client import Counter, Histogram, Gauge, generate_latest
+
+# Metrics definitions (add to existing code)
+webhook_events_total = Counter('webhook_events_total', 'Total webhook events', ['source', 'status'])
+webhook_duration = Histogram('webhook_process_duration_seconds', 'Webhook processing time', ['source'])
+active_tasks = Gauge('active_webhook_tasks', 'Currently active webhook tasks')
+```
+
+**Risk Level**: ⭐⭐ **LOW** - Configuration addition only  
+**Implementation**: Add metrics collection to existing webhook handlers  
+**Rollback Strategy**: Remove metrics imports and calls  
+**Testing**: Verify metrics endpoint returns Prometheus format
+
+#### **2.2 CORS Configuration Fix (NEUROS Service)**
+**Current Issue**: NEUROS CORS failing in health check  
+**Approach**: Update NEUROS container environment variables only
+
+```bash
+# Add CORS headers to existing NEUROS container (restart required)
+docker stop neuros-advanced
+docker run -d --name neuros-advanced \
+  # ... existing parameters ... \
+  -e CORS_ORIGINS="https://auren-pwa.vercel.app,https://aupex.ai" \
+  -e CORS_METHODS="GET,POST,PUT,DELETE,OPTIONS" \
+  neuros-advanced:final-v2
+```
+
+**Risk Level**: ⭐⭐ **LOW** - Environment variable addition  
+**Impact**: Fixes proxy CORS issues  
+**Rollback**: Restart with original parameters
+
+### **Priority 3: Optional Enhancements (Consider Later)**
+
+#### **3.1 Terra Webhook Support**
+**Current State**: Not available in v2.0.0  
+**Recommendation**: **DEFER** - Requires code changes to working bridge
+
+**Risk Assessment**: ⭐⭐⭐⭐ **HIGH** - New webhook handler implementation  
+**Alternative**: Use existing `/webhooks/oura` endpoint with Terra data format  
+**Justification**: Current 3-device support (Oura, WHOOP, HealthKit) covers major platforms
+
+#### **3.2 Circuit Breaker Metrics**
+**Current State**: Circuit breaker present but metrics not exposed  
+**Approach**: Extend existing metrics configuration when implementing 2.1
+
+**Risk Level**: ⭐⭐ **LOW** - Extension of metrics work  
+**Benefit**: Enhanced monitoring capabilities
+
+### **Implementation Strategy: Phased Approach**
+
+#### **Phase 1: Immediate (This Week)**
+1. ✅ Install `wrk` load testing tool (5 minutes)
+2. ✅ Create authentication documentation (30 minutes)
+3. ✅ Test current webhook endpoints with valid signatures
+
+#### **Phase 2: Short-term (Next Week)**  
+1. 🔧 Add Prometheus metrics configuration to Enhanced Bridge
+2. 🔧 Fix NEUROS CORS configuration
+3. 🧪 Run full load testing suite with new tools
+
+#### **Phase 3: Optional (Future)**
+1. 🔮 Consider Terra webhook support if business requirement emerges
+2. 🔮 Enhanced monitoring and alerting
+
+### **Risk Mitigation Strategy**
+
+#### **Before ANY Changes**
+```bash
+# 1. Backup current working containers
+docker commit biometric-bridge biometric-bridge:backup-$(date +%Y%m%d)
+docker commit neuros-advanced neuros-advanced:backup-$(date +%Y%m%d)
+
+# 2. Document current working state
+docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}" > container_backup_state.txt
+curl -s http://localhost:8889/health > bridge_health_backup.json
+curl -s http://localhost:8000/health > neuros_health_backup.json
+```
+
+#### **Testing Protocol**
+```bash
+# After each change, verify core functionality
+1. Health checks: /health endpoints respond
+2. Basic webhook: Test one endpoint with valid auth
+3. Infrastructure: Kafka, Redis, PostgreSQL connectivity  
+4. End-to-end: PWA → Enhanced Bridge → successful response
+```
+
+#### **Rollback Plan**
+```bash
+# If ANY issue occurs during fixes
+docker stop biometric-bridge neuros-advanced
+docker run -d --name biometric-bridge [original parameters] biometric-bridge:backup-YYYYMMDD
+docker run -d --name neuros-advanced [original parameters] neuros-advanced:backup-YYYYMMDD
+```
+
+### **Success Criteria for Each Fix**
+
+| Fix | Success Metric | Verification Command |
+|-----|---------------|---------------------|
+| Load Testing Tools | `wrk` available | `which wrk` |
+| Prometheus Metrics | Metrics exposed | `curl /metrics \| grep webhook_events_total` |
+| CORS Fix | No CORS errors | `curl -H "Origin: https://auren-pwa.vercel.app" /health` |
+
+### **Why This Approach is Safest**
+
+1. **Preserves Working State**: No changes to core webhook processing logic
+2. **Incremental**: Each fix is independent and reversible  
+3. **Non-Breaking**: Configuration additions only, no removal of existing features
+4. **Testable**: Each change has clear success criteria
+5. **Documented**: Full rollback procedures available
+
+### **Estimated Timeline**
+
+- **Phase 1 (Zero Risk)**: 1-2 hours
+- **Phase 2 (Low Risk)**: 4-6 hours over 2 days  
+- **Testing & Validation**: 2 hours per phase
+
+**Total Effort**: ~12 hours spread over 1-2 weeks with careful testing
+
+---
+
 *Test executed by: Senior Engineer*  
 *Date: July 30, 2025*  
-*Next Review: After metrics configuration and load testing implementation* 
+*Fix Strategy: Non-disruptive, phased approach with full rollback capability*  
+*Next Review: After Phase 1 implementation (load testing tools)* 

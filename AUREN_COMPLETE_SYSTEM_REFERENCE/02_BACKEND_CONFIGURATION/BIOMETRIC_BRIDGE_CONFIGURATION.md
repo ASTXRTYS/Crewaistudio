@@ -376,7 +376,7 @@ async def get_metrics():
 curl http://144.126.215.218:8889/health
 
 # Proxy health check
-curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/bridge/health
+curl https://auren-pwa.vercel.app/api/bridge/health
 
 # Test Oura webhook simulation
 curl -X POST http://144.126.215.218:8889/webhook/oura \

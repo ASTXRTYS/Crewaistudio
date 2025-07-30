@@ -5,7 +5,9 @@
 
 ## 🚨 CRITICAL: LOCKED CONFIGURATION
 
-**MASTER REFERENCE**: `FULL_PIPELINE_CONFIG_WITH_PWA.md` (Repository Root)
+**MASTER REFERENCE**: `AUREN_COMPLETE_SYSTEM_REFERENCE/` (Complete System Documentation)
+
+⚠️ **FOR ANY ENGINEER**: If you're ever stuck or need to understand how AUREN is configured, refer to the `AUREN_COMPLETE_SYSTEM_REFERENCE/` folder. This is the SINGLE SOURCE OF TRUTH for our production system configuration.
 
 This documentation hub reflects the **LOCKED** AUREN configuration. All setup is complete and operational.
 
@@ -16,7 +18,7 @@ This documentation hub reflects the **LOCKED** AUREN configuration. All setup is
 ### PRODUCTION READY - ALL SERVICES OPERATIONAL
 ```
 Backend Services:   ✅ 7 containers running (neuros-advanced, biometric-production, etc.)
-PWA Frontend:       ✅ Live at https://auren-omacln1ad-jason-madrugas-projects.vercel.app
+PWA Frontend:       ✅ Live at https://auren-pwa.vercel.app
 Communication:      ✅ HTTPS→HTTP via Vercel proxy (CORS enabled)
 Authentication:     ✅ Disabled (--public flag)
 End-to-End:         ✅ Full NEUROS conversation working
@@ -31,16 +33,17 @@ Documentation:      ✅ Complete and current
 ## 🚀 QUICK START FOR NEW ENGINEERS
 
 ### 1. Read This First
-- **[FULL_PIPELINE_CONFIG_WITH_PWA.md](../FULL_PIPELINE_CONFIG_WITH_PWA.md)** - Complete system configuration
-- **[SOP-001: Master Operations Guide](SOPs/SOP-001-MASTER-OPERATIONS-GUIDE.md)** - Daily procedures
+- **[AUREN_COMPLETE_SYSTEM_REFERENCE/](../AUREN_COMPLETE_SYSTEM_REFERENCE/)** - 🎯 MASTER SYSTEM CONFIGURATION
+- **[SOP-001: Master Operations Guide](SOPs/SOP-001-MASTER-OPERATIONS-GUIDE.md)** - Daily procedures  
+- **[FULL_PIPELINE_CONFIG_WITH_PWA.md](../FULL_PIPELINE_CONFIG_WITH_PWA.md)** - Legacy reference
 
 ### 2. Verify System Status
 ```bash
 # Test PWA access
-curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/
+curl https://auren-pwa.vercel.app/
 
 # Test backend health via proxy
-curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/health
+curl https://auren-pwa.vercel.app/api/neuros/health
 ```
 
 ### 3. Access Backend

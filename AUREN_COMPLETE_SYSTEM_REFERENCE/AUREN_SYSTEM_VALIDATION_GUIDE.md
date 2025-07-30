@@ -56,7 +56,7 @@ curl -s -I http://aupex.ai | grep "Location: https://aupex.ai/"
 ```bash
 # Test 3: Verify the PWA is live and accessible
 echo "--> Testing PWA accessibility..."
-curl -s -I https://auren-omacln1ad-jason-madrugas-projects.vercel.app | grep "HTTP/2 200"
+curl -s -I https://auren-pwa.vercel.app | grep "HTTP/2 200"
 # EXPECTED: HTTP/2 200 OK
 ```
 **Verification**: The PWA landing page loads correctly as documented.
@@ -66,12 +66,12 @@ This is a critical test of the entire frontend-to-backend connection.
 ```bash
 # Test 4: Verify Vercel proxy to NEUROS AI
 echo "--> Testing Vercel Proxy to NEUROS (Port 8000)..."
-curl -s https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/health | jq .
+curl -s https://auren-pwa.vercel.app/api/neuros/health | jq .
 # EXPECTED: {"status": "healthy", "service": "neuros-advanced", ...}
 
 # Test 5: Verify Vercel proxy to Enhanced Bridge
 echo "--> Testing Vercel Proxy to Enhanced Bridge (Port 8889)..."
-curl -s https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/bridge/health | jq .
+curl -s https://auren-pwa.vercel.app/api/bridge/health | jq .
 # EXPECTED: {"status": "healthy", "service": "biometric-bridge", ...}
 
 # Test 6: Verify Nginx proxy from aupex.ai

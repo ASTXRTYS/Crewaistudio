@@ -147,7 +147,7 @@ api:
   metrics_endpoint: "/metrics"
   
   cors_origins:
-    - "https://auren-omacln1ad-jason-madrugas-projects.vercel.app"
+    - "https://auren-pwa.vercel.app"
     - "http://localhost:3000"
     - "http://localhost:5173"
 ```
@@ -439,7 +439,7 @@ from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://auren-omacln1ad-jason-madrugas-projects.vercel.app",
+        "https://auren-pwa.vercel.app",
         "http://localhost:3000",
         "http://localhost:5173"
     ],
@@ -479,7 +479,7 @@ LOG_LEVEL="INFO"
 curl http://144.126.215.218:8000/health
 
 # Proxy health check
-curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/health
+curl https://auren-pwa.vercel.app/api/neuros/health
 
 # Test conversation
 curl -X POST http://144.126.215.218:8000/api/agents/neuros/analyze \

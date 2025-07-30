@@ -25,7 +25,7 @@ The Vercel proxy configuration enables the AUREN PWA to communicate with backend
 ```
 User Browser (HTTPS)
     ↓
-Vercel PWA (https://auren-omacln1ad-jason-madrugas-projects.vercel.app)
+Vercel PWA (https://auren-pwa.vercel.app)
     ↓
 Vercel Proxy Configuration (vercel.json)
     ↓
@@ -194,7 +194,7 @@ The backend services also have CORS enabled for additional security:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://auren-omacln1ad-jason-madrugas-projects.vercel.app",
+        "https://auren-pwa.vercel.app",
         "http://localhost:3000",
         "http://localhost:5173"
     ],
@@ -211,22 +211,22 @@ app.add_middleware(
 ### **Proxy Health Checks**
 ```bash
 # Test NEUROS proxy
-curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/health
+curl https://auren-pwa.vercel.app/api/neuros/health
 # Expected: {"status":"healthy","service":"neuros-advanced"}
 
 # Test Biometric proxy
-curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/biometric/health  
+curl https://auren-pwa.vercel.app/api/biometric/health  
 # Expected: {"status":"healthy","components":{...}}
 
 # Test Enhanced Bridge proxy
-curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/bridge/health
+curl https://auren-pwa.vercel.app/api/bridge/health
 # Expected: {"status":"healthy","service":"biometric-bridge"}
 ```
 
 ### **End-to-End Testing**
 ```bash
 # Test NEUROS conversation through proxy
-curl -X POST https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/api/agents/neuros/analyze \
+curl -X POST https://auren-pwa.vercel.app/api/neuros/api/agents/neuros/analyze \
   -H "Content-Type: application/json" \
   -d '{
     "message": "Test conversation",
@@ -238,7 +238,7 @@ curl -X POST https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neur
 ### **CORS Verification**
 ```bash
 # Test CORS preflight request
-curl -X OPTIONS https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/health \
+curl -X OPTIONS https://auren-pwa.vercel.app/api/neuros/health \
   -H "Origin: https://example.com" \
   -H "Access-Control-Request-Method: GET" \
   -v
@@ -272,7 +272,7 @@ cat auren-pwa/vercel.json | jq .
 # Test all proxy routes after deployment
 for endpoint in neuros biometric bridge; do
   echo "Testing $endpoint:"
-  curl -s "https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/$endpoint/health" | jq .
+  curl -s "https://auren-pwa.vercel.app/api/$endpoint/health" | jq .
 done
 ```
 
@@ -300,7 +300,7 @@ vercel --prod --public --force
 ```bash
 # Check browser console for CORS errors
 # Verify CORS headers in response
-curl -I https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/health
+curl -I https://auren-pwa.vercel.app/api/neuros/health
 
 # Check backend CORS configuration
 sshpass -p '.HvddX+@6dArsKd' ssh -o StrictHostKeyChecking=no root@144.126.215.218 \
@@ -325,7 +325,7 @@ vercel ls
 vercel rollback [deployment-url-from-list]
 
 # 3. Verify rollback success
-curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/health
+curl https://auren-pwa.vercel.app/api/neuros/health
 ```
 
 ---
@@ -368,7 +368,7 @@ git push origin main
 ### **Monitoring**
 ```bash
 # Monitor proxy health
-curl -s https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/health | jq .status
+curl -s https://auren-pwa.vercel.app/api/neuros/health | jq .status
 
 # Check Vercel analytics (via dashboard)
 # https://vercel.com/dashboard

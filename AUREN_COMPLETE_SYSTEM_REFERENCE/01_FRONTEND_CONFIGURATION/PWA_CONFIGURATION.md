@@ -385,14 +385,14 @@ VITE_WEBSOCKET_URL=""        # WebSocket endpoint if needed
 ### **Health Check Commands**
 ```bash
 # Test PWA accessibility
-curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/
+curl https://auren-pwa.vercel.app/
 
 # Test proxy routing
-curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/health
-curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/biometric/health
+curl https://auren-pwa.vercel.app/api/neuros/health
+curl https://auren-pwa.vercel.app/api/biometric/health
 
 # Test end-to-end conversation
-curl -X POST https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/api/agents/neuros/analyze \
+curl -X POST https://auren-pwa.vercel.app/api/neuros/api/agents/neuros/analyze \
   -H "Content-Type: application/json" \
   -d '{"message": "Test", "user_id": "test", "session_id": "test"}'
 ```

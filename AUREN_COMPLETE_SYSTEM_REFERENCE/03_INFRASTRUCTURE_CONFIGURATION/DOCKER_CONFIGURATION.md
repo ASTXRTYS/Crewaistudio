@@ -14,7 +14,7 @@ The AUREN system runs entirely on Docker containers orchestrated on a single Dig
 ### **Container Architecture**
 - **Network**: `auren-network` (bridge network)
 - **Server**: 144.126.215.218 (DigitalOcean Droplet)
-- **Total Containers**: 15+ containers (applications + infrastructure + monitoring)
+- **Total Containers**: 8 containers (VERIFIED RUNNING as of July 30, 2025)
 - **Orchestration**: Docker Compose + manual container management
 
 ---
@@ -32,24 +32,28 @@ Application Layer (UPDATED July 30, 2025):
 
 **STATUS**: 3 of 3 required application containers are operational. All core services running.
 
-### **Data Layer Containers**
+### **Data Layer Containers** ✅ **VERIFIED RUNNING**
 ```
-Data Infrastructure:
-├── auren-postgres              # PostgreSQL + TimescaleDB (Port 5432)
-├── auren-redis                 # Redis cache (Port 6379)
-├── auren-kafka                 # Apache Kafka (Port 9092)
-├── auren-zookeeper            # Zookeeper for Kafka (Port 2181)
-└── auren-chromadb             # Vector database (Port 8000)
+Data Infrastructure (ACTUAL as of July 30, 2025):
+├── ✅ auren-postgres              # PostgreSQL + TimescaleDB (Port 5432) - timescale/timescaledb:latest-pg16
+├── ✅ auren-redis                 # Redis cache (Port 6379) - redis:7-alpine  
+└── ✅ auren-kafka                 # Apache Kafka (Port 9092) - bitnami/kafka:3.5
+
+CONTAINERS NOT RUNNING (documented but not present):
+├── ❌ auren-zookeeper            # Not required (Kafka 3.5 has built-in coordination)
+└── ❌ auren-chromadb             # Not currently deployed
 ```
 
-### **Monitoring Containers**
+### **Monitoring Containers** ✅ **VERIFIED RUNNING**
 ```
-Monitoring Stack:
-├── auren-prometheus           # Metrics collection (Port 9090)
-├── auren-grafana             # Dashboards (Port 3000)
-├── node-exporter             # System metrics (Port 9100)
-├── redis-exporter            # Redis metrics (Port 9121)
-└── postgres-exporter         # PostgreSQL metrics (Port 9187)
+Monitoring Stack (ACTUAL as of July 30, 2025):
+├── ✅ auren-prometheus           # Metrics collection (Port 9090) - prom/prometheus:latest
+└── ✅ auren-grafana             # Dashboards (Port 3000) - grafana/grafana:latest
+
+EXPORTERS NOT RUNNING (documented but not present):
+├── ❌ node-exporter             # System metrics - not deployed
+├── ❌ redis-exporter            # Redis metrics - not deployed  
+└── ❌ postgres-exporter         # PostgreSQL metrics - not deployed
 ```
 
 ---

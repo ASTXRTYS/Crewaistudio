@@ -4,6 +4,8 @@
 *Created: July 28, 2025*  
 *Last Updated: July 28, 2025 (21:00 UTC)*
 
+**Strategic Note:** Our development is currently guided by a four-phased strategic plan to implement the full NEUROS agent vision. The primary source of truth for the current development roadmap and deliverables is the root-level `CURRENT_PRIORITIES.md` document.
+
 ---
 
 ## 📊 DOCUMENTATION STATUS
@@ -43,6 +45,7 @@ AUREN-Studio-main/
 │   ├── 02_DEPLOYMENT/
 │   │   ├── AUREN_CLEAN_DEPLOYMENT_GUIDE.md      ✅ Definitive deployment guide 🆕
 │   │   ├── BIOMETRIC_SYSTEM_DEPLOYMENT_GUIDE.md ✅ Complete deployment guide
+│   │   ├── PWA_IMPLEMENTATION_BLUEPRINT.md      ✅ **NEW** PWA technical blueprint
 │   │   ├── SECTION_11_ENHANCEMENT_GUIDE.md      ✅ Event sourcing & real-time
 │   │   ├── SECTION_12_MAIN_EXECUTION_GUIDE.md   ✅ Production runtime layer
 │   │   └── PGVECTOR_MIGRATION_DESIGN.md         ✅ ChromaDB to pgvector plan
@@ -57,6 +60,7 @@ AUREN-Studio-main/
 │   │   ├── PROMETHEUS_TROUBLESHOOTING_PLAYBOOK.md ✅ Prometheus fix history
 │   │   ├── PROMETHEUS_CONFIGURATION_FIX.md      ✅ Network config fix 🆕
 │   │   ├── MONITORING_TROUBLESHOOTING_COMPLETE_GUIDE.md ✅ Full monitoring fixes 🆕
+│   │   ├── PWA_NEUROS_DEPLOYMENT_TROUBLESHOOTING.md ✅ **NEW** PWA/NEUROS deployment SOP 🆕
 │   │   ├── METRICS_CATALOG.md      ✅ Complete AUREN metrics reference
 │   │   ├── GRAFANA_QUERY_LIBRARY.md ✅ Ready-to-use PromQL queries
 │   │   ├── OBSERVABILITY_RUNBOOK.md ✅ Daily monitoring procedures

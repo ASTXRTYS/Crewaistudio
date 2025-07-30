@@ -1,0 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+
+:root {
+  /* AUREN Brand Colors from your backend */
+  --auren-primary: #00D9FF;
+  --auren-secondary: #9945FF;
+  --auren-success: #00FF88;
+  
+  /* NEUROS Theme */
+  --neuros-black: #0A0A0B;
+  --neuros-steel: #1C1E26;
+  --neuros-steel-light: #2A2D3A;
+  --neuros-accent: #4A9EFF;
+  --neuros-neural: #00D4FF;
+  --neuros-text: #E7E9EA;
+  --neuros-text-dim: #71767B;
+  
+  /* UI Elements */
+  --border-color: rgba(255, 255, 255, 0.1);
+  --shadow-glow: 0 0 20px rgba(0, 217, 255, 0.3);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--neuros-black);
+  color: var(--neuros-text);
+  overflow-x: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--neuros-steel);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--neuros-accent);
+  border-radius: 4px;
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(135deg, var(--auren-primary), var(--auren-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+} 

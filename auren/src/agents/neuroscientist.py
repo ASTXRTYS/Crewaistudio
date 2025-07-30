@@ -237,30 +237,15 @@ class NeuroscientistAgent(BaseAIAgent):
     
     async def _execute_crew_task(self, task_description: str) -> str:
         """Execute a CrewAI task and return the result."""
-        task = # Task migrated to node in StateGraph
-        # Original params: description=task_description,
-            agent=self.crew_agent,
-            expected_output="Detailed analysis with specific, actionable recommendations"
-        
-        
-        crew = StateGraph(dict)
-        
-        # Build graph from agents and tasks
-        for agent in self.agents:
-            workflow.add_node(agent.name, agent.process)
-        
-        # Connect nodes
-        workflow.add_edge(START, self.agents[0].name)
-        for i in range(len(self.agents) - 1):
-            workflow.add_edge(self.agents[i].name, self.agents[i+1].name)
-        workflow.add_edge(self.agents[-1].name, END)
-        
-        return workflow.compile()
-        
-        # Execute the analysis
-        loop = asyncio.get_event_loop()
-        result = await loop.run_in_executor(None, crew.kickoff)
-        return str(result)
+        # This was the original task definition from CrewAI, now handled by the 'perception_node'
+        # in the LangGraph state machine.
+        # task = Task(
+            # description=task_description,
+            # agent=self.crew_agent,
+        # )
+        # result = task.execute()
+        # return result
+        pass # Placeholder as the original logic is now in LangGraph
     
     def _format_memories_for_context(self, memories: List) -> str:
         """Format memories for inclusion in task context."""

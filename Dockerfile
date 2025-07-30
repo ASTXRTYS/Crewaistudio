@@ -1,24 +1,26 @@
-# Baseimage
-FROM python:3.12.10-slim-bookworm
+FROM python:3.12-slim
 
-# Update Packages
-RUN apt update
-RUN apt upgrade -y
-RUN pip install --upgrade pip
-# install git
-RUN apt-get install build-essential -y
+WORKDIR /app
 
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir /CrewAI-Studio
+# Copy requirements
+COPY requirements.txt .
 
-# Install requirements
-COPY ./requirements.txt /CrewAI-Studio/requirements.txt
-WORKDIR /CrewAI-Studio
-RUN pip install -r requirements.txt
+# Install dependencies
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
 
-# Copy CrewAI-Studio
-COPY ./ /CrewAI-Studio/
+# Copy the ENTIRE auren directory structure
+COPY auren/ /app/auren/
+COPY config/ /app/config/
 
-# Run app
-CMD ["streamlit","run","./app/app.py","--server.headless","true"]
-EXPOSE 8501
+# Set the correct working directory for NEUROS
+WORKDIR /app/auren/agents/neuros
+
+# Command to run the REAL NEUROS
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

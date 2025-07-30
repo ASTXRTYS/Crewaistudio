@@ -21,14 +21,16 @@ The AUREN system runs entirely on Docker containers orchestrated on a single Dig
 
 ## 🏗️ **CONTAINER ECOSYSTEM**
 
-### **Application Containers**
+### **Application Containers** ⚠️ **ACTUAL RUNNING STATE**
 ```
-Application Layer:
-├── neuros-advanced              # NEUROS AI Agent (Port 8000)
-├── biometric-production         # Original biometric service (Port 8888)
-├── biometric-bridge            # Enhanced bridge (Port 8889)
-└── auren-web                   # Web services (if applicable)
+Application Layer (VERIFIED July 30, 2025):
+├── ❌ neuros-advanced              # NEUROS AI Agent (Port 8000) - NOT RUNNING
+├── ✅ biometric-production         # Original biometric service (Port 8888) - RUNNING
+├── ✅ biometric-bridge            # Enhanced bridge (Port 8889) - RUNNING & HEALTHY
+└── ❌ auren-web                   # Web services - NOT PRESENT
 ```
+
+**REALITY**: Only 2 of 4 documented application containers are actually running.
 
 ### **Data Layer Containers**
 ```

@@ -11,11 +11,11 @@
 
 The `aupex.ai` website is the main public-facing marketing and information portal for AUREN. It is a static website built with HTML, CSS, and JavaScript, served by a robust Nginx container. It also serves as the primary reverse proxy, directing traffic to the appropriate backend services like the NEUROS AI and Biometric Bridge.
 
-### **Live Deployment**
+### **Live Deployment** ⚠️ **ACTUAL STATUS**
 - **Production URL**: https://aupex.ai
 - **Server**: 144.126.215.218 (DigitalOcean)
 - **Technology**: Static HTML/CSS/JS, Nginx
-- **Status**: ✅ LIVE AND ACCESSIBLE
+- **Status**: ❌ **CONNECTION TIMEOUTS - NOT ACCESSIBLE**
 
 ---
 

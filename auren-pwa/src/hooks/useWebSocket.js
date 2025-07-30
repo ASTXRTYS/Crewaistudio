@@ -7,7 +7,17 @@ export function useWebSocket() {
   const [isConnected, setIsConnected] = useState(false);
   const { addMessage, setConnectionStatus, sessionId } = useStore();
   
+  // Check if we're on HTTPS (Vercel deployment)
+  const isHTTPS = window.location.protocol === 'https:';
+  
   const connect = useCallback(() => {
+    // Skip WebSocket on HTTPS - using REST API only
+    if (isHTTPS) {
+      console.log('Skipping WebSocket on HTTPS - using REST API only');
+      setConnectionStatus('disconnected');
+      return;
+    }
+    
     try {
       // Connect to your actual WebSocket endpoint
       const wsUrl = `${import.meta.env.VITE_WS_URL}/ws/dashboard/pwa_user`;
@@ -71,9 +81,14 @@ export function useWebSocket() {
       console.error('Failed to connect:', error);
       setConnectionStatus('error');
     }
-  }, [addMessage, setConnectionStatus, sessionId]);
+  }, [addMessage, setConnectionStatus, sessionId, isHTTPS]);
   
   const sendMessage = useCallback((text) => {
+    // Always return false on HTTPS to force REST API usage
+    if (isHTTPS) {
+      return false;
+    }
+    
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify({
         type: 'message',
@@ -84,7 +99,7 @@ export function useWebSocket() {
       return true;
     }
     return false;
-  }, []);
+  }, [isHTTPS]);
   
   useEffect(() => {
     connect();
@@ -101,7 +116,7 @@ export function useWebSocket() {
   
   return { 
     sendMessage, 
-    isConnected,
+    isConnected: isHTTPS ? false : isConnected, // Always show as disconnected on HTTPS
     reconnect: connect 
   };
 } 

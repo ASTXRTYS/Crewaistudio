@@ -7,6 +7,10 @@
     {
       "source": "/api/biometric/:path*",
       "destination": "http://144.126.215.218:8888/:path*"
+    },
+    {
+      "source": "/api/bridge/:path*",
+      "destination": "http://144.126.215.218:8889/:path*"
     }
   ],
   "headers": [

@@ -1,317 +1,239 @@
-# AUREN DOCUMENTATION HUB
-## Central Repository for All AUREN Documentation
+# AUREN DOCUMENTATION HUB - LOCKED CONFIGURATION
 
-*Last Updated: July 28, 2025 - 100% PRODUCTION DEPLOYED!*
+**Last Updated**: January 30, 2025 - LOCKED CONFIGURATION UPDATE  
+**Status**: ✅ PRODUCTION READY - LOCKED CONFIGURATION
 
----
+## 🚨 CRITICAL: LOCKED CONFIGURATION
 
-## 🚨 DEPLOYMENT READY STATUS
+**MASTER REFERENCE**: `FULL_PIPELINE_CONFIG_WITH_PWA.md` (Repository Root)
 
-**AS OF JULY 28, 2025 (18:54 UTC)**: AUREN is FULLY DEPLOYED IN PRODUCTION!
-- ✅ **ALL 12 SECTIONS COMPLETE** (including Section 10 Observability)
-- ✅ **0 CREWAI REFERENCES** - Complete purge verified!
-- ✅ **10/10 Components Operational** - OpenAI AI processing confirmed!
-
-### **Current Strategic Focus: Phased NEUROS Enhancement**
-Following a comprehensive review, our development has pivoted to a strategic, four-phased plan to implement the full vision of the NEUROS agent. We are building incrementally on our solid v3.1 foundation.
-
-*   **Current Phase**: **Phase 1: Semantic Memory**
-*   **See [CURRENT_PRIORITIES.md](../CURRENT_PRIORITIES.md) for the detailed roadmap.**
+This documentation hub reflects the **LOCKED** AUREN configuration. All setup is complete and operational.
 
 ---
 
-## 📚 Quick Navigation
+## ✅ CURRENT SYSTEM STATUS (LOCKED)
 
-### 🚀 Getting Started
-- ✅ [Credentials Vault](00_QUICK_START/CREDENTIALS_VAULT.md) - All passwords and access info
-- ✅ [SSH Access Standard](00_QUICK_START/SSH_ACCESS_STANDARD.md) - How to connect to servers
-
-### 🏗️ Architecture
-- ❌ System Overview - **COMING SOON**
-- ❌ Component Map - **COMING SOON**
-
-### 🚢 Deployment  
-- ✅ [**CLEAN DEPLOYMENT GUIDE**](02_DEPLOYMENT/AUREN_CLEAN_DEPLOYMENT_GUIDE.md) - **START HERE FOR DEPLOYMENT** 🆕
-- ✅ [Biometric System Guide](02_DEPLOYMENT/BIOMETRIC_SYSTEM_DEPLOYMENT_GUIDE.md) - Complete deployment instructions
-- ✅ [Section 9 Security Guide](../app/SECTION_9_SECURITY_README.md) - Enterprise security enhancement
-- ✅ [Section 11 Enhancement Guide](02_DEPLOYMENT/SECTION_11_ENHANCEMENT_GUIDE.md) - Event sourcing & real-time features
-- ✅ [Section 12 Main Execution Guide](02_DEPLOYMENT/SECTION_12_MAIN_EXECUTION_GUIDE.md) - LangGraph Production Runtime **COMPLETE**
-- ✅ [PWA Implementation Blueprint](02_DEPLOYMENT/PWA_IMPLEMENTATION_BLUEPRINT.md) - **NEW** Definitive guide for the AUREN PWA
-- ✅ [CrewAI → LangGraph Migration COMPLETED](04_ARCHITECTURE/CREWAI_TO_LANGGRAPH_MIGRATION_COMPLETED.md) - Migration SUCCESS
-- ❌ Website Deployment - **COMING SOON**
-
-### 🔧 Operations
-- ✅ [**Docker Redundancy Cleanup Guide**](03_OPERATIONS/DOCKER_REDUNDANCY_CLEANUP_GUIDE.md) - **CLEAN UP BEFORE DEPLOYMENT** 🆕
-- ✅ [**Docker Safe Cleanup List**](03_OPERATIONS/DOCKER_SAFE_CLEANUP_LIST.md) - **VERIFIED SAFE-TO-REMOVE IMAGES** 🆕
-- ✅ [Service Access Guide](03_OPERATIONS/SERVICE_ACCESS_GUIDE.md) - All DevOps tools & dashboards
-- ✅ [Nginx Configuration](03_OPERATIONS/NGINX_CONFIGURATION.md) - Critical deployment info
-- ✅ [Monitoring Quick Start](../MONITORING_QUICK_START.md) - Grafana & Prometheus guide
-- ✅ [Docker Navigation Guide](03_OPERATIONS/DOCKER_NAVIGATION_GUIDE.md) - Complete Docker infrastructure guide
-- ✅ [Prometheus Troubleshooting](03_OPERATIONS/PROMETHEUS_TROUBLESHOOTING_PLAYBOOK.md) - Step-by-step fix playbook
-- ✅ [Metrics Catalog](03_OPERATIONS/METRICS_CATALOG.md) - Complete catalog of all AUREN metrics
-- ✅ [Grafana Query Library](03_OPERATIONS/GRAFANA_QUERY_LIBRARY.md) - Ready-to-use PromQL queries
-- ✅ [Observability Runbook](03_OPERATIONS/OBSERVABILITY_RUNBOOK.md) - Daily monitoring procedures
-- ✅ [Monitoring Stability Guide](03_OPERATIONS/MONITORING_STABILITY_GUIDE.md) - Prevention & recovery procedures
-- ✅ [Prometheus Configuration Fix](03_OPERATIONS/PROMETHEUS_CONFIGURATION_FIX.md) - Network configuration fix 🆕
-- ✅ [**Monitoring Troubleshooting Complete Guide**](03_OPERATIONS/MONITORING_TROUBLESHOOTING_COMPLETE_GUIDE.md) - **EVERYTHING TO FIX MONITORING** 🆕🔥
-- ✅ [PWA_NEUROS_DEPLOYMENT_TROUBLESHOOTING.md](03_OPERATIONS/PWA_NEUROS_DEPLOYMENT_TROUBLESHOOTING.md) - **PWA/NEUROS DEPLOYMENT FIXES** 🆕🔥
-- ✅ [Webhook Data Storage Issue Resolved](03_OPERATIONS/WEBHOOK_DATA_STORAGE_ISSUE_RESOLVED.md) - Backend fix documentation 🆕
-- ❌ Daily Checklist - **COMING SOON**
-- ❌ Troubleshooting - **COMING SOON**
-
-### 💻 Development
-- ✅ [NEUROS v3.1 Deployment Report](../auren/agents/neuros/NEUROS_V3.1_DEPLOYMENT_REPORT.md) - **LATEST** 🆕
-- ✅ [NEUROS Memory Enhancement](../NEUROS_MEMORY_ENHANCEMENT_SUMMARY.md) - Memory tier awareness
-- ✅ [Memory Management Tools](../auren/tools/memory_management_tools.py) - Implementation examples
-- ✅ [Monitoring Guide](03_DEVELOPMENT/MONITORING_GUIDE.md) - Prometheus & Grafana setup
-- ✅ [Integration Patterns](04_DEVELOPMENT/INTEGRATION_PATTERNS.md) - Best practices for new features
-- ❌ Agent Development Guide - **COMING SOON**
-- ❌ API Documentation - **COMING SOON**
-
-### 🚨 Critical Issues & Handoffs
-- ✅ [Prometheus Issue Report](../PROMETHEUS_ISSUE_FOR_EXECUTIVE_ENGINEER.md) - For Executive Engineer
-- ✅ [NEUROS Memory Audit](../NEUROS_MEMORY_TIER_CAPABILITY_AUDIT.md) - Gap analysis
-- ✅ [Website Deployment Post-Mortem](../WEBSITE_DEPLOYMENT_POSTMORTEM.md) - Incident analysis
-
-### 📝 Session Reports
-- ✅ [July 28, 2025 Work Summary](../JULY_28_2025_WORK_SUMMARY.md) - Complete session report
-
----
-
-## 📊 Documentation Status Reports
-
-- ✅ [Documentation Status Report](AUREN_DOCUMENTATION_STATUS_REPORT.md) - Complete assessment of all docs
-- ✅ [Documentation Organization Guide](01_ARCHITECTURE/DOCUMENTATION_ORGANIZATION_GUIDE.md) - Where everything should live & system overview
-- ✅ **[SYSTEM CHECKPOINT 20250728](SYSTEM_CHECKPOINT_20250728.md)** - Complete system state after cleanup and fixes 🆕
-
----
-
-## 🔑 Most Important Documents (WORKING LINKS ONLY)
-
-1. **[CREDENTIALS VAULT](00_QUICK_START/CREDENTIALS_VAULT.md)** - ⚠️ CONFIDENTIAL
-   - SSH passwords
-   - Database credentials
-   - API keys
-   - Service endpoints
-
-2. **[Biometric System Deployment](02_DEPLOYMENT/BIOMETRIC_SYSTEM_DEPLOYMENT_GUIDE.md)**
-   - Complete guide for Sections 1-8
-   - All commands and configurations
-   - Troubleshooting steps
-
-3. **[State of Readiness](../auren/AUREN_STATE_OF_READINESS_REPORT.md)**
-   - Current system status
-   - Deployment progress
-   - Next steps
-
-4. **[Section 9 Security Enhancement](../app/SECTION_9_SECURITY_README.md)**
-   - API key management
-   - PHI encryption
-   - HIPAA audit logging
-   - Deployment instructions
-
----
-
-## 📁 Current Folder Status
-
+### PRODUCTION READY - ALL SERVICES OPERATIONAL
 ```
-AUREN_DOCS/
-├── 00_QUICK_START/          ✅ Has 2 documents
-├── 01_ARCHITECTURE/         ✅ Has 1 document
-├── 02_DEPLOYMENT/           ✅ Has 4 documents (Section 12 added!)
-├── 03_OPERATIONS/           ✅ Has 8 documents (monitoring enhanced!)
-├── 04_ARCHITECTURE/         ✅ Has 1 document (Migration tracking added!)
-└── 04_DEVELOPMENT/          ✅ Has 2 documents
+Backend Services:   ✅ 7 containers running (neuros-advanced, biometric-production, etc.)
+PWA Frontend:       ✅ Live at https://auren-omacln1ad-jason-madrugas-projects.vercel.app
+Communication:      ✅ HTTPS→HTTP via Vercel proxy (CORS enabled)
+Authentication:     ✅ Disabled (--public flag)
+End-to-End:         ✅ Full NEUROS conversation working
+Documentation:      ✅ Complete and current
+```
+
+**Configuration Locked**: January 30, 2025  
+**Next Phase**: Feature development on stable foundation
+
+---
+
+## 🚀 QUICK START FOR NEW ENGINEERS
+
+### 1. Read This First
+- **[FULL_PIPELINE_CONFIG_WITH_PWA.md](../FULL_PIPELINE_CONFIG_WITH_PWA.md)** - Complete system configuration
+- **[SOP-001: Master Operations Guide](SOPs/SOP-001-MASTER-OPERATIONS-GUIDE.md)** - Daily procedures
+
+### 2. Verify System Status
+```bash
+# Test PWA access
+curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/
+
+# Test backend health via proxy
+curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/health
+```
+
+### 3. Access Backend
+```bash
+sshpass -p '.HvddX+@6dArsKd' ssh -o StrictHostKeyChecking=no root@144.126.215.218
+/root/monitor-auren.sh
 ```
 
 ---
 
-## 🆕 Recent Updates
+## 🌐 LIVE SYSTEM ENDPOINTS (LOCKED)
 
-### January 29, 2025 - Future-Proofing Implementation
-- ✅ Analyzed 2025-2026 technology recommendations
-- ✅ Fixed Prometheus cardinality issues with metric relabeling
-- ✅ Enhanced LangGraph checkpointing with conversation replay
-- ✅ Added Trivy container scanning to security suite
-- ✅ Created Valkey migration script (Redis replacement)
-- ✅ Designed pgvector migration plan from ChromaDB
-- Key decisions:
-  - Adopt Valkey for license protection + 20% performance
-  - Consolidate to pgvector for better data cohesion
-  - Plan for Grafana Alloy before Oct 2025 EOL
-  - Deploy Loki 3.0 for better log analysis
+### Production PWA
+- **Primary**: https://auren-omacln1ad-jason-madrugas-projects.vercel.app
+- **Status**: ✅ LIVE AND ACCESSIBLE
+- **Features**: Full NEUROS conversation, no authentication required
 
-### January 29, 2025 - LangGraph Post-Migration Optimization
-- ✅ Created locked requirements file with pinned versions
-- ✅ Implemented comprehensive smoke tests for all graph paths
-- ✅ Added CI/CD guards against version drift
-- ✅ Set up Alembic for database migrations with Docker integration
-- ✅ Enhanced LangSmith tracing and PostgreSQL checkpointing
-- ✅ Created performance testing suite with p95/p99 targets
-- ✅ Added security scanning and SBOM generation
-- ✅ Documented complete LangGraph architecture
-- Key improvements:
-  - Production-grade configuration management
-  - Redis caching integration
-  - Checkpoint TTL and cleanup
-  - Parallel processing with proper state reducers
-  - Developer guide for adding new nodes
+### Backend APIs (via Proxy)
+- **NEUROS**: `https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/health`
+- **Biometric**: `https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/biometric/health`
+- **Status**: ✅ PROXY ROUTING WORKING
 
-### January 29, 2025 - Section 12 Production Runtime Prepared
-- ✅ Created Section 12 Main Execution Guide
-- ✅ Moved code to proper location (auren/main.py)
-- ✅ Created deployment script for parallel testing
-- ✅ Updated requirements.txt with async dependencies
-- ✅ System ready for 93% → 100% upgrade
-- Key features:
-  - Production-hardened async runtime with lifecycle management
-  - Retry logic with exponential backoff
-  - Graceful shutdown handling
-  - Comprehensive health/metrics/readiness endpoints
-  - Kubernetes deployment ready
-  - Zero-downtime migration path (parallel deployment)
-
-### January 29, 2025 - Section 11 Enhancement Prepared
-- ✅ Created Section 11 v3.0 surgical enhancement SQL
-- ✅ Built automated deployment script with validation
-- ✅ Added comprehensive deployment guide
-- ✅ Integrated with Section 9 security (no duplication)
-- ✅ System ready for 90% → 95% upgrade
-- Key features:
-  - Event sourcing with complete audit trail
-  - Continuous aggregates for real-time analytics
-  - PostgreSQL LISTEN/NOTIFY for instant UI updates
-  - Zero-knowledge proof tables (future-ready)
-  - Non-destructive migration preserves all data
-
-### January 28, 2025 - Enhanced Observability & Documentation
-- Added comprehensive observability documentation:
-  - ✅ Metrics Catalog - Complete list of all AUREN metrics
-  - ✅ Grafana Query Library - Ready-to-use PromQL queries  
-  - ✅ Observability Runbook - Daily monitoring procedures
-  - ✅ Integration Patterns - Best practices for new features
-  - ✅ Monitoring Stability Guide - Prevention & recovery procedures
-- Created 4 enhanced Grafana dashboards:
-  - Memory Tier Operations
-  - NEUROS Cognitive Modes
-  - Webhook Processing
-  - System Health & Performance
-- Fixed critical monitoring issues:
-  - ✅ Prometheus container (was down) - now running with restart policy
-  - ✅ Metrics endpoint (500 error) - fixed missing Response import
-  - ✅ All 6 Grafana dashboards - now operational
-  - ⚠️ Custom AUREN metrics - defined but need implementation
-
-### July 28, 2025 (Later in Day)
-- ✅ Enhanced NEUROS with complete memory tier awareness (167 lines added to YAML)
-- ✅ Created memory management tools for three-tier system
-- ✅ Deployed Prometheus & Grafana monitoring (needs instrumentation fix)
-- ✅ Fixed ChromaDB NumPy 2.0 compatibility issue
-- ✅ Fixed Level 1 knowledge directory path (removed spaces)
-- ✅ Updated Documentation Organization Guide with data flow
-- ✅ Created handoff documents for Executive Engineer
-
-### January 28, 2025
-- ✅ Created Section 9 Security Enhancement Layer
-- ✅ Added enterprise authentication, PHI encryption, and audit logging
-- ✅ Updated credentials vault with security keys
-- ✅ Created deployment script and comprehensive tests
-- ✅ Fixed website deployment (wrong version was live)
-- ✅ Created post-mortem and nginx configuration docs
-
-### July 28, 2025 (Earlier)
-- ✅ Deployed Biometric System (Sections 1-8)
-- ✅ Created comprehensive deployment documentation
-- ✅ Updated State of Readiness report
-- ✅ Created centralized credentials vault
-- ✅ Established sshpass as standard access method
+### Direct Backend (Internal)
+- **NEUROS**: http://144.126.215.218:8000
+- **Biometric**: http://144.126.215.218:8888
+- **Status**: ✅ CORS ENABLED, HTTP ENDPOINTS WORKING
 
 ---
 
-## 📝 DOCUMENTS THAT NEED TO BE CREATED
+## 📚 LOCKED DOCUMENTATION STRUCTURE
 
-### High Priority (This Week):
-1. **01_ARCHITECTURE/SYSTEM_OVERVIEW.md**
-   - High-level system design
-   - Component interactions
-   - Data flow diagrams
+### 🔐 MASTER REFERENCES (START HERE)
+- ✅ **[FULL_PIPELINE_CONFIG_WITH_PWA.md](../FULL_PIPELINE_CONFIG_WITH_PWA.md)** - Complete technical configuration
+- ✅ **[SOP-001: Master Operations Guide](SOPs/SOP-001-MASTER-OPERATIONS-GUIDE.md)** - Daily operational procedures
+- ✅ **[CONFIGURATION_LOCK_SUMMARY.md](../CONFIGURATION_LOCK_SUMMARY.md)** - Lock completion summary
 
-2. **03_OPERATIONS/DAILY_CHECKLIST.md**
-   - Morning health checks
-   - Service verification steps
-   - Log review procedures
+### 📋 OPERATIONAL GUIDES
+- ✅ **[SOP-003: Working Backend Configuration](SOPs/SOP-003-WORKING-BACKEND-CONFIGURATION.md)** - Backend technical details
+- ✅ **[Current System State](CURRENT_SYSTEM_STATE.md)** - Live system status and metrics
+- ✅ **[Monitor Script](../monitor-auren.sh)** - Automated health check script (server)
 
-3. **03_OPERATIONS/TROUBLESHOOTING.md**
-   - Common issues and fixes
-   - Service restart procedures
-   - Debug commands
+### 🔐 ACCESS & SECURITY
+- ✅ **[Credentials Vault](00_QUICK_START/CREDENTIALS_VAULT.md)** - All passwords and access credentials
+- ✅ **[SSH Access Standard](00_QUICK_START/SSH_ACCESS_STANDARD.md)** - Connection procedures
 
-4. **04_DEVELOPMENT/API_DOCUMENTATION.md**
-   - All endpoints
-   - Request/response formats
-   - Authentication methods
+### 🌐 PWA CONFIGURATION (LOCKED)
+- ✅ **[auren-pwa/vercel.json](../auren-pwa/vercel.json)** - Proxy routing configuration
+- ✅ **[auren-pwa/src/utils/api.js](../auren-pwa/src/utils/api.js)** - API endpoint configuration
+- ✅ **[auren-pwa/src/utils/websocket.js](../auren-pwa/src/utils/websocket.js)** - WebSocket handling
 
-### Medium Priority (Next 2 Weeks):
-1. **01_ARCHITECTURE/COMPONENT_MAP.md**
-2. **02_DEPLOYMENT/WEBSITE_DEPLOYMENT.md**
-3. **04_DEVELOPMENT/AGENT_DEVELOPMENT_GUIDE.md**
-4. **03_OPERATIONS/MONITORING_GUIDE.md**
+### 📖 DOCUMENTATION ORGANIZATION
+- ✅ **[Documentation Organization Guide](01_ARCHITECTURE/DOCUMENTATION_ORGANIZATION_GUIDE.md)** - Complete navigation map
 
 ---
 
-## 🎯 Documentation Priorities
+## 🔧 LOCKED SYSTEM ARCHITECTURE
 
-### What's Actually Available NOW:
-- ✅ Complete biometric system deployment guide
-- ✅ All credentials and access information
-- ✅ SSH access standards with sshpass
-- ✅ Documentation status assessment
-- ✅ Documentation organization guide
+### Backend (LOCKED - DO NOT CHANGE)
+```
+Server: 144.126.215.218 (DigitalOcean)
+Container Names: neuros-advanced, biometric-production
+Ports: 8000 (NEUROS), 8888 (Biometric)
+Network: auren-network
+CORS: Enabled for Vercel domains
+Status: ✅ OPERATIONAL
+```
 
-### What's Missing (Needs Creation):
-- ❌ Architecture documentation
-- ❌ Operations runbooks
-- ❌ Development guides
-- ❌ API documentation
-- ❌ Website deployment guide
+### PWA (LOCKED - DO NOT CHANGE)
+```
+Framework: Vite + React
+Deployment: Vercel (--public flag required)
+Proxy Paths: /api/neuros, /api/biometric
+Authentication: DISABLED
+Status: ✅ FULLY FUNCTIONAL
+```
 
----
-
-## 📝 Documentation Standards
-
-All documentation should include:
-- Clear title and purpose
-- Date created/updated
-- Author information
-- Table of contents (for long docs)
-- Code examples
-- Troubleshooting section
-
----
-
-## 🔍 Can't Find Something?
-
-### Existing Documentation:
-- **Main Project Status**: `auren/AUREN_STATE_OF_READINESS_REPORT.md`
-- **Website Documentation**: `AUPEX_WEBSITE_DOCUMENTATION/`
-- **LangGraph Documentation**: `LANGRAF Pivot/`
-- **Agent Specific**: `auren/agents/{agent_name}/`
-
-### Need These Created:
-- Architecture diagrams
-- Daily operations procedures
-- API endpoint documentation
-- Development guides
+### Communication Flow (LOCKED)
+```
+User Browser (HTTPS)
+    ↓
+Vercel PWA
+    ↓
+Vercel Proxy (/api/neuros → http://144.126.215.218:8000)
+    ↓
+NEUROS Backend (HTTP + CORS)
+    ↓
+Response with AI conversation
+```
 
 ---
 
-## 📞 Contact
+## 🚀 DEPLOYMENT PROCEDURES (LOCKED)
 
-For documentation questions or updates:
-- **Role**: Senior Engineer
-- **Project**: AUREN
-- **Company**: AUPEX
+### PWA Updates
+```bash
+cd auren-pwa
+git add . && git commit -m "Changes" && git push
+vercel --prod --public  # CRITICAL: --public flag required
+```
+
+### Backend Updates
+```bash
+ssh root@144.126.215.218
+# Make changes to containers
+docker restart neuros-advanced  # if needed
+/root/monitor-auren.sh  # verify health
+```
 
 ---
 
-*This is the master index for all AUREN documentation. All links have been verified to work as of January 29, 2025. AUREN is 100% PRODUCTION-READY!* 
+## ✅ VERIFICATION COMMANDS (LOCKED SYSTEM)
+
+### Complete System Test
+```bash
+# 1. PWA loads without authentication
+curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/
+
+# 2. NEUROS health via proxy
+curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/health
+
+# 3. End-to-end conversation test
+curl -X POST https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/api/agents/neuros/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Test", "user_id": "test", "session_id": "test"}'
+```
+
+**Expected Results**: All commands return success responses
+
+---
+
+## 🚫 DEPRECATED DOCUMENTATION
+
+**DO NOT USE** (marked obsolete):
+- ❌ Old docker-compose references with different names
+- ❌ Direct HTTP PWA access patterns
+- ❌ Manual CORS configurations
+- ❌ Authentication-enabled deployment guides
+- ❌ Any non-standard container naming
+
+---
+
+## 🎯 FOR FUTURE ENGINEERS
+
+### Getting Started
+1. **Read**: `FULL_PIPELINE_CONFIG_WITH_PWA.md` (complete technical reference)
+2. **Understand**: System is fully operational and locked
+3. **Follow**: SOP-001 for daily operations
+4. **Build**: New features on stable foundation
+
+### Development Guidelines
+- Backend changes: SSH to server, modify code, restart containers
+- Frontend changes: Edit PWA, commit, push, `vercel --prod --public`
+- Always test proxy endpoints after changes
+- Document architectural changes in master reference
+
+### Critical Rules
+- NEVER change container names (neuros-advanced, biometric-production)
+- NEVER change port mappings (8000, 8888)
+- NEVER modify CORS origins without testing
+- ALWAYS use `vercel --prod --public` for deployments
+- ALWAYS reference locked configuration for guidance
+
+---
+
+## 🚨 EMERGENCY PROCEDURES
+
+### System Down
+1. SSH: `sshpass -p '.HvddX+@6dArsKd' ssh -o StrictHostKeyChecking=no root@144.126.215.218`
+2. Check: `/root/monitor-auren.sh`
+3. Restore: Follow procedures in `FULL_PIPELINE_CONFIG_WITH_PWA.md`
+
+### PWA Issues
+1. Redeploy: `cd auren-pwa && vercel --prod --public --force`
+2. Verify: Test endpoints above
+
+---
+
+## 📝 DOCUMENTATION MAINTENANCE
+
+### When to Update
+- Major architectural changes (rare, requires approval)
+- New documentation structure (follow locked patterns)
+- Updated deployment procedures (test thoroughly)
+
+### What NOT to Change
+- Locked configuration references
+- Container naming standards
+- Port mapping documentation
+- CORS configuration details
+- Proxy routing patterns
+
+---
+
+**END OF DOCUMENTATION HUB**
+
+*This documentation reflects the locked AUREN configuration. The system is production-ready and fully operational. All procedures have been tested and verified. Future development should build upon this stable foundation.* 

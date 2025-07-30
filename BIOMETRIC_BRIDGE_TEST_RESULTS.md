@@ -301,11 +301,19 @@ docker run -d --name neuros-advanced \
 
 #### **3.1 Terra Webhook Support**
 **Current State**: Not available in v2.0.0  
-**Recommendation**: **DEFER** - Requires code changes to working bridge
+**Recommendation**: **DEFER - AWAIT TERRA RESPONSE** - Requires code changes to working bridge
 
 **Risk Assessment**: ⭐⭐⭐⭐ **HIGH** - New webhook handler implementation  
 **Alternative**: Use existing `/webhooks/oura` endpoint with Terra data format  
 **Justification**: Current 3-device support (Oura, WHOOP, HealthKit) covers major platforms
+
+**Strategic Dependencies**:
+- 🔄 **Business Requirements**: Confirm if Terra integration is actually needed
+- 📧 **Terra API Documentation**: Await Terra's webhook format/authentication requirements  
+- 📊 **Data Format Specification**: Understand Terra's data payload structure
+- 🎯 **ROI Analysis**: Evaluate Terra integration value vs current 3-platform coverage
+
+**Note**: Kafka topic `terra-biometric-events` exists, suggesting Terra was considered, but no business case confirmed yet.
 
 #### **3.2 Circuit Breaker Metrics**
 **Current State**: Circuit breaker present but metrics not exposed  

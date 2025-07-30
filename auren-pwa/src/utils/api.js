@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-// Use different URLs for different services
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8888';
-const NEUROS_BASE = import.meta.env.VITE_NEUROS_URL || 'http://localhost:8000';
+// Use proxy paths for production, direct URLs for development
+const API_BASE = import.meta.env.VITE_API_URL || '/api/biometric';
+const NEUROS_BASE = import.meta.env.VITE_NEUROS_URL || '/api/neuros';
 
 // Create axios instances
 const api = axios.create({
@@ -24,13 +24,8 @@ export const chatAPI = {
   // Send text message to NEUROS (using the correct endpoint)
   sendMessage: async (text, sessionId) => {
     try {
-      // First try WebSocket if in development
-      if (window.location.protocol === 'http:') {
-        console.log('Using WebSocket for development...');
-      }
-      
-      // Fall back to REST API
-      console.log('Sending via REST API to NEUROS...');
+      // REST API call through Vercel proxy
+      console.log('Sending via REST API to NEUROS through proxy...');
       const response = await neurosApi.post('/api/agents/neuros/analyze', {
         message: text,
         session_id: sessionId,
@@ -45,11 +40,7 @@ export const chatAPI = {
       };
     } catch (error) {
       console.error('Error sending message:', error);
-      // For mixed content errors, provide user guidance
-      if (error.code === 'ERR_NETWORK') {
-        throw new Error('Network error - Please allow mixed content in your browser settings (click lock icon → Site settings → Insecure content → Allow)');
-      }
-      throw error;
+      throw new Error(`Communication error: ${error.message}`);
     }
   },
 

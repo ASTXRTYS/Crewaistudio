@@ -1,214 +1,136 @@
-# SOP-001: MASTER OPERATIONS GUIDE - LOCKED CONFIGURATION
+# SOP-001: AUREN MASTER OPERATIONS GUIDE
 
-**Created**: January 30, 2025
-**Status**: ✅ PRODUCTION READY - LOCKED CONFIGURATION
-**Critical**: THIS IS THE DEFINITIVE OPERATIONS GUIDE
+**Version**: 1.0  
+**Last Updated**: January 30, 2025  
+**Status**: ✅ LOCKED CONFIGURATION - PRODUCTION READY
+**Critical**: This is the definitive operations guide for the AUREN system.
 
 ---
 
 ## 🎯 PRIMARY REFERENCE
 
-**MASTER DOCUMENT**: `FULL_PIPELINE_CONFIG_WITH_PWA.md` (Repository Root)
-
-This SOP provides operational procedures for the locked AUREN configuration. All technical details are in the master document.
-
-## 🔧 DAILY OPERATIONS
-
-### Morning Health Check
-```bash
-# SSH to server
-sshpass -p '.HvddX+@6dArsKd' ssh -o StrictHostKeyChecking=no root@144.126.215.218
-
-# Run comprehensive health check
-/root/monitor-auren.sh
-
-# Expected output: All containers UP, all endpoints healthy
-```
-
-### Quick Status Verification
-```bash
-# Verify PWA is accessible
-curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/
-
-# Verify NEUROS via proxy
-curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/health
-
-# Should return: {"status":"healthy","service":"neuros-advanced"}
-```
-
-## 🚀 DEPLOYMENT PROCEDURES
-
-### PWA Updates
-```bash
-# Navigate to PWA directory
-cd auren-pwa
-
-# Make changes to code
-# Edit files as needed
-
-# Deploy to production
-git add .
-git commit -m "Describe changes"
-git push
-vercel --prod --public  # CRITICAL: --public flag required
-
-# Verify deployment
-curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/
-```
-
-### Backend Updates
-```bash
-# SSH to server
-sshpass -p '.HvddX+@6dArsKd' ssh -o StrictHostKeyChecking=no root@144.126.215.218
-
-# Make changes to running containers
-docker exec -it neuros-advanced /bin/bash
-# Edit files as needed
-# Exit container
-
-# Restart affected services
-docker restart neuros-advanced
-
-# Verify health
-docker logs neuros-advanced --tail 10
-curl http://localhost:8000/health
-```
-
-## 🔍 MONITORING PROCEDURES
-
-### Container Health
-```bash
-# Check all containers
-docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-
-# Check specific container logs
-docker logs neuros-advanced --tail 20
-docker logs biometric-production --tail 20
-```
-
-### Endpoint Monitoring
-```bash
-# Test all critical endpoints
-curl http://localhost:8000/health     # NEUROS direct
-curl http://localhost:8888/health     # Biometric direct
-
-# Test proxy endpoints
-curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/health
-curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/biometric/health
-```
-
-### CORS Verification
-```bash
-# Test CORS headers
-curl -H "Origin: https://auren-pwa.vercel.app" \
-     -X OPTIONS \
-     http://localhost:8000/health -v
-
-# Should include: access-control-allow-origin header
-```
-
-## 🚨 TROUBLESHOOTING PROCEDURES
-
-### Issue: PWA Shows Authentication Page
-**Solution**: 
-```bash
-cd auren-pwa
-vercel --prod --public --force
-```
-
-### Issue: NEUROS Not Responding
-**Solution**:
-```bash
-ssh root@144.126.215.218
-docker restart neuros-advanced
-docker logs neuros-advanced --tail 30
-```
-
-### Issue: 502 Proxy Errors
-**Diagnosis**:
-```bash
-# Check backend is running
-ssh root@144.126.215.218
-docker ps | grep neuros-advanced
-curl http://localhost:8000/health
-
-# If backend down, restart
-docker restart neuros-advanced
-```
-
-### Issue: CORS Errors in Browser
-**Solution**: CORS is configured. If errors persist:
-```bash
-# Verify CORS configuration hasn't changed
-ssh root@144.126.215.218
-docker exec -i neuros-advanced grep -A 10 "CORSMiddleware" /app/neuros_advanced_reasoning_simple.py
-```
-
-## 📊 PERFORMANCE MONITORING
-
-### Key Metrics to Track
-- Container uptime: Should be >99%
-- Response times: <500ms for health endpoints
-- Memory usage: <80% for all containers
-- Disk usage: <90% (currently ~83%)
-
-### Weekly Review
-```bash
-# Check system resources
-ssh root@144.126.215.218
-df -h                    # Disk usage
-docker stats --no-stream # Container resources
-```
-
-## 🔐 SECURITY PROCEDURES
-
-### Access Control
-- SSH access via sshpass with documented password
-- Vercel deployment requires proper git access
-- No public database ports exposed
-
-### Regular Security Checks
-```bash
-# Verify only expected ports are open
-nmap 144.126.215.218
-
-# Check for unusual connections
-ssh root@144.126.215.218
-netstat -tulpn | grep LISTEN
-```
-
-## 📝 CHANGE MANAGEMENT
-
-### Before Making Changes
-1. Read FULL_PIPELINE_CONFIG_WITH_PWA.md
-2. Test in development environment first
-3. Document the change purpose
-4. Plan rollback procedure
-
-### After Making Changes
-1. Run full verification tests
-2. Update documentation if needed
-3. Monitor for 24 hours
-4. Update change log
-
-## 🎯 ESCALATION PROCEDURES
-
-### Level 1: Standard Issues
-- Use troubleshooting procedures above
-- Check documentation
-- Run monitor-auren.sh
-
-### Level 2: Service Down
-- Follow emergency restoration in FULL_PIPELINE_CONFIG_WITH_PWA.md
-- Notify team if downtime >15 minutes
-
-### Level 3: Configuration Corruption
-- DO NOT make experimental changes
-- Refer to locked configuration document
-- Consider full service recreation using documented commands
+**TECHNICAL SPECIFICATION**: See `SOP-003-AUREN-MASTER-TECHNICAL-SPECIFICATION.md` for all architecture, configuration, and data flow details.
 
 ---
 
-**END OF SOP-001**
+## 1. Daily Operations & Monitoring
 
-*This SOP provides operational procedures for the locked AUREN configuration. Technical details are in FULL_PIPELINE_CONFIG_WITH_PWA.md. Follow procedures exactly as documented.* 
+### Morning Health Check
+1.  **SSH to Server**:
+    ```bash
+    sshpass -p '.HvddX+@6dArsKd' ssh -o StrictHostKeyChecking=no root@144.126.215.218
+    ```
+2.  **Run Comprehensive Health Script**:
+    ```bash
+    /root/monitor-auren.sh
+    ```
+3.  **Expected Output**:
+    - All containers `Up`
+    - NEUROS and Biometric health endpoints return success.
+    - Disk usage below 90%.
+
+### Quick Status Verification
+1.  **Verify PWA Accessibility**:
+    ```bash
+    curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/
+    # Should return HTML, not an authentication page.
+    ```
+2.  **Verify NEUROS via Proxy**:
+    ```bash
+    curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/health
+    # Should return: {"status":"healthy","service":"neuros-advanced"}
+    ```
+
+## 2. Deployment Runbook
+
+### Frontend Deployment Process (PWA)
+
+#### Step-by-Step Deployment
+1.  **Prepare Code**:
+    ```bash
+    cd auren-pwa
+    git pull origin main # Or your feature branch
+    npm install
+    npm run build  # Test build locally before deploying
+    ```
+2.  **Deploy to Production**:
+    ```bash
+    vercel --prod --public
+    ```
+3.  **Verify Deployment**:
+    - Check the new deployment URL in the Vercel CLI output.
+    - Run the "Quick Status Verification" checks above.
+    - Send a test message through the PWA interface.
+
+#### Rollback Procedure
+1.  **List Recent Deployments**:
+    ```bash
+    vercel ls
+    ```
+2.  **Rollback to a Previous Working Deployment**:
+    ```bash
+    vercel rollback [deployment-url-from-list]
+    ```
+
+### Backend Deployment Process
+
+#### Container Updates
+1.  **Build New Image** (if required):
+    ```bash
+    # On the server, in the relevant directory
+    docker build -t neuros-advanced:new-version .
+    ```
+2.  **Stop and Remove the Old Container**:
+    ```bash
+    docker stop neuros-advanced
+    docker rm neuros-advanced
+    ```
+3.  **Start the New Container**:
+    ```bash
+    docker run -d --name neuros-advanced \
+      --network auren-network \
+      -p 8000:8000 \
+      -e REDIS_URL=redis://auren-redis:6379 \
+      -e POSTGRES_URL=postgresql://auren_user:[PASSWORD]@auren-postgres:5432/auren_production \
+      -e KAFKA_BOOTSTRAP_SERVERS=auren-kafka:9092 \
+      neuros-advanced:new-version
+    ```
+4.  **Verify Health**:
+    ```bash
+    docker logs neuros-advanced --tail 20
+    curl http://localhost:8000/health
+    ```
+
+#### Database Updates
+1.  **Backup the Database First**:
+    ```bash
+    docker exec auren-postgres pg_dump -U auren_user auren_production > backup_$(date +%Y%m%d).sql
+    ```
+2.  **Apply Migrations**:
+    ```bash
+    docker exec -i auren-postgres psql -U auren_user auren_production < migration.sql
+    ```
+
+## 3. Emergency & Troubleshooting
+
+### Issue: PWA Can't Connect or Shows Errors
+1.  **Check Browser Console**: Look for network errors (404, 502, CORS).
+2.  **Verify Vercel Proxy**: Test the proxy health endpoints directly (see "Quick Status Verification"). A 502 error means the backend is down.
+3.  **Check Backend Health**: Use `/root/monitor-auren.sh` on the server.
+
+### Issue: NEUROS Not Responding
+1.  **Check Container**: `docker ps | grep neuros-advanced`
+2.  **Check Logs**: `docker logs neuros-advanced --tail 50`
+3.  **Restart**: `docker restart neuros-advanced`
+
+### Issue: Disk Full
+1.  **Check Usage**: `df -h`
+2.  **Clean Docker Resources**: `docker system prune -a`
+3.  **Remove Old Logs**: `find /var/log -type f -mtime +30 -delete`
+
+### Complete System Recovery
+Refer to the emergency restoration commands in `SOP-003-AUREN-MASTER-TECHNICAL-SPECIFICATION.md`.
+
+---
+
+**END OF SOP-001** 

@@ -6,7 +6,7 @@
 ## 🚨 CRITICAL: LOCKED CONFIGURATION
 
 **STATUS**: ✅ PRODUCTION READY - LOCKED CONFIGURATION  
-**MASTER REFERENCE**: `FULL_PIPELINE_CONFIG_WITH_PWA.md` (Repository Root)
+**MASTER REFERENCE**: [`AUREN_SYSTEM_CONFIGURATION_OVERVIEW.md`](../AUREN_SYSTEM_CONFIGURATION_OVERVIEW.md) (Master Research & Configuration Guide)
 
 This documentation organization reflects the **LOCKED** AUREN configuration. All setup is complete and operational.
 
@@ -32,12 +32,36 @@ Documentation:      ✅ Complete and current
 
 ---
 
+## 📚 **COMPLETE DOCUMENTATION INVENTORY**
+
+### **🎯 TIER 1: STRATEGIC & OPERATIONAL COMMAND CENTER**
+*Start here for all AUREN work - strategic vision + operational reality*
+
+1. **[`AUREN_MASTER_SYSTEM_BLUEPRINT_v22.md`](../AUREN_MASTER_SYSTEM_BLUEPRINT_v22.md)** 🌟 **NEW MASTER DOCUMENT**
+   - **Purpose**: Strategic vision + operational reality hybrid
+   - **Contains**: Market positioning, technical architecture, implementation status, roadmap
+   - **Audience**: All engineers, co-founders, stakeholders
+   - **Status**: ✅ Current (July 31, 2025)
+
+2. **[`../auren/AUREN_STATE_OF_READINESS_REPORT.md`](../../auren/AUREN_STATE_OF_READINESS_REPORT.md)** 
+   - **Purpose**: Current system operational status and capabilities
+   - **Contains**: Production status, service health, technical gap analysis
+   - **Audience**: Operations team, engineers
+   - **Status**: ✅ Current with technical gaps documented
+
+3. **[`../CURRENT_PRIORITIES.md`](../../CURRENT_PRIORITIES.md)**
+   - **Purpose**: Technical gaps and immediate deliverables
+   - **Contains**: Phase completion status, implementation roadmap
+   - **Audience**: Development team
+   - **Status**: ✅ Current with Phase 3-4 gaps documented
+
 ## 📁 LOCKED DOCUMENTATION STRUCTURE
 
 ```
 CrewAI-Studio-main/
 │
-├── FULL_PIPELINE_CONFIG_WITH_PWA.md    # 🔐 MASTER REFERENCE (LOCKED)
+├── AUREN_SYSTEM_CONFIGURATION_OVERVIEW.md # 🔐 MASTER RESEARCH & CONFIGURATION GUIDE
+├── FULL_PIPELINE_CONFIG_WITH_PWA.md    # Legacy technical configuration
 ├── CONFIGURATION_LOCK_SUMMARY.md       # 📋 Lock completion summary
 │
 ├── AUREN_DOCS/                         # Documentation hub
@@ -84,8 +108,9 @@ CrewAI-Studio-main/
 ## 🎯 DOCUMENTATION HIERARCHY (LOCKED)
 
 ### 1. 🔐 MASTER REFERENCES (START HERE)
-- **`AUREN_BACKEND_INFRASTRUCTURE_CERTIFICATION.md`** - 🏆 **CERTIFIED PRODUCTION STANDARD** - V1.0 (July 30, 2025)
-- **`FULL_PIPELINE_CONFIG_WITH_PWA.md`** - Complete technical configuration
+- **[`AUREN_SYSTEM_CONFIGURATION_OVERVIEW.md`](../AUREN_SYSTEM_CONFIGURATION_OVERVIEW.md)** - 🏆 **MASTER RESEARCH & CONFIGURATION GUIDE**
+- **`AUREN_BACKEND_INFRASTRUCTURE_CERTIFICATION.md`** - Certified Production Standard
+- **`FULL_PIPELINE_CONFIG_WITH_PWA.md`** - Legacy complete technical configuration
 - **`AUREN_DOCS/README.md`** - Navigation hub with live endpoints
 - **`SOP-001-MASTER-OPERATIONS-GUIDE.md`** - Daily operational procedures
 
@@ -207,13 +232,13 @@ docker restart neuros-advanced  # if needed
 ### Complete System Test
 ```bash
 # 1. PWA loads without authentication
-curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/
+curl https://auren-b1tuli19i-jason-madrugas-projects.vercel.app/
 
 # 2. NEUROS health via proxy
-curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/health
+curl https://auren-b1tuli19i-jason-madrugas-projects.vercel.app/api/neuros/health
 
 # 3. End-to-end conversation test
-curl -X POST https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/api/agents/neuros/analyze \
+curl -X POST https://auren-b1tuli19i-jason-madrugas-projects.vercel.app/api/neuros/api/agents/neuros/analyze \
   -H "Content-Type: application/json" \
   -d '{"message": "Test", "user_id": "test", "session_id": "test"}'
 ```
@@ -225,7 +250,7 @@ curl -X POST https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neur
 ## 🎯 FOR FUTURE ENGINEERS
 
 ### Getting Started
-1. **Read**: `FULL_PIPELINE_CONFIG_WITH_PWA.md` (complete technical reference)
+1. **Read**: `AUREN_SYSTEM_CONFIGURATION_OVERVIEW.md` (complete technical reference & research guide)
 2. **Understand**: System is fully operational and locked
 3. **Follow**: SOP-001 for daily operations
 4. **Build**: New features on stable foundation
@@ -254,7 +279,7 @@ curl -X POST https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neur
 
 ### Configuration Corruption
 - DO NOT experiment with changes
-- Refer to locked configuration document
+- Refer to locked configuration document and `AUREN_SYSTEM_CONFIGURATION_OVERVIEW.md`
 - Use documented restoration commands
 - Contact team if major issues
 

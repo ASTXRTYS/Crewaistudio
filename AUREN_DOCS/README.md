@@ -1,49 +1,62 @@
 # AUREN DOCUMENTATION HUB - LOCKED CONFIGURATION
 
-**Last Updated**: January 30, 2025 - LOCKED CONFIGURATION UPDATE  
-**Status**: ✅ PRODUCTION READY - LOCKED CONFIGURATION
+**Last Updated**: July 31, 2025 - MASTER BLUEPRINT INTEGRATION  
+**Status**: ✅ PRODUCTION READY - STRATEGIC VISION + OPERATIONAL REALITY
 
-## 🚨 CRITICAL: LOCKED CONFIGURATION
+## 🚨 **CRITICAL: START HERE FOR ALL ENGINEERS**
 
-**MASTER REFERENCE**: `AUREN_COMPLETE_SYSTEM_REFERENCE/` (Complete System Documentation)
+**PRIMARY REFERENCES (Read in Order)**:
+1. **[AUREN MASTER SYSTEM BLUEPRINT v22](AUREN_MASTER_SYSTEM_BLUEPRINT_v22.md)** - 🎯 **STRATEGIC VISION + OPERATIONAL REALITY**
+2. **[AUREN STATE OF READINESS REPORT](../auren/AUREN_STATE_OF_READINESS_REPORT.md)** - Current system status and capabilities
+3. **[CURRENT PRIORITIES](../CURRENT_PRIORITIES.md)** - Technical gaps and immediate deliverables
 
-⚠️ **FOR ANY ENGINEER**: If you're ever stuck or need to understand how AUREN is configured, refer to the `AUREN_COMPLETE_SYSTEM_REFERENCE/` folder. This is the SINGLE SOURCE OF TRUTH for our production system configuration.
+⚠️ **FOR ANY ENGINEER**: The Master Blueprint v22 combines our strategic vision with operational reality. It shows where we're going, where we are, and how to get there. This is your **single source of truth** for understanding AUREN.
 
-This documentation hub reflects the **LOCKED** AUREN configuration. All setup is complete and operational.
+**OPERATIONAL REFERENCE**: [`AUREN_SYSTEM_CONFIGURATION_OVERVIEW.md`](../AUREN_SYSTEM_CONFIGURATION_OVERVIEW.md) (Complete System Documentation & Research Guide)
+
+This documentation hub reflects the **LOCKED** AUREN configuration with strategic context integrated.
 
 ---
 
-## ✅ CURRENT SYSTEM STATUS (LOCKED)
+## ✅ **CURRENT SYSTEM STATUS (LOCKED)**
 
-### PRODUCTION READY - ALL SERVICES OPERATIONAL
+### **PRODUCTION READY - 50-60% OF VISION IMPLEMENTED**
 ```
+Strategic Vision:   ✅ Documented in Master Blueprint v22
+Implementation:     ✅ 50-60% complete with clear roadmap
 Backend Services:   ✅ 7 containers running (neuros-advanced, biometric-production, etc.)
-PWA Frontend:       ✅ Live at https://auren-pwa.vercel.app
+PWA Frontend:       ✅ Live at https://auren-b1tuli19i-jason-madrugas-projects.vercel.app
+AI Engine:          ✅ NEUROS with cognitive modes and hot memory  
 Communication:      ✅ HTTPS→HTTP via Vercel proxy (CORS enabled)
-Authentication:     ✅ Disabled (--public flag)
-End-to-End:         ✅ Full NEUROS conversation working
-Documentation:      ✅ Complete and current
+End-to-End:         ✅ Full conversation working
+Documentation:      ✅ Strategic + operational alignment complete
 ```
 
 **Configuration Locked**: January 30, 2025  
-**Next Phase**: Feature development on stable foundation
+**Strategic Integration**: July 31, 2025  
+**Next Phase**: Execute roadmap from Master Blueprint v22
 
 ---
 
-## 🚀 QUICK START FOR NEW ENGINEERS
+## 🚀 **QUICK START FOR NEW ENGINEERS**
 
-### 1. Read This First
-- **[AUREN_COMPLETE_SYSTEM_REFERENCE/](../AUREN_COMPLETE_SYSTEM_REFERENCE/)** - 🎯 MASTER SYSTEM CONFIGURATION
+### 1. Read Strategic Context First
+- **[Master Blueprint v22](AUREN_MASTER_SYSTEM_BLUEPRINT_v22.md)** - 🎯 **WHY we built AUREN + HOW it works**
+- **[State of Readiness](../auren/AUREN_STATE_OF_READINESS_REPORT.md)** - Current operational status
+- **[Current Priorities](../CURRENT_PRIORITIES.md)** - What needs to be built next
+
+### 2. Understand Operations  
 - **[SOP-001: Master Operations Guide](SOPs/SOP-001-MASTER-OPERATIONS-GUIDE.md)** - Daily procedures  
-- **[FULL_PIPELINE_CONFIG_WITH_PWA.md](../FULL_PIPELINE_CONFIG_WITH_PWA.md)** - Legacy reference
+- **[SOP-003: Technical Specification](SOPs/SOP-003-AUREN-MASTER-TECHNICAL-SPECIFICATION.md)** - System architecture
+- **[Credentials Vault](00_QUICK_START/CREDENTIALS_VAULT.md)** - All passwords and access
 
-### 2. Verify System Status
+### 3. Verify System Status
 ```bash
 # Test PWA access
-curl https://auren-pwa.vercel.app/
+curl https://auren-b1tuli19i-jason-madrugas-projects.vercel.app/
 
 # Test backend health via proxy
-curl https://auren-pwa.vercel.app/api/neuros/health
+curl https://auren-b1tuli19i-jason-madrugas-projects.vercel.app/api/neuros/health
 ```
 
 ### 3. Access Backend
@@ -57,7 +70,7 @@ sshpass -p '.HvddX+@6dArsKd' ssh -o StrictHostKeyChecking=no root@144.126.215.21
 ## 🌐 LIVE SYSTEM ENDPOINTS (LOCKED)
 
 ### Production PWA
-- **Primary**: https://auren-omacln1ad-jason-madrugas-projects.vercel.app
+- **Primary**: https://auren-b1tuli19i-jason-madrugas-projects.vercel.app
 - **Status**: ✅ LIVE AND ACCESSIBLE
 - **Features**: Full NEUROS conversation, no authentication required
 
@@ -167,13 +180,13 @@ docker restart neuros-advanced  # if needed
 ### Complete System Test
 ```bash
 # 1. PWA loads without authentication
-curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/
+curl https://auren-b1tuli19i-jason-madrugas-projects.vercel.app/
 
 # 2. NEUROS health via proxy
-curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/health
+curl https://auren-b1tuli19i-jason-madrugas-projects.vercel.app/api/neuros/health
 
 # 3. End-to-end conversation test
-curl -X POST https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/api/agents/neuros/analyze \
+curl -X POST https://auren-b1tuli19i-jason-madrugas-projects.vercel.app/api/neuros/api/agents/neuros/analyze \
   -H "Content-Type: application/json" \
   -d '{"message": "Test", "user_id": "test", "session_id": "test"}'
 ```

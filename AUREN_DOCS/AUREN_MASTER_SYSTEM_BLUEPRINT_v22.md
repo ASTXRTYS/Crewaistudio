@@ -335,109 +335,197 @@ class NEUROSAdvancedWorkflow:
 - Memory recall: Hot memory working, warm/cold missing
 - User context: Session-based only
 
-### **2. The Nutritionist ❌ NOT IMPLEMENTED**
+### **2-7. Complete Seven-Specialist Framework ⚠️ EXPANDED ARCHITECTURE**
 
-**Planned Implementation**:
+**Strategic Update**: Framework expanded from 5 to 7 specialists to cover complete human optimization domains.
+
+**Current Status**: 1 of 7 specialists implemented (NEUROS operational)
+
+#### **Complete Specialist Domain Coverage**
+
+| Domain | Specialist | Status | Core Function | Key Gaps Addressed |
+|--------|------------|--------|---------------|-------------------|
+| **Brain & Nerves** | **NEUROS** | ✅ **OPERATIONAL** | HRV, CNS, Recovery | None - fully implemented |
+| **Nutrition & Supplementation** | **NUTROS** | ❌ Planned Month 3 | Meal planning, Supplementation | Food & macros optimization |
+| **Movement & Injury Prevention** | **KINETOS** | ❌ Planned Month 4 | Physio, Mobility, Injury-proofing | Corrective exercise programming |
+| **Strength & Hypertrophy** | **HYPERTROS** | ❌ Planned Month 5 | Progressive overload, Periodization | Systematic strength progression |
+| **Cardiovascular & Metabolic** | **CARDIOS** | ❌ Planned Month 6 | Zone training, VO₂-max, Cardiac health | Aerobic progression optimization |
+| **Sleep & Recovery Architecture** | **SOMNOS** | ❌ Planned Month 7 | Sleep optimization, Chronotype tuning | Deep sleep protocol ownership |
+| **Visual Biometrics & Aesthetics** | **OPTICOS** | ❌ Planned Month 8 | MIRAGE analysis, Symmetry scoring | Visual progress intelligence |
+| **Endocrine & Peptide Optimization** | **ENDOS** | ❌ Planned Month 9 | Hormone cycles, Peptide protocols | Advanced endocrinology reasoning |
+
+#### **Specialist Agent Specifications**
+
+**KINETOS** (Movement & Mobility Specialist)
 ```python
-class Nutritionist(BaseSpecialist):
+class KINETOS(BaseSpecialist):
     def __init__(self):
         super().__init__(
-            name="Dr. Fuel",
-            expertise=["Meal planning", "Supplementation", "Metabolic optimization"]
+            name="KINETOS",
+            etymology="From kine-/kineto- 'movement'",
+            expertise=[
+                "Posterior-chain resets", "Joint diagnostics", 
+                "Physio prescriptions", "Injury prevention"
+            ],
+            data_pipes=["Wearable IMU streams", "Mobility-screen video"],
+            kpis=["Glute activation %", "Injury-risk score", "Range-of-motion delta"]
         )
+```
+
+**HYPERTROS** (Strength & Hypertrophy Coach)
+```python
+class HYPERTROS(BaseSpecialist):
+    def __init__(self):
+        super().__init__(
+            name="HYPERTROS", 
+            etymology="From hyper- 'excess' + troph- 'nourishment'",
+            expertise=[
+                "Periodized lifting blocks", "Progressive overload math",
+                "Composite body-part scoring", "Hypertrophy optimization"
+            ],
+            data_pipes=["Strength-session logs", "DEXA scans"],
+            kpis=["Weekly tonnage", "Hypertrophy index", "Lean-mass delta"]
+        )
+```
+
+**CARDIOS** (Cardiovascular & Metabolic Engine)
+```python
+class CARDIOS(BaseSpecialist):
+    def __init__(self):
+        super().__init__(
+            name="CARDIOS",
+            etymology="From cardi- 'heart'", 
+            expertise=[
+                "Zone-based conditioning", "VO₂-max ramps",
+                "Vascular health trends", "Metabolic optimization"
+            ],
+            data_pipes=["HR, HRV, VO₂ sensors", "Blood panels"],
+            kpis=["VO₂-max trend", "Resting HR", "Zone-3 compliance", "Lipid flags"]
+        )
+```
+
+**SOMNOS** (Sleep Architecture & Recovery)
+```python
+class SOMNOS(BaseSpecialist):
+    def __init__(self):
+        super().__init__(
+            name="SOMNOS",
+            etymology="From somn- 'sleep'",
+            expertise=[
+                "Architecture reconstruction", "Chronotype anchoring", 
+                "Micro-nap scheduling", "Recovery optimization"
+            ],
+            data_pipes=["Sleep-stage CSVs", "Light exposure logs"],
+            kpis=["Deep-sleep %", "REM balance", "Circadian drift", "Recovery index"]
+        )
+```
+
+**OPTICOS** (Visual Biometrics & Aesthetic Analysis)  
+```python
+class OPTICOS(BaseSpecialist):
+    def __init__(self):
+        super().__init__(
+            name="OPTICOS",
+            etymology="From opt- 'eye/vision'",
+            expertise=[
+                "Facial/body symmetry scoring", "Inflammation deltas",
+                "Aesthetic forecasting", "MIRAGE integration"
+            ],
+            data_pipes=["MIRAGE image embeddings"],
+            kpis=["Symmetry score", "Inflammation heat-map", "Aesthetic risk alerts"]
+        )
+```
+
+**ENDOS** (Endocrine & Peptide Strategist)
+```python
+class ENDOS(BaseSpecialist):
+    def __init__(self):
+        super().__init__(
+            name="ENDOS",
+            etymology="From endo- 'within' (endocrine/internal)",
+            expertise=[
+                "Cycle design", "Legality scans", 
+                "Dose forecasting", "Safety alerts"
+            ],
+            data_pipes=["Master Journal peptide table", "Regulatory RSS feeds"],
+            kpis=["Protocol-safety score", "Legal-status radar", "Dose-response curve"]
+        )
+```
+
+#### **Cross-Specialist Collaboration Patterns**
+
+**Cooperative Intelligence Network**:
+```mermaid
+graph TB
+    NEUROS[NEUROS<br/>Brain & Nerves] 
+    NUTROS[NUTROS<br/>Nutrition]
+    KINETOS[KINETOS<br/>Movement]
+    HYPERTROS[HYPERTROS<br/>Strength]
+    CARDIOS[CARDIOS<br/>Cardiovascular]
+    SOMNOS[SOMNOS<br/>Sleep]
+    OPTICOS[OPTICOS<br/>Visual]
+    ENDOS[ENDOS<br/>Endocrine]
+    
+    NEUROS <--> SOMNOS
+    NEUROS <--> CARDIOS
+    KINETOS <--> HYPERTROS
+    CARDIOS <--> ENDOS
+    OPTICOS <--> NUTROS
+    SOMNOS <--> ENDOS
+    
+    ALL --> NUTROS[Nutrition Hub]
+```
+
+**Example Collaboration Scenarios**:
+- **NEUROS + SOMNOS**: HRV trends → sleep architecture adjustments
+- **KINETOS + HYPERTROS**: Movement screening → strength program modifications  
+- **CARDIOS + ENDOS**: Metabolic markers → endocrine intervention timing
+- **OPTICOS + NUTROS**: Visual inflammation → anti-inflammatory nutrition protocols
+- **All Specialists**: Weekly case review for complex multi-domain optimization
+
+#### **Technical Integration Architecture**
+
+**Unified Data Pipeline** (All specialists integrate with existing infrastructure):
+
+```python
+class SevenSpecialistFramework:
+    def __init__(self):
+        self.kafka_bus = KafkaEventBus()
+        self.memory_layer = ThreeTierMemory()
+        self.protocol_engine = ProtocolExecutor()
         
-    async def process_query(self, query: Query) -> Response:
-        # Future implementation - requires multi-agent framework completion
-        pass
+        self.specialists = {
+            'neuros': NEUROS(),
+            'nutros': NUTROS(), 
+            'kinetos': KINETOS(),
+            'hypertros': HYPERTROS(),
+            'cardios': CARDIOS(),
+            'somnos': SOMNOS(),
+            'opticos': OPTICOS(),
+            'endos': ENDOS()
+        }
+        
+    async def process_user_request(self, request: UserRequest) -> CompoundResponse:
+        # Route to primary specialist
+        primary_response = await self.route_to_specialist(request)
+        
+        # Peer review by relevant specialists  
+        peer_reviews = await self.get_peer_reviews(primary_response, request)
+        
+        # Synthesize compound recommendation
+        return await self.synthesize_response(primary_response, peer_reviews)
 ```
 
-**Knowledge Domains (PLANNED)**:
-- Personalized meal planning and macro/micronutrient optimization
-- Supplement protocols based on biometric data
-- Metabolic flexibility and adaptation
-- Nutrient timing for performance and recovery
-- Gut health and microbiome optimization
-- Hydration strategies
-- Anti-inflammatory nutrition
-- Performance nutrition for specific goals
+**Data Flow Specifications**:
 
-**Implementation Blockers**:
-- Multi-agent framework not complete
-- Cross-specialist communication not implemented
-- Specialist memory isolation not designed
-- Protocol execution system missing (needed for meal plan protocols)
-
-### **3. The Training Coach ❌ NOT IMPLEMENTED**
-
-**Planned Implementation**:
-```python
-class TrainingCoach(BaseSpecialist):
-    def __init__(self):
-        super().__init__(
-            name="Coach Performance",
-            expertise=["Programming", "Periodization", "Load management"]
-        )
-```
-
-**Knowledge Domains (PLANNED)**:
-- Exercise programming and periodization
-- Load management and progressive overload
-- Movement pattern optimization
-- Sport-specific training protocols
-- Strength, power, and endurance development
-- Recovery integration into training cycles
-- Performance testing and benchmarking
-- Technique refinement and form cues
-
-**Key Interactions (PLANNED)**:
-- Coordinates with Neuroscientist on recovery needs
-- Collaborates with Physical Therapist on movement quality
-- Integrates with Nutritionist for performance nutrition timing
-- Uses biometric data for load management decisions
-
-### **4. The Physical Therapist ❌ NOT IMPLEMENTED**
-
-**Planned Implementation**:
-```python
-class PhysicalTherapist(BaseSpecialist):
-    def __init__(self):
-        super().__init__(
-            name="Dr. Movement",
-            expertise=["Injury prevention", "Rehabilitation", "Movement quality"]
-        )
-```
-
-**Knowledge Domains (PLANNED)**:
-- Movement assessment and dysfunction identification
-- Injury prevention protocols
-- Rehabilitation programming
-- Mobility and flexibility optimization
-- Corrective exercise prescription
-- Pain management strategies
-- Biomechanical analysis
-- Return-to-sport protocols
-
-### **5. The Aesthetic Consultant ❌ NOT IMPLEMENTED**
-
-**Planned Implementation**:
-```python
-class AestheticConsultant(BaseSpecialist):
-    def __init__(self):
-        super().__init__(
-            name="Dr. Aesthetics",
-            expertise=["Body composition", "Visual tracking", "Aesthetic optimization"]
-        )
-```
-
-**Knowledge Domains (PLANNED)**:
-- Body composition analysis and tracking
-- Visual progress documentation
-- Aesthetic goal setting and planning
-- Muscle symmetry and proportion
-- Skin health and appearance
-- Posture and presence optimization
-- Confidence and body image coaching
-- Competition preparation (physique sports)
+| Specialist | Input Streams | Output Protocols | Memory Embeddings |
+|------------|--------------|------------------|-------------------|
+| **KINETOS** | IMU data, video analysis | Corrective exercise DAGs | Movement pattern embeddings |
+| **HYPERTROS** | Strength logs, body composition | Periodized training blocks | Progressive overload embeddings |
+| **CARDIOS** | HR/HRV streams, lab panels | Zone progression plans | Cardiovascular trend embeddings |
+| **SOMNOS** | Sleep staging, light exposure | Chronotype optimization | Sleep architecture embeddings |
+| **OPTICOS** | MIRAGE image data | Aesthetic progress alerts | Visual biometric embeddings |
+| **ENDOS** | Peptide logs, regulatory feeds | Cycle safety protocols | Endocrine optimization embeddings |
 
 ---
 

@@ -248,6 +248,105 @@ This entire phase will be guided by the research and implementation roadmap laid
 - Enhance wellness positioning enforcement
 - Add new compliance monitoring rules
 
+### **2.6 Complete Specialist Framework Architecture** ⚠️ **6 SPECIALISTS MISSING**
+
+**Strategic Context**: Current framework covers "brain & nerves" (NEUROS), with NUTROS planned. Missing are the agents that move, grow, power, dose, see, and restore the body.
+
+**Gap Analysis**: Comprehensive specialist domain mapping reveals 6 unfilled functional domains critical for true "data-to-action" leadership.
+
+#### **Unfilled Functional Domains**
+
+| System Module | Core Duties | Current Gap | Strategic Impact |
+|---------------|-------------|-------------|------------------|
+| **Mobility & Injury-Proofing** | Posterior-chain resets, joint diagnostics, physio prescriptions | NEUROS tracks signals but nobody programs corrective drills | Movement quality degradation |
+| **Strength/Hypertrophy Programming** | Periodized lifting blocks, progressive overload math, composite body-part scoring | Master Journal logs workouts but needs agent to write them | No systematic strength progression |
+| **Cardiometabolic Engine** | Zone-based conditioning, VO₂-max ramps, vascular health trends | No agent for aerobic progression or cardiac-risk flags | Missing cardiovascular optimization |
+| **Peptide & Endocrine Governance** | Cycle design, legality scans, dose forecasting, safety alerts | AUREN logs injections but can't reason over mechanistic endocrinology | Advanced optimization blocked |
+| **Visual Biometrics (MIRAGE)** | Facial/body symmetry scoring, inflammation deltas, aesthetic forecasting | MIRAGE runs as report but lacks dedicated analyst agent | No visual progress intelligence |
+| **Sleep-Replenishment & Recovery** | Architecture reconstruction, chronotype anchoring, micro-nap scheduling | NEUROS tracks HRV but doesn't own sleep protocols | Recovery optimization incomplete |
+
+#### **Proposed Specialist Agent Framework**
+
+**Naming Convention**: -OS suffix (echoes "operating system," matches NEUROS/NUTROS pattern, telegraphs domain via Greek/Latin roots)
+
+| Agent Name | Etymology & Source | Role Focus | Key KPIs |
+|------------|-------------------|------------|----------|
+| **KINETOS** | From kine-/kineto- "movement" ([Membean](https://membean.com)) | Physio & mobility specialist | Glute activation %, injury-risk score, range-of-motion delta |
+| **HYPERTROS** | From hyper- "excess" + troph- "nourishment" ([Etymology Online](https://etymonline.com), [Membean](https://membean.com)) | Strength & muscle-gain coach | Weekly tonnage, hypertrophy index, lean-mass delta |
+| **CARDIOS** | From cardi- "heart" ([Wordpandit](https://wordpandit.com)) | Aerobic & metabolic engine | VO₂-max trend, resting HR, zone-3 compliance, lipid flags |
+| **ENDOS** | From endo- "within" (endocrine/internal) ([Etymology Online](https://etymonline.com)) | Peptide/endocrine strategist | Protocol-safety score, legal-status radar, dose-response curve |
+| **OPTICOS** | From opt- "eye/vision" ([Wordpandit](https://wordpandit.com)) | MIRAGE visual analyst | Symmetry score, inflammation heat-map, aesthetic risk alerts |
+| **SOMNOS** | From somn- "sleep" ([Membean](https://membean.com)) | Sleep-architecture & recovery guru | Deep-sleep %, REM balance, circadian drift, recovery index |
+
+#### **Technical Integration Framework**
+
+**Data Pipeline Integration** (Kafka Event Bus + pgvector warm layer):
+
+| Specialist | Primary Data Pipes | Consumes | Produces |
+|------------|-------------------|----------|----------|
+| **KINETOS** | Wearable IMU streams, mobility-screen video | Joint-angle vectors | Corrective-exercise DAGs |
+| **HYPERTROS** | Strength-session logs, DEXA scans | Reps, sets, body-comp | Periodized block plan |
+| **CARDIOS** | HR, HRV, VO₂ sensors, blood panels | Cardio telemetry | Zone-progress ladder |
+| **ENDOS** | Master Journal peptide table, regulatory RSS feeds | Dose history, legal database | Cycle schedule & safety score |
+| **OPTICOS** | MIRAGE image embeddings | Symmetry deltas | Aesthetic alerts & collage |
+| **SOMNOS** | Sleep-stage CSVs, light exposure logs | Architecture histograms | Chronotype-tuning plan |
+
+#### **Implementation Strategy for Discussion**
+
+**Phase 1: Foundation Specialists** (Months 3-6)
+1. **NUTROS** (Nutrition): Already planned - meal planning, supplementation
+2. **KINETOS** (Movement): Physical therapy integration, injury prevention
+3. **SOMNOS** (Sleep): Sleep architecture optimization, recovery protocols
+
+**Phase 2: Performance Specialists** (Months 6-9)
+4. **HYPERTROS** (Strength): Periodized programming, hypertrophy optimization
+5. **CARDIOS** (Cardiovascular): Zone-based training, metabolic conditioning
+
+**Phase 3: Advanced Specialists** (Months 9-12)
+6. **OPTICOS** (Visual): MIRAGE integration, aesthetic progress tracking
+7. **ENDOS** (Endocrine): Advanced peptide/hormone optimization (regulatory sensitive)
+
+#### **Cross-Specialist Collaboration Framework**
+
+**Cooperative Patterns** (AutoGen-style peer review):
+- **NEUROS + SOMNOS**: HRV data → sleep architecture recommendations
+- **KINETOS + HYPERTROS**: Movement screening → strength program modifications
+- **CARDIOS + ENDOS**: Metabolic markers → endocrine intervention timing
+- **OPTICOS + NUTROS**: Visual inflammation → anti-inflammatory nutrition
+- **All Specialists**: Weekly case review for complex user optimization
+
+**Data Sharing Architecture**:
+- **Unified Memory Layer**: pgvector embeddings shared across specialists
+- **Event-Driven Triggers**: Kafka streams enable real-time collaboration
+- **Protocol Execution**: Dagster workflows coordinate multi-specialist plans
+
+#### **Strategic Discussion Points**
+
+**Market Differentiation**:
+- **Complete Human Optimization**: Only platform with 7-specialist framework
+- **Cross-Domain Intelligence**: Specialists validate and enhance each other's recommendations
+- **Compound Protocol Execution**: Multi-specialist plans (e.g., strength + mobility + nutrition)
+
+**Technical Complexity**:
+- **Specialist Independence**: Each agent operates autonomously with shared data
+- **Collaboration Protocols**: Structured peer review and recommendation enhancement
+- **Data Pipeline**: All specialists consume from unified Kafka streams
+
+**Regulatory Considerations**:
+- **ENDOS Risk**: Peptide/hormone recommendations require careful FDA positioning
+- **KINETOS Safety**: Physical therapy protocols need liability considerations
+- **All Specialists**: Maintain General Wellness positioning across all domains
+
+**Resource Requirements**:
+- **Development**: 7 specialists × 3 months average = 21 specialist-months
+- **API Costs**: Increased LLM usage for multi-specialist interactions
+- **Data Infrastructure**: Enhanced storage for multi-domain embeddings
+
+**Success Metrics**:
+- **Cross-Specialist Collaboration**: >30% of recommendations enhanced by peer review
+- **User Outcomes**: Measurable improvement in all 7 domains
+- **Market Position**: Only platform offering complete human optimization framework
+
 ---
 
 ## 🔧 **DISCUSSION FRAMEWORK FOR STRATEGIC DECISIONS**

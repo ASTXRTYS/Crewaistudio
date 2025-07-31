@@ -46,9 +46,44 @@ agents/
     └── validation_template.py     # Testing template
 ```
 
-### **🎯 CURRENT IMPLEMENTATION STATUS - LIVE TRACKING**
+### **🎯 COMPLETE 9-AGENT ARCHITECTURE OVERVIEW**
 **Last Updated**: July 31, 2025  
 **Location**: `./agents/` (repository root)
+
+```bash
+agents/                                    
+├── roster.yaml                           # Registry for all 9 agents
+│
+├── neuros_modules/                       # 🧠 NEUROS (CNS Specialist)
+│   ├── core_personality.yaml
+│   ├── cognitive_modes.yaml
+│   └── [future_phases].yaml
+│
+├── nutros_modules/                       # 🥗 NUTROS (Nutrition)
+│   ├── core_personality.yaml
+│   ├── cognitive_modes.yaml
+│   └── [nutrition_specific].yaml
+│
+├── kinetos_modules/                      # 🏃 KINETOS (Movement)
+│   ├── core_personality.yaml
+│   ├── cognitive_modes.yaml
+│   └── [movement_specific].yaml
+│
+├── hypertros_modules/                    # 💪 HYPERTROS (Strength)
+├── cardios_modules/                      # ❤️ CARDIOS (Cardiovascular)
+├── somnos_modules/                       # 😴 SOMNOS (Sleep)
+├── opticos_modules/                      # 👁️ OPTICOS (Visual)
+├── endos_modules/                        # 🧪 ENDOS (Endocrine)
+├── auren_modules/                        # 🎯 AUREN (Chief-of-Staff)
+│
+└── shared_modules/                       # 🔗 Universal components
+    ├── ethical_guardrails.yaml
+    ├── viral_hooks.yaml
+    ├── kpi_schemas.yaml
+    └── integration_protocols.yaml
+```
+
+### **🔍 DETAILED IMPLEMENTATION STATUS - LIVE TRACKING**
 
 ```bash
 # Main modular architecture directory
@@ -86,11 +121,12 @@ agents/
 - ✅ **Total Lines**: ~400 lines across all files (well under maintainability limits)
 - ✅ **Crisis Prevention**: Phase 5 integration path secured (no 3,608-line files)
 
-**🔄 UPDATE PROCEDURE**: When adding new agents or modules, update this section immediately with:
-1. New directory paths
-2. Actual file line counts
-3. Implementation status (planned/in-progress/complete)
-4. Update timestamp
+**🔄 MANDATORY UPDATE PROCEDURES**: 
+1. **Complete Architecture Overview**: Update visual structure with new agents/modules
+2. **Detailed Implementation Status**: Update line counts and implementation status
+3. **Both sections MUST be updated simultaneously** 
+4. **Update timestamp on both sections**
+5. **Validate structure with commands below**
 
 ### **File Size Limits (Enforced)**
 ```
@@ -514,7 +550,7 @@ cProfile.run('agents.loader.load_agent_roster()', sort='cumtime')
 
 ### **🚨 CRITICAL SOP REQUIREMENT**
 
-**Every time a file is added, modified, or removed from the modular architecture, the "CURRENT IMPLEMENTATION STATUS" section above MUST be updated immediately.**
+**Every time a file is added, modified, or removed from the modular architecture, BOTH the "Complete 9-Agent Architecture Overview" and "Detailed Implementation Status" sections above MUST be updated immediately and simultaneously.**
 
 ### **Standard Update Procedure**
 

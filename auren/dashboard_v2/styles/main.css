@@ -280,6 +280,45 @@ body {
     font-size: 1.25rem;
 }
 
+/* Horizontal scrolling agents */
+.agents-horizontal-scroll {
+    display: flex;
+    gap: 2rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 1rem 0 2rem 0;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-blue) rgba(255, 255, 255, 0.1);
+}
+
+.agents-horizontal-scroll::-webkit-scrollbar {
+    height: 8px;
+}
+
+.agents-horizontal-scroll::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.agents-horizontal-scroll::-webkit-scrollbar-thumb {
+    background: var(--accent-blue);
+    border-radius: 4px;
+}
+
+.agents-horizontal-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-purple);
+}
+
+.scroll-hint {
+    text-align: center;
+    margin-top: 1rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    opacity: 0.7;
+}
+
+/* Legacy grid for fallback */
 .features-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -287,16 +326,21 @@ body {
 }
 
 .feature-card {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 20px;
-    padding: 3rem;
+    padding: 2rem;
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
     text-decoration: none;
     color: inherit;
     display: block;
+    min-width: 320px;
+    max-width: 320px;
+    flex-shrink: 0;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .feature-card:hover {

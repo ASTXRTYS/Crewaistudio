@@ -95,8 +95,14 @@ CrewAI-Studio-main/
 │   │   └── [OTHER OPERATIONS DOCS]
 │   │
 │   ├── SOPs/                           # 🔧 STANDARD OPERATING PROCEDURES
-│   │   ├── SOP-001-MASTER-OPERATIONS-GUIDE.md    # 📋 Daily operations (NEW)
-│   │   └── SOP-003-WORKING-BACKEND-CONFIGURATION.md # 🔧 Backend config (UPDATED)
+│   │   ├── SOP-000-MASTER-SOP-INDEX.md          # 🎯 NEW: Master SOP navigation hub (July 31, 2025)
+│   │   ├── SOP-001-MASTER-OPERATIONS-GUIDE.md    # 📋 Daily operations
+│   │   ├── SOP-003-AUREN-MASTER-TECHNICAL-SPECIFICATION.md # 🔧 Backend config
+│   │   ├── SOP-004-NEUROS-MODULAR-ARCHITECTURE-IMPLEMENTATION.md # 🏗️ NEW: Modular architecture (July 31, 2025)
+│   │   ├── SOP-005-AGENT-MODULAR-CONFIGURATION-MANAGEMENT.md # 🔧 NEW: Universal agent templates (July 31, 2025)
+│   │   ├── SOP-006-MODULAR-SYSTEM-TESTING-AND-VALIDATION.md # 🔍 NEW: Comprehensive testing framework (July 31, 2025)
+│   │   ├── SOP-007-PHASE-INTEGRATION-PROCEDURES.md # 🚀 NEW: Safe phase integration (July 31, 2025)
+│   │   └── SOP-008-MODULAR-ARCHITECTURE-TROUBLESHOOTING.md # 🛠️ NEW: Emergency response procedures (July 31, 2025)
 │   │
 │   └── CURRENT_SYSTEM_STATE.md         # 📊 Live system status (UPDATED)
 │

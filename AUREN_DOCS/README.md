@@ -1,69 +1,97 @@
-# AUREN DOCUMENTATION HUB - LOCKED CONFIGURATION
+# AUREN DOCUMENTATION HUB - HUMAN PERFORMANCE OS
 
-**Last Updated**: July 31, 2025 - MASTER BLUEPRINT INTEGRATION  
-**Status**: ✅ PRODUCTION READY - STRATEGIC VISION + OPERATIONAL REALITY
+**Last Updated**: July 31, 2025 - HUMAN PERFORMANCE OS ARCHITECTURE INTEGRATION  
+**Status**: 🎯 **STRATEGIC COMMAND CENTER** - Complete System Architecture + Operations
 
-## 🚨 **CRITICAL: START HERE FOR ALL ENGINEERS**
+## 🚨 **SUPREME STRATEGIC REFERENCE - READ FIRST**
 
-**PRIMARY REFERENCES (Read in Order)**:
-1. **[AUREN MASTER SYSTEM BLUEPRINT v22](AUREN_MASTER_SYSTEM_BLUEPRINT_v22.md)** - 🎯 **STRATEGIC VISION + OPERATIONAL REALITY**
-2. **[AUREN STATE OF READINESS REPORT](../auren/AUREN_STATE_OF_READINESS_REPORT.md)** - Current system status and capabilities
-3. **[CURRENT PRIORITIES](../CURRENT_PRIORITIES.md)** - Technical gaps and immediate deliverables
+**🎯 PRIMARY COMMAND DOCUMENT**:
+**[AUREN HUMAN PERFORMANCE OS ARCHITECTURE](AUREN_HUMAN_PERFORMANCE_OS_ARCHITECTURE.md)** - 🌟 **THE COMPLETE SYSTEM BLUEPRINT**
 
-⚠️ **FOR ANY ENGINEER**: The Master Blueprint v22 combines our strategic vision with operational reality. It shows where we're going, where we are, and how to get there. This is your **single source of truth** for understanding AUREN.
-
-**OPERATIONAL REFERENCE**: [`AUREN_SYSTEM_CONFIGURATION_OVERVIEW.md`](../AUREN_SYSTEM_CONFIGURATION_OVERVIEW.md) (Complete System Documentation & Research Guide)
-
-This documentation hub reflects the **LOCKED** AUREN configuration with strategic context integrated.
+*The definitive architecture for the world's first event-driven human performance operating system - nine specialist AI agents working as unified intelligence.*
 
 ---
 
-## ✅ **CURRENT SYSTEM STATUS (LOCKED)**
+## 📚 **STRATEGIC HIERARCHY - TIER 1 DOCUMENTS**
 
-### **PRODUCTION READY - 50-60% OF VISION IMPLEMENTED**
+**Read in this exact order for complete understanding**:
+
+1. **[🎯 Human Performance OS Architecture](AUREN_HUMAN_PERFORMANCE_OS_ARCHITECTURE.md)** - **SUPREME BLUEPRINT**
+   - Complete 9-agent system architecture
+   - Event-driven orchestration & real-time collaboration
+   - Cross-domain reasoning & unified intelligence
+
+2. **[📊 Master System Blueprint v22](AUREN_MASTER_SYSTEM_BLUEPRINT_v22.md)** - Strategic vision + operational reality
+   - Market positioning & competitive advantages
+   - Implementation status & technical roadmap
+
+3. **[📈 State of Readiness Report](../auren/AUREN_STATE_OF_READINESS_REPORT.md)** - Current operational status
+   - Production system capabilities & health
+   - Technical gap analysis & completion metrics
+
+4. **[🎯 Current Priorities](../CURRENT_PRIORITIES.md)** - Technical gaps & immediate deliverables
+   - High-leverage gap analysis & strategic discussions
+   - Implementation roadmap & resource allocation
+
+---
+
+## ✅ **CURRENT SYSTEM STATUS - HUMAN PERFORMANCE OS**
+
+### **🎭 Agent Implementation Status (1 of 9 Operational)**
 ```
-Strategic Vision:   ✅ Documented in Master Blueprint v22
-Implementation:     ✅ 50-60% complete with clear roadmap
-Backend Services:   ✅ 7 containers running (neuros-advanced, biometric-production, etc.)
-PWA Frontend:       ✅ Live at https://auren-b1tuli19i-jason-madrugas-projects.vercel.app
-AI Engine:          ✅ NEUROS with cognitive modes and hot memory  
-Communication:      ✅ HTTPS→HTTP via Vercel proxy (CORS enabled)
-End-to-End:         ✅ Full conversation working
-Documentation:      ✅ Strategic + operational alignment complete
+🎯 AUREN (Chief-of-Staff):     ✅ UI Ready - orchestration pending specialist completion
+🧠 NEUROS (Brain & Nerves):    ✅ FULLY OPERATIONAL - cognitive modes, hot memory, <2s response
+🥗 NUTROS (Nutrition):         🔧 Month 3 - meal planning, supplementation protocols
+🏃 KINETOS (Movement):         🔧 Month 4 - mobility, injury prevention, physio protocols  
+💪 HYPERTROS (Strength):       🔧 Month 5 - periodization, progressive overload programming
+❤️ CARDIOS (Cardiovascular):   🔧 Month 6 - zone training, VO₂-max optimization
+😴 SOMNOS (Sleep):             🔧 Month 7 - sleep architecture, chronotype tuning
+👁️ OPTICOS (Visual):          🔧 Month 8 - MIRAGE integration, aesthetic analysis
+🧪 ENDOS (Endocrine):          🔧 Month 9 - peptide cycles, hormonal optimization
+```
+
+### **🔥 Performance OS Capabilities**
+```
+Event-Driven Architecture:  ✅ Kafka foundation operational (advanced CEP patterns pending)
+3-Tier Memory System:       ⚠️ 66% complete (Hot memory operational, warm/cold pending)
+Cross-Agent Collaboration:  🔧 Framework designed, implementation starts Month 3
+Real-Time Intelligence:     ✅ <2s response times achieved (single agent)
+Unified Orchestration:      🔧 AUREN chief-of-staff role designed, pending specialist integration
 ```
 
 **Configuration Locked**: January 30, 2025  
-**Strategic Integration**: July 31, 2025  
-**Next Phase**: Execute roadmap from Master Blueprint v22
+**Performance OS Design**: July 31, 2025  
+**Next Phase**: Execute 9-agent implementation roadmap
 
 ---
 
-## 🚀 **QUICK START FOR NEW ENGINEERS**
+## 🚀 **QUICK START FOR ENGINEERS - PERFORMANCE OS FOCUS**
 
-### 1. Read Strategic Context First
-- **[Master Blueprint v22](AUREN_MASTER_SYSTEM_BLUEPRINT_v22.md)** - 🎯 **WHY we built AUREN + HOW it works**
-- **[State of Readiness](../auren/AUREN_STATE_OF_READINESS_REPORT.md)** - Current operational status
-- **[Current Priorities](../CURRENT_PRIORITIES.md)** - What needs to be built next
+### 1. Understand the Complete Vision
+- **[🎯 Human Performance OS Architecture](AUREN_HUMAN_PERFORMANCE_OS_ARCHITECTURE.md)** - **START HERE** for complete system understanding
+- **[📊 Master Blueprint v22](AUREN_MASTER_SYSTEM_BLUEPRINT_v22.md)** - Strategic context and market positioning
+- **[📈 State of Readiness](../auren/AUREN_STATE_OF_READINESS_REPORT.md)** - What's currently working
 
-### 2. Understand Operations  
-- **[SOP-001: Master Operations Guide](SOPs/SOP-001-MASTER-OPERATIONS-GUIDE.md)** - Daily procedures  
-- **[SOP-003: Technical Specification](SOPs/SOP-003-AUREN-MASTER-TECHNICAL-SPECIFICATION.md)** - System architecture
-- **[Credentials Vault](00_QUICK_START/CREDENTIALS_VAULT.md)** - All passwords and access
+### 2. Review Implementation Status  
+- **[🎯 Current Priorities](../CURRENT_PRIORITIES.md)** - Technical gaps requiring resolution
+- **[⚙️ SOP-001: Operations Guide](SOPs/SOP-001-MASTER-OPERATIONS-GUIDE.md)** - Daily operational procedures
+- **[🏗️ SOP-003: Technical Specification](SOPs/SOP-003-AUREN-MASTER-TECHNICAL-SPECIFICATION.md)** - Current system architecture
 
-### 3. Verify System Status
+### 3. Access Production Systems
 ```bash
-# Test PWA access
+# Test Human Performance OS foundation
 curl https://auren-b1tuli19i-jason-madrugas-projects.vercel.app/
 
-# Test backend health via proxy
-curl https://auren-b1tuli19i-jason-madrugas-projects.vercel.app/api/neuros/health
+# Test NEUROS agent (currently operational)
+curl https://auren-omacln1ad-jason-madrugas-projects.vercel.app/api/neuros/health
+
+# Verify event-driven foundation
+curl http://144.126.215.218:8000/health
 ```
 
-### 3. Access Backend
-```bash
-sshpass -p '.HvddX+@6dArsKd' ssh -o StrictHostKeyChecking=no root@144.126.215.218
-/root/monitor-auren.sh
-```
+### 4. Development Environment
+- **[🔐 Credentials Vault](00_QUICK_START/CREDENTIALS_VAULT.md)** - All passwords and access
+- **[🔧 SSH Access Standard](00_QUICK_START/SSH_ACCESS_STANDARD.md)** - Server access procedures
 
 ---
 

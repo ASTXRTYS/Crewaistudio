@@ -1,34 +1,87 @@
 ---
-# AUREN Agent Roster - Modular Configuration Hub
-# Focus: ONLY implemented features (Phases 1-2 + working hot memory)
+# AUREN Agent Roster – v1.1
+# Includes all nine specialists; non-implemented agents set enabled: false
 
-version: 1.0
+version: 1.1
 last_updated: "2025-07-31"
 
 common:
   tone_shift_labels: true
   shareable_hook_default: false
-  ethical_guardrails: true
-  kpi_schema:
-    - metric
-    - value
-    - unit
-    - confidence
-    - timestamp
+  ethical_guardrails: true          # pulls shared_modules/ethical_guardrails.yaml
+  kpi_schema: [ metric, value, unit, confidence, timestamp ]
 
 agents:
+
+  #######################################################################
+  # 1. Implemented Specialist
+  #######################################################################
   NEUROS:
+    enabled: true
+    status: "alpha"                 # alpha | beta | prod
     role: "Central Nervous System Specialist"
-    emotional_anchors: [ "Curious", "Structured", "Empathetic" ]
+    emotional_anchors: [ Curious, Structured, Empathetic ]
     shareable_hook: false
     responsibilities:
       - analyze_biometrics
       - cognitive_mode_switching
       - conversation_optimization
-    kpis: [ "Response_quality", "Mode_switching_accuracy", "User_engagement" ]
-    upstream_topics: [ "wearables.biometric", "user.interaction" ]
-    downstream_topics: [ "insights", "recommendations" ]
-    include: 
-      - "neuros_modules/core_personality.yaml"
-      - "neuros_modules/cognitive_modes.yaml"
-      - "shared_modules/ethical_guardrails.yaml" 
+    kpis: [ HRV_trend, Fatigue_index, CNS_load ]
+    upstream_topics: [ wearables.biometric, user.interaction ]
+    downstream_topics: [ insights, recommendations ]
+    include:
+      - neuros_modules/core_personality.yaml
+      - neuros_modules/cognitive_modes.yaml
+      - shared_modules/ethical_guardrails.yaml
+
+  #######################################################################
+  # 2-9. Skeleton Specialists (placeholders)
+  #######################################################################
+  NUTROS:
+    enabled: false
+    status: "todo"
+    role: "Nutrition & Supplement Strategist"
+    include:
+      - nutros_modules/core_personality.yaml   # create empty file for now
+
+  KINETOS:
+    enabled: false
+    status: "todo"
+    role: "Mobility & Injury-Prevention Specialist"
+    include: [ kinetos_modules/core_personality.yaml ]
+
+  HYPERTROS:
+    enabled: false
+    status: "todo"
+    role: "Strength & Hypertrophy Coach"
+    include: [ hypertros_modules/core_personality.yaml ]
+
+  CARDIOS:
+    enabled: false
+    status: "todo"
+    role: "Cardiometabolic Engine Optimizer"
+    include: [ cardios_modules/core_personality.yaml ]
+
+  ENDOS:
+    enabled: false
+    status: "todo"
+    role: "Peptide & Endocrine Strategist"
+    include: [ endos_modules/core_personality.yaml ]
+
+  OPTICOS:
+    enabled: false
+    status: "todo"
+    role: "Visual Biometrics Analyst"
+    include: [ opticos_modules/core_personality.yaml ]
+
+  SOMNOS:
+    enabled: false
+    status: "todo"
+    role: "Sleep & Recovery Architect"
+    include: [ somnos_modules/core_personality.yaml ]
+
+  AUREN:
+    enabled: false
+    status: "todo"
+    role: "Chief-of-Staff Orchestrator"
+    include: [ auren_modules/core_personality.yaml ] 

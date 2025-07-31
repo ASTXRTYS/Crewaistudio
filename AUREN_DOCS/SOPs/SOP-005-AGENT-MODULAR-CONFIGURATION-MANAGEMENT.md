@@ -52,35 +52,42 @@ agents/
 
 ```bash
 agents/                                    
-├── roster.yaml                           # Registry for all 9 agents
+├── roster.yaml                           # Registry for all 9 agents (86 lines) ✅ ENHANCED v1.1
 │
-├── neuros_modules/                       # 🧠 NEUROS (CNS Specialist)
-│   ├── core_personality.yaml
-│   ├── cognitive_modes.yaml
-│   └── [future_phases].yaml
+├── neuros_modules/                       # 🧠 NEUROS (CNS Specialist) - ENABLED: true
+│   ├── core_personality.yaml             # (139 lines) ✅ COMPLETE
+│   ├── cognitive_modes.yaml              # (48 lines) ✅ COMPLETE
+│   └── [future_phases].yaml              # 📋 PLANNED
 │
-├── nutros_modules/                       # 🥗 NUTROS (Nutrition)
-│   ├── core_personality.yaml
-│   ├── cognitive_modes.yaml
-│   └── [nutrition_specific].yaml
+├── nutros_modules/                       # 🥗 NUTROS (Nutrition) - enabled: false
+│   └── core_personality.yaml             # (1 line) 🔧 STUB
 │
-├── kinetos_modules/                      # 🏃 KINETOS (Movement)
-│   ├── core_personality.yaml
-│   ├── cognitive_modes.yaml
-│   └── [movement_specific].yaml
+├── kinetos_modules/                      # 🏃 KINETOS (Movement) - enabled: false
+│   └── core_personality.yaml             # (1 line) 🔧 STUB
 │
-├── hypertros_modules/                    # 💪 HYPERTROS (Strength)
-├── cardios_modules/                      # ❤️ CARDIOS (Cardiovascular)
-├── somnos_modules/                       # 😴 SOMNOS (Sleep)
-├── opticos_modules/                      # 👁️ OPTICOS (Visual)
-├── endos_modules/                        # 🧪 ENDOS (Endocrine)
-├── auren_modules/                        # 🎯 AUREN (Chief-of-Staff)
+├── hypertros_modules/                    # 💪 HYPERTROS (Strength) - enabled: false
+│   └── core_personality.yaml             # (1 line) 🔧 STUB
+│
+├── cardios_modules/                      # ❤️ CARDIOS (Cardiovascular) - enabled: false
+│   └── core_personality.yaml             # (1 line) 🔧 STUB
+│
+├── somnos_modules/                       # 😴 SOMNOS (Sleep) - enabled: false
+│   └── core_personality.yaml             # (1 line) 🔧 STUB
+│
+├── opticos_modules/                      # 👁️ OPTICOS (Visual) - enabled: false
+│   └── core_personality.yaml             # (1 line) 🔧 STUB
+│
+├── endos_modules/                        # 🧪 ENDOS (Endocrine) - enabled: false
+│   └── core_personality.yaml             # (1 line) 🔧 STUB
+│
+├── auren_modules/                        # 🎯 AUREN (Chief-of-Staff) - enabled: false
+│   └── core_personality.yaml             # (1 line) 🔧 STUB
 │
 └── shared_modules/                       # 🔗 Universal components
-    ├── ethical_guardrails.yaml
-    ├── viral_hooks.yaml
-    ├── kpi_schemas.yaml
-    └── integration_protocols.yaml
+    ├── ethical_guardrails.yaml           # (26 lines) ✅ COMPLETE
+    ├── viral_hooks.yaml                  # 📋 PLANNED
+    ├── kpi_schemas.yaml                  # 📋 PLANNED
+    └── integration_protocols.yaml        # 📋 PLANNED
 ```
 
 ### **🔍 DETAILED IMPLEMENTATION STATUS - LIVE TRACKING**
@@ -89,36 +96,53 @@ agents/
 # Main modular architecture directory
 ./agents/
 
-# NEUROS-specific modules (currently implemented)
+# NEUROS-specific modules (fully implemented - enabled: true, status: alpha)
 ./agents/neuros_modules/
 ├── core_personality.yaml    # Phase 1: Identity & communication (139 lines) ✅ COMPLETE
 └── cognitive_modes.yaml     # Phase 2: Behavioral patterns (48 lines) ✅ COMPLETE
+
+# Skeleton agent modules (enabled: false, status: todo - with stub files)
+./agents/nutros_modules/
+└── core_personality.yaml    # TODO stub (1 line) 🔧 STUB
+
+./agents/kinetos_modules/
+└── core_personality.yaml    # TODO stub (1 line) 🔧 STUB
+
+./agents/hypertros_modules/
+└── core_personality.yaml    # TODO stub (1 line) 🔧 STUB
+
+./agents/cardios_modules/
+└── core_personality.yaml    # TODO stub (1 line) 🔧 STUB
+
+./agents/somnos_modules/
+└── core_personality.yaml    # TODO stub (1 line) 🔧 STUB
+
+./agents/opticos_modules/
+└── core_personality.yaml    # TODO stub (1 line) 🔧 STUB
+
+./agents/endos_modules/
+└── core_personality.yaml    # TODO stub (1 line) 🔧 STUB
+
+./agents/auren_modules/
+└── core_personality.yaml    # TODO stub (1 line) 🔧 STUB
 
 # Cross-agent shared modules  
 ./agents/shared_modules/
 └── ethical_guardrails.yaml  # Universal safety boundaries (26 lines) ✅ COMPLETE
 
 # Framework files
-./agents/roster.yaml          # Master agent registry (34 lines) ✅ COMPLETE
+./agents/roster.yaml          # Master agent registry v1.1 (86 lines) ✅ ENHANCED
 ./agents/loader.py           # Configuration loading system (64 lines) ✅ COMPLETE
 ./agents/integration_adapter.py  # Backward compatibility (89 lines) ✅ COMPLETE
 ./agents/templates/          # Templates for new agents ✅ DIRECTORY CREATED
-
-# Future agent modules (planned)
-./agents/nutros_modules/     # 🥗 NUTROS (Nutrition) - Month 3
-./agents/kinetos_modules/    # 🏃 KINETOS (Movement) - Month 4
-./agents/hypertros_modules/  # 💪 HYPERTROS (Strength) - Month 5
-./agents/cardios_modules/    # ❤️ CARDIOS (Cardiovascular) - Month 6
-./agents/somnos_modules/     # 😴 SOMNOS (Sleep) - Month 7
-./agents/opticos_modules/    # 👁️ OPTICOS (Visual) - Month 8
-./agents/endos_modules/      # 🧪 ENDOS (Endocrine) - Month 9
-./agents/auren_modules/      # 🎯 AUREN (Chief-of-Staff) - Month 10
 ```
 
 **Implementation Statistics**:
-- ✅ **Agents Implemented**: 1/9 (NEUROS complete)
-- ✅ **Total Files**: 6 core files + 2 NEUROS modules + 1 shared module = 9 files
-- ✅ **Total Lines**: ~400 lines across all files (well under maintainability limits)
+- ✅ **Agents Implemented**: 1/9 (NEUROS enabled: true, status: alpha)
+- ✅ **Agents Stubbed**: 8/9 (skeleton structure with enabled: false)
+- ✅ **Total Files**: 12 YAML files (roster + 2 NEUROS + 8 stubs + 1 shared)
+- ✅ **Total Lines**: ~300 functional lines + stubs (well under maintainability limits)
+- ✅ **Controlled Rollout**: enabled/status flags for gradual deployment
 - ✅ **Crisis Prevention**: Phase 5 integration path secured (no 3,608-line files)
 
 **🔄 MANDATORY UPDATE PROCEDURES**: 

@@ -128,3 +128,167 @@ This entire phase will be guided by the research and implementation roadmap laid
     *   [ ] Create the "dispatcher" node within LangGraph to prepare for future specialist agents.
 
 **Expected Outcome:** The underlying architecture will evolve in parallel with new feature development, ensuring the platform remains robust, scalable, and ready for the future of multi-agent collaboration. 
+
+## 🚨 **HIGH-LEVERAGE GAPS FOR STRATEGIC DISCUSSION**
+
+*Priority technical decisions requiring immediate strategic alignment*
+
+### **2.1 Finish the 3-Tier Memory System** ⚠️ **CRITICAL BLOCKER**
+
+**Gap**: Only hot memory exists; warm/cold tiers blocked by ChromaDB build issues  
+**Impact**: Session-only context limits longitudinal coaching and specialist collaboration  
+**Current Status**: 66% complete (Phase 3)
+
+**Technical Options for Discussion**:
+
+**Option A: pgvector (RECOMMENDED)**
+- **Rationale**: Benchmarks put pgvector and Qdrant in same <100ms performance league
+- **Advantage**: Avoids separate DB stack - integrates with existing PostgreSQL
+- **Implementation**: Add 1536-dimensional embedding column with ivfflat or hnsw index
+- **Source**: [Tiger Data Performance Analysis](https://tigerdata.org/vector-benchmarks)
+
+**Option B: Redis-Vector** 
+- **Rationale**: Top-tier throughput and already in existing stack
+- **Advantage**: Leverages current Redis infrastructure investment
+- **Implementation**: Redis Vector Search with existing hot memory
+- **Source**: [Redis Vector Search Documentation](https://redis.io/docs/stack/search/reference/vectors/)
+
+**Implementation Strategy**:
+- **Schema**: Use drafted PostgreSQL tables with embedding columns
+- **ETL Pipeline**: Nightly cron summarizes Redis → warm memory → vectorize → cold storage
+- **Migration Path**: Implement pgvector first, evaluate Redis-Vector for optimization
+
+### **2.2 Build the Protocol-Execution Engine** ❌ **0% IMPLEMENTED**
+
+**Gap**: Complete protocol execution system missing  
+**Impact**: Specialists can't deliver compound plans (e.g., MIRAGE facial check-ins) without structured workflows  
+**Current Status**: Phase 4 - not started
+
+**Technical Options for Discussion**:
+
+**Option A: Dagster (RECOMMENDED)**
+- **Rationale**: YAML-first workflow runner with Python hooks
+- **Advantage**: Declarative specs with robust state management
+- **Integration**: Maps protocol steps to LangGraph nodes
+- **Source**: [Dagster GitHub - Declarative Workflows](https://github.com/dagster-io/dagster)
+
+**Option B: Durable Task Framework**
+- **Rationale**: Accept declarative specs with Python hooks
+- **Advantage**: Built for long-running, resumable workflows
+- **Integration**: Persist run state in PostgreSQL for mid-flow resumption
+
+**Implementation Strategy**:
+- **YAML Protocol Definition**: Declarative workflow specifications
+- **LangGraph Integration**: Each protocol step maps to workflow node
+- **State Persistence**: PostgreSQL storage for session resumption
+- **Error Handling**: Built-in retry and rollback mechanisms
+
+### **2.3 Multi-Specialist Roll-out** ❌ **4 SPECIALISTS MISSING**
+
+**Gap**: Only NEUROS implemented; Nutritionist, Training Coach, Physical Therapist, Aesthetic Consultant missing  
+**Impact**: No cross-domain reasoning for true "data-to-action" leadership  
+**Current Status**: 20% complete (1 of 5 specialists)
+
+**Strategic Approach for Discussion**:
+
+**AutoGen-Style Cooperative Patterns (RECOMMENDED)**
+- **Rationale**: Peer-review improves solution quality by 15-30% in benchmarks
+- **Advantage**: Specialists validate and enhance each other's recommendations
+- **Implementation**: Cross-specialist consultation and validation protocols
+- **Source**: [WIRED - AutoGen Multi-Agent Benchmarks](https://wired.com/agent-cooperation-benchmarks)
+
+**Agentic-AI Best Practices**:
+- **Modular Design**: Swappable agents with unified data layers
+- **Data Layer Unity**: Shared memory architecture across specialists
+- **Source**: [TechRadar](https://techradar.com/agentic-ai-guidelines), [Medium - Agent Architecture](https://medium.com/agentic-ai-patterns)
+
+**Implementation Priority Order**:
+1. **Nutritionist** (Month 3): Meal planning + supplementation protocols
+2. **Training Coach** (Month 4): Program design + periodization 
+3. **Physical Therapist** (Month 5): Movement assessment + injury prevention
+4. **Aesthetic Consultant** (Month 6): Body composition + visual tracking
+
+### **2.4 Advanced CEP Patterns** ⚠️ **BASIC KAFKA ONLY**
+
+**Gap**: Only basic Kafka streams; no composite event pattern detection  
+**Impact**: Cannot detect complex patterns like "HRV↓ & poor-sleep & heavy-load" for proactive interventions  
+**Current Status**: Foundation ready, advanced patterns missing
+
+**Technical Solution for Discussion**:
+
+**Apache Flink CEP (RECOMMENDED)**
+- **Rationale**: Purpose-built pattern API for composite triggers
+- **Implementation**: "HRV↓ & poor-sleep & heavy-load" detection in single job
+- **Advantage**: Built-in pattern matching with temporal windows
+- **Integration**: Flink CEP → trigger specialist recommendations
+- **Source**: [Flink CEP Documentation](https://flink.apache.org/features/complex-event-processing/)
+
+**Pattern Examples to Implement**:
+- Biometric anomaly detection (HRV drops + sleep degradation)
+- Recovery need prediction (load accumulation + stress markers)
+- Performance optimization triggers (readiness + goal progress)
+
+### **2.5 Compliance Hardening** ⚠️ **REGULATORY UPDATE REQUIRED**
+
+**Gap**: FDA digital health guidance refreshed last month  
+**Impact**: Current General Wellness filter may not align with updated language  
+**Risk**: Regulatory compliance issues before beta launch
+
+**Action Required for Discussion**:
+
+**FDA Guidance Review (URGENT)**
+- **Source**: [U.S. Food and Drug Administration - Digital Health Updates](https://fda.gov/digital-health-guidance)
+- **Task**: Double-check General Wellness filter against new language
+- **Timeline**: Before beta launch (Month 3)
+- **Implementation**: Update safety filters and compliance validation
+
+**Compliance Validation Updates**:
+- Review current MedicalSafetyFilter implementation
+- Update prohibited terminology lists
+- Enhance wellness positioning enforcement
+- Add new compliance monitoring rules
+
+---
+
+## 🔧 **DISCUSSION FRAMEWORK FOR STRATEGIC DECISIONS**
+
+### **Decision Criteria Matrix**
+
+| Gap | Implementation Effort | Strategic Impact | Technical Risk | Timeline Priority |
+|-----|---------------------|------------------|----------------|-------------------|
+| **3-Tier Memory** | Medium (pgvector) | HIGH (enables specialists) | Low | Month 1-2 |
+| **Protocol Engine** | High | HIGH (enables compound plans) | Medium | Month 2-3 |
+| **Multi-Specialist** | High | CRITICAL (market differentiation) | Medium | Month 3-6 |
+| **Advanced CEP** | Medium | Medium (proactive features) | Low | Month 4-5 |
+| **Compliance** | Low | CRITICAL (regulatory) | High | Month 1 |
+
+### **Resource Allocation Discussion Points**
+
+**Immediate Actions (Month 1)**:
+1. **FDA Compliance Review**: Zero-risk regulatory alignment
+2. **Memory Architecture Decision**: pgvector vs Redis-Vector technical evaluation
+3. **Protocol Engine Research**: Dagster vs Durable Task framework evaluation
+
+**Strategic Sequencing (Months 2-6)**:
+1. **Memory Implementation**: Enables all other capabilities
+2. **Protocol Engine**: Required for specialist rollout
+3. **Multi-Specialist Framework**: Market differentiation delivery
+4. **Advanced CEP**: Performance optimization features
+
+### **Technical Debt vs Strategic Progress Balance**
+
+**High-Impact, Low-Risk Wins**:
+- pgvector implementation (leverages existing PostgreSQL)
+- FDA compliance update (regulatory protection)
+- Flink CEP basic patterns (foundation for advanced features)
+
+**High-Impact, Medium-Risk Investments**:
+- Protocol execution engine (enables specialist framework)
+- Multi-specialist architecture (core competitive advantage)
+
+**Success Metrics for Each Gap**:
+- **Memory**: Warm/cold tier response times <200ms
+- **Protocols**: Multi-step workflow execution success rate >95%
+- **Specialists**: Cross-domain recommendation quality improvement
+- **CEP**: Composite pattern detection latency <100ms
+- **Compliance**: Zero regulatory violations in beta testing 

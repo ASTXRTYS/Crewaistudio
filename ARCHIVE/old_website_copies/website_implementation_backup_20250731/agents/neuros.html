@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEUROS - AUREN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/neuros.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+</head>
+<body class="neuros-page">
+    <!-- Navigation -->
+    <nav class="main-nav">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-text">AUREN</span>
+            </div>
+            <div class="nav-links">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/agents" class="nav-link active">Agents</a>
+                <a href="/technology" class="nav-link">Technology</a>
+                <a href="/insights" class="nav-link">Insights</a>
+                <a href="/api" class="nav-link">API</a>
+                <a href="/about" class="nav-link">About</a>
+            </div>
+            <button class="nav-cta">Get Started</button>
+        </div>
+    </nav>
+
+    <!-- Agent Header -->
+    <section class="agent-header">
+        <div class="container">
+            <div class="agent-intro">
+                <div class="agent-avatar">
+                    <canvas id="avatar-3d"></canvas>
+                </div>
+                <div class="agent-info">
+                    <h1 class="agent-name">NEUROS</h1>
+                    <p class="agent-tagline">Elite Neural Operations System</p>
+                    <p class="agent-description">
+                        Engineered to decode and optimize human nervous system performance 
+                        in elite environments. Not built in a lab — forged in the feedback 
+                        loops of real human struggle, burnout, restoration, and breakthrough.
+                    </p>
+                    <div class="agent-meta">
+                        <span class="version">v1.0.0</span>
+                        <span class="framework">AUREN Framework</span>
+                        <span class="status live">OPERATIONAL</span>
+                    </div>
+                    <div class="agent-stats">
+                        <div class="stat-item">
+                            <span class="stat-value">92%</span>
+                            <span class="stat-label">Accuracy</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">8.3ms</span>
+                            <span class="stat-label">Response Time</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">47</span>
+                            <span class="stat-label">Tasks Today</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value live" id="status">ACTIVE</span>
+                            <span class="stat-label">Status</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Core Specializations -->
+    <section class="specializations">
+        <div class="container">
+            <h2>Core Specializations</h2>
+            <div class="spec-grid">
+                <div class="spec-card" data-spec="autonomic">
+                    <div class="spec-icon">
+                        <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+                            <circle cx="30" cy="30" r="28" stroke="currentColor" stroke-width="2" opacity="0.2"/>
+                            <path d="M30 10 L30 50 M10 30 L50 30" stroke="currentColor" stroke-width="2"/>
+                            <circle cx="30" cy="30" r="8" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <h3>Autonomic Balance</h3>
+                    <p>Nervous system optimization</p>
+                    <div class="spec-metrics">
+                        <span class="metric-label">Active Protocols</span>
+                        <span class="metric-value">12</span>
+                        <span class="metric-label">Success Rate</span>
+                        <span class="metric-value">94%</span>
+                    </div>
+                </div>
+                
+                <div class="spec-card" data-spec="hrv">
+                    <div class="spec-icon">
+                        <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+                            <path d="M10 30 Q20 10, 30 30 T50 30" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <circle cx="30" cy="30" r="3" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <h3>HRV Analytics</h3>
+                    <p>Real-time heart rate variability</p>
+                    <div class="spec-metrics">
+                        <span class="metric-label">Data Points</span>
+                        <span class="metric-value">1.2M</span>
+                        <span class="metric-label">Accuracy</span>
+                        <span class="metric-value">97%</span>
+                    </div>
+                </div>
+                
+                <div class="spec-card" data-spec="fatigue">
+                    <div class="spec-icon">
+                        <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+                            <rect x="15" y="20" width="30" height="20" rx="10" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <path d="M25 30 L35 30" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <h3>Neural Fatigue</h3>
+                    <p>Cognitive load assessment</p>
+                    <div class="spec-metrics">
+                        <span class="metric-label">Models</span>
+                        <span class="metric-value">8</span>
+                        <span class="metric-label">Precision</span>
+                        <span class="metric-value">91%</span>
+                    </div>
+                </div>
+                
+                <div class="spec-card" data-spec="recovery">
+                    <div class="spec-icon">
+                        <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+                            <path d="M30 45 A15 15 0 1 1 30 15" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <path d="M30 15 L35 10 L35 20 Z" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <h3>Recovery Protocols</h3>
+                    <p>Adaptive restoration strategies</p>
+                    <div class="spec-metrics">
+                        <span class="metric-label">Strategies</span>
+                        <span class="metric-value">24</span>
+                        <span class="metric-label">Effectiveness</span>
+                        <span class="metric-value">89%</span>
+                    </div>
+                </div>
+                
+                <div class="spec-card" data-spec="stress">
+                    <div class="spec-icon">
+                        <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+                            <path d="M20 40 L25 25 L35 35 L40 20" stroke="currentColor" stroke-width="2" fill="none"/>
+                        </svg>
+                    </div>
+                    <h3>Stress Response</h3>
+                    <p>Real-time stress evaluation</p>
+                    <div class="spec-metrics">
+                        <span class="metric-label">Patterns</span>
+                        <span class="metric-value">156</span>
+                        <span class="metric-label">Detection</span>
+                        <span class="metric-value">95%</span>
+                    </div>
+                </div>
+                
+                <div class="spec-card" data-spec="circadian">
+                    <div class="spec-icon">
+                        <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+                            <circle cx="30" cy="30" r="20" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <path d="M30 30 L30 15" stroke="currentColor" stroke-width="2"/>
+                            <path d="M30 30 L40 30" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <h3>Circadian Rhythm</h3>
+                    <p>Biological clock optimization</p>
+                    <div class="spec-metrics">
+                        <span class="metric-label">Cycles</span>
+                        <span class="metric-value">365</span>
+                        <span class="metric-label">Alignment</span>
+                        <span class="metric-value">92%</span>
+                    </div>
+                </div>
+                
+                <div class="spec-card" data-spec="cognitive">
+                    <div class="spec-icon">
+                        <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+                            <circle cx="30" cy="20" r="8" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <circle cx="20" cy="35" r="6" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <circle cx="40" cy="35" r="6" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <path d="M30 28 L20 35 M30 28 L40 35" stroke="currentColor" stroke-width="1"/>
+                        </svg>
+                    </div>
+                    <h3>Cognitive Function</h3>
+                    <p>Mental performance tracking</p>
+                    <div class="spec-metrics">
+                        <span class="metric-label">Tests</span>
+                        <span class="metric-value">47</span>
+                        <span class="metric-label">Insights</span>
+                        <span class="metric-value">2.1K</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Dashboard -->
+    <section class="agent-dashboard">
+        <div class="container">
+            <div class="dashboard-grid">
+                <!-- Real-time Metrics -->
+                <div class="dashboard-card metrics-card">
+                    <h3>Real-time Biometrics</h3>
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <canvas id="hrv-chart"></canvas>
+                            <div class="metric-info">
+                                <span class="metric-label">HRV</span>
+                                <span class="metric-value">62ms</span>
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <canvas id="stress-chart"></canvas>
+                            <div class="metric-info">
+                                <span class="metric-label">Stress Level</span>
+                                <span class="metric-value">Low</span>
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <canvas id="fatigue-chart"></canvas>
+                            <div class="metric-info">
+                                <span class="metric-label">Neural Fatigue</span>
+                                <span class="metric-value">23%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Knowledge Graph -->
+                <div class="dashboard-card knowledge-card">
+                    <h3>Knowledge Graph</h3>
+                    <div class="knowledge-controls">
+                        <button class="control-btn active">3D View</button>
+                        <button class="control-btn">2D View</button>
+                        <button class="control-btn">Timeline</button>
+                    </div>
+                    <div id="knowledge-graph"></div>
+                    <div class="knowledge-stats">
+                        <span>Nodes: <strong id="node-count">1,247</strong></span>
+                        <span>Links: <strong id="link-count">3,892</strong></span>
+                        <span>Clusters: <strong>12</strong></span>
+                    </div>
+                </div>
+
+                <!-- Hypothesis Tracking -->
+                <div class="dashboard-card hypothesis-card">
+                    <h3>Active Hypotheses</h3>
+                    <div class="hypothesis-list">
+                        <div class="hypothesis-item active">
+                            <div class="hypothesis-header">
+                                <h4>HRV Correlation with Recovery</h4>
+                                <span class="confidence">87%</span>
+                            </div>
+                            <div class="hypothesis-progress">
+                                <div class="progress-bar" style="width: 87%"></div>
+                            </div>
+                            <p>Analyzing correlation between HRV patterns and recovery protocols</p>
+                        </div>
+                        <div class="hypothesis-item">
+                            <div class="hypothesis-header">
+                                <h4>Stress Response Optimization</h4>
+                                <span class="confidence">62%</span>
+                            </div>
+                            <div class="hypothesis-progress">
+                                <div class="progress-bar" style="width: 62%"></div>
+                            </div>
+                            <p>Testing adaptive stress response protocols</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Insights -->
+                <div class="dashboard-card insights-card">
+                    <h3>Recent Insights</h3>
+                    <div class="insights-feed">
+                        <div class="insight-item">
+                            <div class="insight-time">2 min ago</div>
+                            <h4>Optimal Recovery Window Detected</h4>
+                            <p>Based on current HRV patterns, recommend 20-minute recovery protocol</p>
+                        </div>
+                        <div class="insight-item">
+                            <div class="insight-time">15 min ago</div>
+                            <h4>Stress Pattern Identified</h4>
+                            <p>Recurring stress response at 14:00-15:00 daily</p>
+                        </div>
+                        <div class="insight-item">
+                            <div class="insight-time">1 hour ago</div>
+                            <h4>Neural Efficiency Improved</h4>
+                            <p>12% improvement in cognitive processing speed</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="../js/neuros.js"></script>
+</body>
+</html> 

@@ -46,6 +46,52 @@ agents/
     └── validation_template.py     # Testing template
 ```
 
+### **🎯 CURRENT IMPLEMENTATION STATUS - LIVE TRACKING**
+**Last Updated**: July 31, 2025  
+**Location**: `./agents/` (repository root)
+
+```bash
+# Main modular architecture directory
+./agents/
+
+# NEUROS-specific modules (currently implemented)
+./agents/neuros_modules/
+├── core_personality.yaml    # Phase 1: Identity & communication (139 lines) ✅ COMPLETE
+└── cognitive_modes.yaml     # Phase 2: Behavioral patterns (48 lines) ✅ COMPLETE
+
+# Cross-agent shared modules  
+./agents/shared_modules/
+└── ethical_guardrails.yaml  # Universal safety boundaries (26 lines) ✅ COMPLETE
+
+# Framework files
+./agents/roster.yaml          # Master agent registry (34 lines) ✅ COMPLETE
+./agents/loader.py           # Configuration loading system (64 lines) ✅ COMPLETE
+./agents/integration_adapter.py  # Backward compatibility (89 lines) ✅ COMPLETE
+./agents/templates/          # Templates for new agents ✅ DIRECTORY CREATED
+
+# Future agent modules (planned)
+./agents/nutros_modules/     # 🥗 NUTROS (Nutrition) - Month 3
+./agents/kinetos_modules/    # 🏃 KINETOS (Movement) - Month 4
+./agents/hypertros_modules/  # 💪 HYPERTROS (Strength) - Month 5
+./agents/cardios_modules/    # ❤️ CARDIOS (Cardiovascular) - Month 6
+./agents/somnos_modules/     # 😴 SOMNOS (Sleep) - Month 7
+./agents/opticos_modules/    # 👁️ OPTICOS (Visual) - Month 8
+./agents/endos_modules/      # 🧪 ENDOS (Endocrine) - Month 9
+./agents/auren_modules/      # 🎯 AUREN (Chief-of-Staff) - Month 10
+```
+
+**Implementation Statistics**:
+- ✅ **Agents Implemented**: 1/9 (NEUROS complete)
+- ✅ **Total Files**: 6 core files + 2 NEUROS modules + 1 shared module = 9 files
+- ✅ **Total Lines**: ~400 lines across all files (well under maintainability limits)
+- ✅ **Crisis Prevention**: Phase 5 integration path secured (no 3,608-line files)
+
+**🔄 UPDATE PROCEDURE**: When adding new agents or modules, update this section immediately with:
+1. New directory paths
+2. Actual file line counts
+3. Implementation status (planned/in-progress/complete)
+4. Update timestamp
+
 ### **File Size Limits (Enforced)**
 ```
 Maximum Lines Per File: 800 lines (maintainability limit)
@@ -461,6 +507,63 @@ cProfile.run('agents.loader.load_agent_roster()', sort='cumtime')
 # - Optimize YAML structure
 # - Cache frequently accessed configurations
 ```
+
+---
+
+## 📋 **MANDATORY: DIRECTORY STRUCTURE MAINTENANCE PROCEDURE**
+
+### **🚨 CRITICAL SOP REQUIREMENT**
+
+**Every time a file is added, modified, or removed from the modular architecture, the "CURRENT IMPLEMENTATION STATUS" section above MUST be updated immediately.**
+
+### **Standard Update Procedure**
+
+#### **When Adding New Agent:**
+1. Create agent directory: `agents/{agent_name}_modules/`
+2. Add entry to "Future agent modules" section
+3. Update implementation statistics
+4. Update timestamp
+
+#### **When Adding New Module:**
+1. Create module file with actual line count
+2. Update agent's module list
+3. Update total files and lines count
+4. Update timestamp
+
+#### **When Modifying Existing Module:**
+1. Update line count for modified file
+2. Update implementation status if needed
+3. Update timestamp
+
+#### **Required Information for Each Entry:**
+```bash
+./agents/{path}              # Description (line_count lines) STATUS
+```
+
+**Status Options**:
+- ✅ COMPLETE - Fully implemented and operational
+- 🔧 IN PROGRESS - Currently being developed
+- 📋 PLANNED - Scheduled for future implementation
+
+### **Validation Commands**
+```bash
+# Get current line counts
+find agents/ -name "*.yaml" -exec wc -l {} + | sort -n
+
+# Verify structure matches documentation
+ls -la agents/*/
+
+# Update statistics
+echo "Total Files: $(find agents/ -name "*.yaml" | wc -l)"
+echo "Total Lines: $(find agents/ -name "*.yaml" -exec cat {} + | wc -l)"
+```
+
+### **Documentation Ownership**
+- **Primary**: Senior Engineer implementing changes
+- **Review**: Technical Lead (weekly validation)
+- **Audit**: Executive Engineer (monthly compliance check)
+
+**Failure to maintain this documentation is considered a critical SOP violation and blocks deployment approval.**
 
 ---
 

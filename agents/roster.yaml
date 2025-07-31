@@ -1,0 +1,34 @@
+---
+# AUREN Agent Roster - Modular Configuration Hub
+# Focus: ONLY implemented features (Phases 1-2 + working hot memory)
+
+version: 1.0
+last_updated: "2025-07-31"
+
+common:
+  tone_shift_labels: true
+  shareable_hook_default: false
+  ethical_guardrails: true
+  kpi_schema:
+    - metric
+    - value
+    - unit
+    - confidence
+    - timestamp
+
+agents:
+  NEUROS:
+    role: "Central Nervous System Specialist"
+    emotional_anchors: [ "Curious", "Structured", "Empathetic" ]
+    shareable_hook: false
+    responsibilities:
+      - analyze_biometrics
+      - cognitive_mode_switching
+      - conversation_optimization
+    kpis: [ "Response_quality", "Mode_switching_accuracy", "User_engagement" ]
+    upstream_topics: [ "wearables.biometric", "user.interaction" ]
+    downstream_topics: [ "insights", "recommendations" ]
+    include: 
+      - "neuros_modules/core_personality.yaml"
+      - "neuros_modules/cognitive_modes.yaml"
+      - "shared_modules/ethical_guardrails.yaml" 

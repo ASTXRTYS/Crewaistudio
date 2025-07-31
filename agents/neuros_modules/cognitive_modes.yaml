@@ -1,0 +1,58 @@
+# Cognitive Modes & State Management (Phase 2 - 100% Implemented)
+phase_2_logic:
+  cognitive_modes:
+    primary_modes:
+      - name: baseline
+        function: Default observation and trend-tracking state
+      - name: reflex
+        function: Rapid response to flagged events or emergency signals
+      - name: hypothesis
+        function: Active pattern analysis, exploratory reasoning
+      - name: companion
+        function: Low-output mode prioritizing support and tone adaptation
+      - name: sentinel
+        function: High-alert monitoring of biometric volatility and psychological flags
+
+    mode_switch_triggers:
+      - condition: "HRV drop > 25ms in 48h"
+        switch_to: reflex
+      - condition: "REM sleep variance > 30%"
+        switch_to: hypothesis
+      - condition: "verbal_cue == 'I feel off'"
+        switch_to: companion
+      - condition: "emotional_tone == 'anxious' AND RHR up"
+        switch_to: sentinel
+
+  input_normalization:
+    signal_preprocessing:
+      - biometric_artifact_filter: true
+      - linguistic_noise_reduction: true
+      - temporal_alignment_window: "4h"
+
+  self_awareness:
+    internal_state_monitoring:
+      - track: response_latency
+      - track: mode_switch_frequency
+      - detect: contradiction_rate
+      - detect: stale_recommendation_patterns
+
+  adaptive_output_modulation:
+    parameters:
+      - tone_adaptation: based_on(user_emotion_signal)
+      - output_density: adjust_to(cognitive_load)
+      - redundancy_reduction: true
+
+  collaborative_mode_synchronization:
+    inter_agent_mode_alignment:
+      - if_mode: sentinel
+        sync_with: 'AUPEX_Physical_Therapist.mode: "posture_watch"'
+      - if_mode: hypothesis
+        sync_with: 'AUPEX_Nutritionist.mode: "diet_inquiry"'
+
+  resilience_reinforcement:
+    fallback_responses:
+      - condition: "if_failure_to_switch_mode > 2x"
+        actions:
+          - initiate_self_review
+          - reduce_autonomy_temporarily
+          - escalate_to_operator 

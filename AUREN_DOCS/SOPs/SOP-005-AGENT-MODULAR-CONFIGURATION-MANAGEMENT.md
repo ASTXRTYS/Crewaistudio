@@ -144,6 +144,7 @@ agents/
 - ✅ **Total Lines**: ~300 functional lines + stubs (well under maintainability limits)
 - ✅ **Controlled Rollout**: enabled/status flags for gradual deployment
 - ✅ **Crisis Prevention**: Phase 5 integration path secured (no 3,608-line files)
+- ✅ **Website Integration**: All 9 agents displayed on live aupex.ai with Coming Soon status
 
 **🔄 MANDATORY UPDATE PROCEDURES**: 
 1. **Complete Architecture Overview**: Update visual structure with new agents/modules

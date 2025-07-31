@@ -283,13 +283,15 @@ body {
 /* Horizontal scrolling agents */
 .agents-horizontal-scroll {
     display: flex;
-    gap: 2rem;
+    flex-wrap: nowrap;
+    gap: 1.5rem;
     overflow-x: auto;
     overflow-y: hidden;
     padding: 1rem 0 2rem 0;
     scroll-behavior: smooth;
     scrollbar-width: thin;
     scrollbar-color: var(--accent-blue) rgba(255, 255, 255, 0.1);
+    width: 100%;
 }
 
 .agents-horizontal-scroll::-webkit-scrollbar {
@@ -336,8 +338,8 @@ body {
     text-decoration: none;
     color: inherit;
     display: block;
-    min-width: 320px;
-    max-width: 320px;
+    min-width: 280px;
+    max-width: 280px;
     flex-shrink: 0;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);

@@ -73,6 +73,16 @@ services:
     networks:
       - auren-network
 
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.95.0
+    command: ["--config=/etc/otel.yaml"]
+    volumes:
+      - ./otel.yaml:/etc/otel.yaml
+    ports:
+      - "4318:4318"   # OTLP HTTP
+    networks:
+      - auren-network
+
 networks:
   auren-network:
     driver: bridge

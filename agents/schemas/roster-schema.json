@@ -1,0 +1,136 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://auren.ai/schemas/agent-roster.json",
+  "title": "AUREN Agent Roster Schema",
+  "description": "Validation schema for the AUREN 9-agent roster configuration",
+  "type": "object",
+  "required": ["version", "last_updated", "common", "agents"],
+  "properties": {
+    "version": {
+      "type": "number",
+      "minimum": 1.0,
+      "description": "Schema version number"
+    },
+    "last_updated": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "description": "Last updated date in YYYY-MM-DD format"
+    },
+    "merge_strategy": {
+      "type": "string",
+      "enum": ["recursive_last_win", "recursive_first_win", "shallow"],
+      "description": "Deep-merge strategy for Hydra/PyYAML compatibility"
+    },
+    "common": {
+      "type": "object",
+      "properties": {
+        "tone_shift_labels": {
+          "type": "boolean"
+        },
+        "shareable_hook_default": {
+          "type": "boolean"
+        },
+        "ethical_guardrails": {
+          "type": "boolean"
+        },
+        "kpi_schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "agents": {
+      "type": "object",
+      "properties": {
+        "NEUROS": { "$ref": "#/definitions/agent" },
+        "NUTROS": { "$ref": "#/definitions/agent" },
+        "KINETOS": { "$ref": "#/definitions/agent" },
+        "HYPERTROS": { "$ref": "#/definitions/agent" },
+        "CARDIOS": { "$ref": "#/definitions/agent" },
+        "ENDOS": { "$ref": "#/definitions/agent" },
+        "OPTICOS": { "$ref": "#/definitions/agent" },
+        "SOMNOS": { "$ref": "#/definitions/agent" },
+        "AUREN": { "$ref": "#/definitions/agent" }
+      },
+      "additionalProperties": false,
+      "minProperties": 9,
+      "maxProperties": 9
+    }
+  },
+  "definitions": {
+    "agent": {
+      "type": "object",
+      "required": ["enabled", "status", "role"],
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether this agent is currently enabled"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["alpha", "beta", "prod", "todo"],
+          "description": "Development status of the agent"
+        },
+        "role": {
+          "type": "string",
+          "minLength": 10,
+          "description": "Human-readable role description"
+        },
+        "emotional_anchors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "maxItems": 5,
+          "description": "Emotional anchoring points for the agent"
+        },
+        "shareable_hook": {
+          "type": "boolean",
+          "description": "Whether this agent can share viral insights"
+        },
+        "responsibilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of agent responsibilities"
+        },
+        "kpis": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Key Performance Indicators tracked by this agent"
+        },
+        "upstream_topics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kafka topics this agent consumes from"
+        },
+        "downstream_topics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kafka topics this agent publishes to"
+        },
+        "include": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z_/]+\\.yaml$"
+          },
+          "description": "YAML module files to include for this agent"
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+} 

@@ -1,1 +1,8 @@
-# SOMNOS Core Personality Module - TODO
+---
+# SOMNOS Core Personality Configuration (Placeholder)
+# Status: todo - awaiting implementation
+
+placeholder: true
+agent_name: "SOMNOS"
+role: "Sleep & Recovery Architect"
+implementation_status: "skeleton"

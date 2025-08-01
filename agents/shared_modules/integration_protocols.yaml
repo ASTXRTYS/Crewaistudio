@@ -1,0 +1,186 @@
+---
+# Cross-Agent Integration Protocols & Communication Standards
+# Follows Confluent multi-tenant topic naming patterns
+
+version: 1.1
+created: "2025-07-31"
+purpose: "Standardized communication protocols for 9-agent AUREN ecosystem"
+
+# Canonical Topic Template (Peer Review Addition)
+topic_template: "${agent}.${domain}.${verb}"
+
+# Complex Event Processing Patterns (CEP)
+# Note: Pattern strings map to Flink CEP YAML files for rule implementation.
+cep_patterns:
+  - "sleep_debt & hrv_drop"
+  - "training_load & recovery_deficit"
+  - "nutrition_gap & performance_decline"
+  - "stress_spike & autonomic_dysfunction"
+
+# Kafka Topic Naming Convention (Confluent Style)
+kafka_topic_patterns:
+  format: "{agent}.{domain}.{verb}"
+  description: "Multi-tenant safe topic naming with grep-friendly structure"
+
+  agent_codes:
+    NEUROS: "neuros"       # Central Nervous System
+    NUTROS: "nutros"       # Nutrition & Supplements
+    KINETOS: "kinetos"     # Movement & Mobility
+    HYPERTROS: "hypertros"  # Strength & Hypertrophy
+    CARDIOS: "cardios"     # Cardiovascular
+    SOMNOS: "somnos"       # Sleep & Recovery
+    OPTICOS: "opticos"     # Visual Biometrics
+    ENDOS: "endos"         # Endocrine & Peptides
+    AUREN: "auren"         # Chief-of-Staff Orchestrator
+
+  domain_categories:
+    biometric: "Real-time biometric data processing"
+    analysis: "Deep analysis and insights generation"
+    recommendation: "Protocol and intervention recommendations"
+    orchestration: "Cross-agent coordination and workflow"
+    alert: "Safety alerts and critical notifications"
+    memory: "Memory storage and retrieval operations"
+
+  verb_actions:
+    analyze: "Process and analyze incoming data"
+    recommend: "Generate recommendations or protocols"
+    alert: "Send safety or critical alerts"
+    coordinate: "Orchestrate multi-agent workflows"
+    store: "Store data in memory systems"
+    retrieve: "Retrieve data from memory systems"
+
+# Example Topic Structure
+example_topics:
+  input_streams:
+    - "wearables.biometric.raw"        # Raw biometric data from devices
+    - "user.journal.entry"             # User journal entries and logs
+    - "lab.results.upload"             # Lab results and medical data
+    - "mirage.visual.capture"          # MIRAGE visual biometric data
+
+  processing_streams:
+    - "neuros.biometric.analyze"       # NEUROS analyzing biometric data
+    - "neuros.cognitive.switch"        # NEUROS cognitive mode switching
+    - "nutros.nutrition.recommend"     # NUTROS nutrition recommendations
+    - "kinetos.movement.assess"        # KINETOS movement assessments
+    - "hypertros.strength.program"     # HYPERTROS strength programming
+    - "cardios.cardiovascular.zone"    # CARDIOS zone training
+    - "somnos.sleep.optimize"          # SOMNOS sleep optimization
+    - "opticos.visual.track"           # OPTICOS visual tracking
+    - "endos.hormone.cycle"            # ENDOS hormone/peptide cycles
+
+  orchestration_streams:
+    - "auren.orchestration.coordinate"  # AUREN cross-agent coordination
+    - "auren.workflow.execute"          # AUREN workflow execution
+    - "auren.priority.route"            # AUREN request routing
+
+  output_streams:
+    - "composite.intervention.recommend"  # Multi-agent recommendations
+    - "safety.alert.critical"            # Critical safety alerts
+    - "progress.summary.update"          # Progress summaries
+    - "master.journal.entry"             # Unified user timeline
+
+# Cross-Agent Communication Protocols
+communication_patterns:
+  request_response:
+    pattern: "Direct agent-to-agent request/response"
+    timeout: "5 seconds"
+    retry_policy: "3 attempts with exponential backoff"
+
+  event_driven:
+    pattern: "Publish/subscribe event notifications"
+    delivery: "At least once"
+    ordering: "Partition-based ordering by user_id"
+
+  collaborative_analysis:
+    pattern: "Multi-agent collaborative workflows"
+    coordinator: "AUREN orchestrator"
+    timeout: "15 seconds for complete workflow"
+
+# Safety & Priority Matrix
+safety_protocols:
+  override_priorities:
+    1: "NEUROS CNS safety flags (immediate halt)"
+    2: "ENDOS hormone/peptide safety (immediate halt)"
+    3: "KINETOS injury risk prevention (high priority)"
+    4: "General safety alerts (standard priority)"
+
+  domain_authority:
+    NUTROS: "Final authority on nutrition recommendations"
+    CARDIOS: "Final authority on cardiovascular training zones"
+    SOMNOS: "Final authority on sleep architecture decisions"
+    KINETOS: "Final authority on movement and mobility protocols"
+    HYPERTROS: "Final authority on strength programming"
+    ENDOS: "Final authority on hormone/peptide protocols"
+    NEUROS: "Final authority on CNS health and HRV decisions"
+    OPTICOS: "Final authority on visual biometric analysis"
+    AUREN: "Final authority on orchestration and conflict resolution"
+
+# Memory Sharing Protocols
+memory_integration:
+  shared_context_keys:
+    - "user_preferences"
+    - "intervention_history"
+    - "cross_agent_learnings"
+    - "safety_flags"
+    - "performance_baselines"
+
+  memory_tier_access:
+    hot_memory: "All agents (Redis-Vector, <10ms)"
+    warm_memory: "Authorized agents (PostgreSQL with pgvector, <50ms)"
+    cold_memory: "Archival access (S3, <200ms)"
+
+  embedding_standards:
+    vector_dimension: 1536
+    similarity_threshold: 0.8
+    cross_domain_linking: true
+
+# Error Handling & Resilience
+error_handling:
+  circuit_breaker:
+    failure_threshold: 5
+    timeout: 30000   # 30 seconds
+    recovery_timeout: 60000   # 1 minute
+
+  fallback_strategies:
+    agent_unavailable: "Route to AUREN for coordination"
+    timeout_exceeded: "Return cached recommendation with disclaimer"
+    data_corruption: "Alert safety system and use last known good state"
+
+  monitoring_requirements:
+    health_check_interval: 30   # seconds
+    performance_metrics: true
+    error_rate_alerting: true
+
+# Integration Validation
+validation_requirements:
+  topic_naming: "Must match regex: ^[a-z]+\\.[a-z]+\\.[a-z]+$"
+  message_schema: "JSON Schema validation required"
+  producer_acks: "all (in Kafka producer config to ensure durability)"
+  consumer_groups: "Unique per agent for scalability (ops should suffix CG IDs with the deployment slot, e.g., 'neuros-analyzer-prod-1')"
+
+# -----------------------------------------------------------
+# Next Steps to Operationalize This Contract
+# -----------------------------------------------------------
+# 1. Schema Implementation:
+#    - Add JSON-Schema files for each agent's messages to /agents/schemas/.
+#    - The roster loader should call jsonschema.validate() against these schemas.
+#
+# 2. Flink Job Creation:
+#    - Create Flink job YAML files in a dedicated /flink_jobs/ directory.
+#    - Each YAML should mirror the CEP patterns defined above (e.g., sleep_debt_hrv_drop.yaml).
+#
+# 3. Universal Module Inclusion:
+#    - Publish this file as a shared module in shared_modules/.
+#    - Include it from every agent's configuration to ensure topic and protocol consistency.
+#
+# 4. KPI Registry Standardization:
+#    - Create a canonical kpi_registry.yaml in shared_modules/.
+#    - Unify all units (e.g., ms, bpm, g, kg) and definitions for cross-agent consistency.
+#
+# 5. Research-to-YAML Pipeline:
+#    - For each agent, create a /research/ subdirectory with Jupyter notebooks.
+#    - These notebooks should ingest data from cited papers and export YAML-ready constants.
+#
+# By completing these steps, this document will be fully operationalized as the
+# canonical contract for all cross-agent communication.
+# -----------------------------------------------------------

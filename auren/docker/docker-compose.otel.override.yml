@@ -1,0 +1,77 @@
+# NEUROS OpenTelemetry Blue-Green Deployment Override
+# Created: 2025-07-31 | Senior Engineer | Following AUREN SOPs
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.otel.override.yml up -d
+
+version: '3.8'
+
+services:
+  # Blue-Green NEUROS with OpenTelemetry
+  neuros-otel:
+    image: neuros-advanced:otel-v2.0.0
+    container_name: neuros-otel
+    restart: unless-stopped
+    networks:
+      - auren-network
+    ports:
+      - "8001:8000"  # Different port for blue-green deployment
+    environment:
+      # OpenTelemetry Configuration
+      - OTEL_SERVICE_NAME=auren-neuros
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+      - OTEL_SDK_DISABLED=false
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=auren-neuros,service.version=2.0.0-otel,deployment.color=blue
+      
+      # Application Configuration  
+      - LOG_LEVEL=INFO
+      - SERVICE_NAME=auren-neuros
+      - PYTHONUNBUFFERED=1
+      
+      # Database & Infrastructure
+      - POSTGRES_URL=postgresql://auren_user:auren_secure_2024@auren-postgres:5432/auren_production
+      - REDIS_URL=redis://auren-redis:6379/0
+      - KAFKA_BOOTSTRAP_SERVERS=auren-kafka:9092
+      
+    volumes:
+      - neuros-otel-logs:/app/logs
+      - neuros-otel-data:/app/data
+    
+    # Production hardening
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+    
+    # Health monitoring
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    
+    # Resource limits (following production guidance)
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    
+    depends_on:
+      - otel-collector
+      - auren-postgres
+      - auren-redis
+      - auren-kafka
+
+volumes:
+  neuros-otel-logs:
+    driver: local
+  neuros-otel-data:
+    driver: local
+
+networks:
+  auren-network:
+    external: true 

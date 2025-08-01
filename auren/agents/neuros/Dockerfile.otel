@@ -1,0 +1,76 @@
+# NEUROS OpenTelemetry Production Image - Multi-Stage Build
+# Created: 2025-07-31 | Senior Engineer | Following AUREN SOPs
+
+# ===== BUILD STAGE =====
+FROM python:3.11-slim AS builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory for build
+WORKDIR /build
+
+# Copy and install dependencies in build stage
+COPY requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+# ===== RUNTIME STAGE =====
+FROM python:3.11-slim AS runtime
+
+# Install only runtime dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create non-root user following Docker security best practices
+RUN useradd -m -u 1000 neuros
+
+# Set working directory
+WORKDIR /app
+
+# Copy installed packages from builder stage
+COPY --from=builder /root/.local /home/neuros/.local
+
+# Copy application files
+COPY --chown=neuros:neuros neuros_advanced_reasoning_simple.py .
+COPY --chown=neuros:neuros otel_init.py .
+COPY --chown=neuros:neuros start_advanced.py .
+COPY --chown=neuros:neuros *.yaml ./
+
+# Create required directories
+RUN mkdir -p /app/logs /app/data && \
+    chown -R neuros:neuros /app
+
+# Switch to non-root user
+USER neuros
+
+# Add local packages to PATH
+ENV PATH=/home/neuros/.local/bin:$PATH
+ENV PYTHONPATH=/home/neuros/.local/lib/python3.11/site-packages:$PYTHONPATH
+
+# Environment variables for production
+ENV PYTHONUNBUFFERED=1
+ENV LOG_LEVEL=INFO
+ENV SERVICE_NAME=auren-neuros
+ENV OTEL_SERVICE_NAME=auren-neuros
+ENV OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+
+# OpenTelemetry environment variables (can be overridden)
+ENV OTEL_SDK_DISABLED=false
+ENV OTEL_RESOURCE_ATTRIBUTES=service.name=auren-neuros,service.version=2.0.0-otel
+
+# Health check for container orchestration
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:8000/health || exit 1
+
+# Expose application port
+EXPOSE 8000
+
+# Container restart policy handled by compose
+# Run the enhanced NEUROS service with OpenTelemetry
+CMD ["python", "start_advanced.py"] 

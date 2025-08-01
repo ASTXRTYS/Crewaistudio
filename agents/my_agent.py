@@ -34,7 +34,15 @@ except ImportError:
         rnd_id = _local_rnd_id
         fix_columns_width = _local_fix_columns_width
 
-from shared_utils import deep_merge, generate_kafka_topics
+# Ensure the 'agents' directory is in the path for shared_utils
+try:
+    from shared_utils import deep_merge, generate_kafka_topics
+except ImportError:
+    # This fallback is crucial for scripts run from the root directory
+    AGENT_DIR = os.path.dirname(__file__)
+    if AGENT_DIR not in sys.path:
+        sys.path.insert(0, AGENT_DIR)
+    from shared_utils import deep_merge, generate_kafka_topics
 
 # Tool Protocol for better type safety
 class ToolProtocol(Protocol):
@@ -222,6 +230,51 @@ class MyAgent:
         self.status = kwargs.get('status', 'active')
         self.enabled = kwargs.get('enabled', True)
         self.locked = kwargs.get('locked', False)  # Prevents deletion if true
+
+        # KPI configuration loading
+        self._kpi_registry = self._load_kpi_registry()
+        self._kpi_bindings = self._load_kpi_bindings()
+    
+    def _load_kpi_registry(self) -> Dict[str, Any]:
+        """Loads the canonical KPI registry."""
+        try:
+            registry_path = os.path.join(os.path.dirname(__file__), 'shared_modules', 'kpi_registry.yaml')
+            with open(registry_path, 'r') as f:
+                return yaml.safe_load(f).get('kpis', {})
+        except Exception as e:
+            if STREAMLIT_AVAILABLE:
+                st.warning(f"Could not load KPI registry: {e}")
+            return {}
+
+    def _load_kpi_bindings(self) -> Dict[str, Any]:
+        """Loads agent-specific KPI bindings from its module directory."""
+        if not self.agent_config_path:
+            return {}
+        try:
+            # Assumes bindings are in the same directory as the agent's core config
+            bindings_path = os.path.join(os.path.dirname(self.agent_config_path), 'kpi_bindings.yaml')
+            if os.path.exists(bindings_path):
+                with open(bindings_path, 'r') as f:
+                    return yaml.safe_load(f)
+            return {}
+        except Exception as e:
+            if STREAMLIT_AVAILABLE:
+                st.warning(f"Could not load KPI bindings for {self.role}: {e}")
+            return {}
+
+    def get_kpi_threshold(self, kpi_key: str, threshold_type: str) -> Optional[Any]:
+        """
+        Retrieves a specific KPI threshold from the agent's bindings.
+        Example: get_kpi_threshold('hrv_rmssd', 'risk_if') -> "< 25"
+        """
+        if not self._kpi_bindings:
+            return None
+        
+        for binding in self._kpi_bindings.get('kpis_used', []):
+            if binding.get('key') == kpi_key:
+                return binding.get('alerting', {}).get(threshold_type)
+        
+        return None
 
     def _get_default_llm_model(self) -> str:
         """Get default LLM model with module-level caching"""

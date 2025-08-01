@@ -27,6 +27,7 @@ import redis.asyncio as redis
 # FastAPI integration
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from .otel_init import configure_otel
 
 logger = logging.getLogger(__name__)
 
@@ -195,6 +196,7 @@ class NEUROSFastAPIIntegration:
     def __init__(self, neuros_workflow: NEUROSAdvancedWorkflow):
         self.workflow = neuros_workflow
         self.app = FastAPI(title="NEUROS Advanced Reasoning")
+        configure_otel(self.app)  # adds tracing + /metrics
         self._setup_routes()
         
     def _setup_routes(self):

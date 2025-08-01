@@ -1,0 +1,56 @@
+# NEUROS OpenTelemetry Production Image - Optimized Multi-Stage
+# Target: ~160MB runtime | Created: 2025-07-31 | Senior Engineer
+# Resolves version conflicts with known-good OTel bundle
+
+# ===== BUILDER STAGE =====
+FROM python:3.11-slim AS builder
+WORKDIR /build
+
+# Install only build essentials
+RUN apt-get update && apt-get install -y gcc g++ && rm -rf /var/lib/apt/lists/*
+
+# Copy lean requirements and install to /install prefix
+COPY requirements.otel.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.otel.txt
+
+# ===== RUNTIME STAGE =====
+FROM python:3.11-slim
+
+# Runtime environment variables
+ENV PYTHONUNBUFFERED=1 \
+    OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318 \
+    OTEL_SERVICE_NAME=auren-neuros \
+    OTEL_RESOURCE_ATTRIBUTES=service.name=auren-neuros,service.version=2.0.0-otel
+
+# Install minimal runtime dependencies
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user for security
+RUN useradd -m -u 1000 neuros
+
+# Set working directory
+WORKDIR /app
+
+# Copy Python packages from builder
+COPY --from=builder /install /usr/local
+
+# Copy application files with proper ownership
+COPY --chown=neuros:neuros neuros_advanced_reasoning_simple.py .
+COPY --chown=neuros:neuros otel_init.py .
+COPY --chown=neuros:neuros start_advanced.py .
+
+# Create required directories
+RUN mkdir -p /app/logs /app/data && chown -R neuros:neuros /app
+
+# Switch to non-root user
+USER neuros
+
+# Health check for container orchestration
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:8000/health || exit 1
+
+# Expose application port
+EXPOSE 8000
+
+# Run the NEUROS service with OpenTelemetry
+CMD ["uvicorn", "neuros_advanced_reasoning_simple:app", "--host", "0.0.0.0", "--port", "8000"] 

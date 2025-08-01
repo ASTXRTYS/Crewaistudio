@@ -1,1 +1,8 @@
-# HYPERTROS Core Personality Module - TODO
+---
+# HYPERTROS Core Personality Configuration (Placeholder)
+# Status: todo - awaiting implementation
+
+placeholder: true
+agent_name: "HYPERTROS"
+role: "Strength & Hypertrophy Coach"
+implementation_status: "skeleton"

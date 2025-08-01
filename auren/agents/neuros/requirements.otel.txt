@@ -1,0 +1,37 @@
+# NEUROS OpenTelemetry Production Requirements
+# Optimized with known-good OTel bundle (resolves PyPI conflicts)
+# Created: 2025-07-31 | Senior Engineer | Following production guidance
+
+# Known-good OpenTelemetry bundle (resolves API/SDK/exporter version conflicts)
+opentelemetry-distro==0.45b0
+opentelemetry-exporter-prometheus==0.45b0
+
+# Core LangGraph/LangChain - PRODUCTION VERSIONS
+langgraph==0.2.56
+langchain==0.3.17
+langchain-openai==0.3.28
+langchain-core==0.3.72
+
+# Async & Database (minimal set)
+asyncpg>=0.29.0
+redis[hiredis]>=5.0.1
+psycopg2-binary>=2.9.9
+pgvector>=0.2.0
+
+# Kafka (production-ready)
+confluent-kafka>=2.3.0
+
+# API Framework (pinned versions)
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+pydantic>=2.5.0
+
+# Essential utilities only
+python-dateutil>=2.8.2
+structlog>=23.2.0
+orjson>=3.9.10
+PyYAML>=6.0.1
+python-dotenv>=1.0.0
+
+# Health monitoring
+httpx>=0.25.2 

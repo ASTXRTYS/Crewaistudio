@@ -1,0 +1,46 @@
+# OpenTelemetry Collector Production Configuration
+# Created: 2025-07-31 | Senior Engineer | Following production guidance
+# Memory-optimized for 256Mi limit with guard rails
+
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+  
+  # Memory limiter - critical for 256Mi constraint
+  memory_limiter:
+    check_interval: 2s
+    limit_mib: 180  # Below 256Mi limit with safety margin
+
+exporters:
+  prometheus:
+    endpoint: "0.0.0.0:9464"
+    send_timestamps: true
+    
+  logging:
+    loglevel: info
+    
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch, memory_limiter]
+      exporters: [logging]
+      
+    metrics:
+      receivers: [otlp]
+      processors: [batch, memory_limiter]
+      exporters: [prometheus]
+      
+  telemetry:
+    logs:
+      level: info
+    metrics:
+      level: detailed 

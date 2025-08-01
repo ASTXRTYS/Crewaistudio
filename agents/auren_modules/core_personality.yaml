@@ -1,1 +1,8 @@
-# AUREN Core Personality Module - TODO
+---
+# AUREN Core Personality Configuration (Placeholder)
+# Status: todo - awaiting implementation
+
+placeholder: true
+agent_name: "AUREN"
+role: "Chief-of-Staff Orchestrator"
+implementation_status: "skeleton"

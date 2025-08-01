@@ -1,1 +1,8 @@
-# CARDIOS Core Personality Module - TODO
+---
+# CARDIOS Core Personality Configuration (Placeholder)
+# Status: todo - awaiting implementation
+
+placeholder: true
+agent_name: "CARDIOS"
+role: "Cardiometabolic Engine Optimizer"
+implementation_status: "skeleton"

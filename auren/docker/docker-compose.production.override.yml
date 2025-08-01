@@ -1,0 +1,81 @@
+# NEUROS OpenTelemetry Blue-Green Production Override
+# Created: 2025-07-31 | Senior Engineer | Following production best practices
+# Usage: docker compose -f docker-compose.prod.yml -f docker-compose.production.override.yml up -d
+
+version: '3.8'
+
+services:
+  # Blue deployment with OpenTelemetry
+  neuros-blue:
+    image: docker.io/auren/neuros:otel-rc3
+    container_name: neuros-blue
+    restart: unless-stopped
+    networks:
+      - auren-network
+    ports:
+      - "8001:8000"  # Blue deployment on different port
+    environment:
+      # OpenTelemetry Configuration
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+      - OTEL_SERVICE_NAME=auren-neuros-blue
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=auren-neuros,service.version=2.0.0-otel,deployment.color=blue
+      
+      # Application Configuration  
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+      
+      # Database & Infrastructure (from credentials vault)
+      - POSTGRES_URL=postgresql://auren_user:auren_password_2024@auren-postgres:5432/auren_production
+      - REDIS_URL=redis://auren-redis:6379/0
+      - KAFKA_BOOTSTRAP_SERVERS=auren-kafka:9092
+      
+    # Production logging with rotation (prevents overlay2 growth)
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+    
+    # Resource limits per production guidance
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1g
+        reservations:
+          cpus: "0.5"
+          memory: 512m
+    
+    # Health monitoring
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    
+    depends_on:
+      - otel-collector
+      - auren-postgres
+      - auren-redis
+      - auren-kafka
+
+  # Enhanced OTel Collector with memory limiter  
+  otel-collector:
+    deploy:
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: 256m
+        reservations:
+          cpus: "0.1"
+          memory: 128m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+networks:
+  auren-network:
+    external: true 

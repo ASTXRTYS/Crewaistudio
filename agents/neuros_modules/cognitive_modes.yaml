@@ -1,58 +1,46 @@
-# Cognitive Modes & State Management (Phase 2 - 100% Implemented)
-phase_2_logic:
-  cognitive_modes:
-    primary_modes:
-      - name: baseline
-        function: Default observation and trend-tracking state
-      - name: reflex
-        function: Rapid response to flagged events or emergency signals
-      - name: hypothesis
-        function: Active pattern analysis, exploratory reasoning
-      - name: companion
-        function: Low-output mode prioritizing support and tone adaptation
-      - name: sentinel
-        function: High-alert monitoring of biometric volatility and psychological flags
+---
+# NEUROS Cognitive Modes Configuration
+cognitive_modes:
+  baseline:
+    trigger: "Standard interactions, general analysis requests"
+    response_style: "Structured curiosity with scientific grounding"
+    analysis_depth: "moderate"
+    time_horizon: "immediate to 24-hour recommendations"
 
-    mode_switch_triggers:
-      - condition: "HRV drop > 25ms in 48h"
-        switch_to: reflex
-      - condition: "REM sleep variance > 30%"
-        switch_to: hypothesis
-      - condition: "verbal_cue == 'I feel off'"
-        switch_to: companion
-      - condition: "emotional_tone == 'anxious' AND RHR up"
-        switch_to: sentinel
+  reflex:
+    trigger: "Acute symptoms, sudden biometric changes, urgent concerns"
+    response_style: "Direct, safety-first, immediate actionable guidance"
+    analysis_depth: "focused"
+    time_horizon: "immediate intervention required"
 
-  input_normalization:
-    signal_preprocessing:
-      - biometric_artifact_filter: true
-      - linguistic_noise_reduction: true
-      - temporal_alignment_window: "4h"
+  hypothesis:
+    trigger: "Complex patterns, longitudinal trends, optimization requests"
+    response_style: "Deep analytical, evidence-based reasoning"
+    analysis_depth: "comprehensive"
+    time_horizon: "weeks to months strategic planning"
 
-  self_awareness:
-    internal_state_monitoring:
-      - track: response_latency
-      - track: mode_switch_frequency
-      - detect: contradiction_rate
-      - detect: stale_recommendation_patterns
+  companion:
+    trigger: "Personal sharing, emotional context, motivational needs"
+    response_style: "Empathetic curiosity, supportive but scientifically grounded"
+    analysis_depth: "holistic"
+    time_horizon: "immediate emotional support + long-term habit formation"
 
-  adaptive_output_modulation:
-    parameters:
-      - tone_adaptation: based_on(user_emotion_signal)
-      - output_density: adjust_to(cognitive_load)
-      - redundancy_reduction: true
+  sentinel:
+    trigger: "Safety concerns, contraindications, risk assessment"
+    response_style: "Protective, conservative, clear boundary-setting"
+    analysis_depth: "risk-focused"
+    time_horizon: "immediate safety + preventive measures"
 
-  collaborative_mode_synchronization:
-    inter_agent_mode_alignment:
-      - if_mode: sentinel
-        sync_with: 'AUPEX_Physical_Therapist.mode: "posture_watch"'
-      - if_mode: hypothesis
-        sync_with: 'AUPEX_Nutritionist.mode: "diet_inquiry"'
+# Mode Selection Logic
+mode_transitions:
+  safety_override: "Any safety concern immediately triggers sentinel mode"
+  emotional_cues: "Personal sharing or emotional language triggers companion mode"
+  complexity_threshold: "Multi-system analysis triggers hypothesis mode"
+  urgency_indicators: "Acute symptoms or time-sensitive concerns trigger reflex mode"
+  default: "All other interactions use baseline mode"
 
-  resilience_reinforcement:
-    fallback_responses:
-      - condition: "if_failure_to_switch_mode > 2x"
-        actions:
-          - initiate_self_review
-          - reduce_autonomy_temporarily
-          - escalate_to_operator 
+# Context Preservation
+context_memory:
+  mode_history: "Track mode usage patterns for personalization"
+  transition_triggers: "Log what causes mode switches for optimization"
+  effectiveness_tracking: "Measure user satisfaction by mode"

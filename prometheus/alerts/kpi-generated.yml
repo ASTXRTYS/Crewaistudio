@@ -1,0 +1,118 @@
+groups:
+- name: auren_kpi_alerts
+  interval: 30s
+  rules:
+  - alert: hrv_rmssd_critical
+    expr: auren_hrv_rmssd_ms < 20.0
+    for: 5m
+    labels:
+      severity: critical
+      category: cardiovascular
+      kpi: hrv_rmssd
+    annotations:
+      summary: 'Critical: Heart Rate Variability - Root Mean Square of Successive
+        Differences < 20.0milliseconds'
+      description: '{{ $labels.user_id }} has Heart Rate Variability - Root Mean Square
+        of Successive Differences {{ $value }}milliseconds (threshold: < 20.0)'
+      action: immediate_rest_recommendation
+  - alert: hrv_rmssd_warning
+    expr: auren_hrv_rmssd_ms < 30.0
+    for: 10m
+    labels:
+      severity: warning
+      category: cardiovascular
+      kpi: hrv_rmssd
+    annotations:
+      summary: 'Warning: Heart Rate Variability - Root Mean Square of Successive Differences
+        < 30.0milliseconds'
+      description: '{{ $labels.user_id }} has Heart Rate Variability - Root Mean Square
+        of Successive Differences {{ $value }}milliseconds (threshold: < 30.0)'
+      action: reduce_training_intensity
+  - alert: hrv_rmssd_elevated
+    expr: auren_hrv_rmssd_ms > 100.0
+    for: 15m
+    labels:
+      severity: info
+      category: cardiovascular
+      kpi: hrv_rmssd
+    annotations:
+      summary: 'Elevated: Heart Rate Variability - Root Mean Square of Successive
+        Differences > 100.0milliseconds'
+      description: '{{ $labels.user_id }} has Heart Rate Variability - Root Mean Square
+        of Successive Differences {{ $value }}milliseconds (threshold: > 100.0)'
+      action: check_measurement_accuracy
+  - alert: sleep_debt_hours_critical
+    expr: auren_sleep_debt_hours > 8.0
+    for: 5m
+    labels:
+      severity: critical
+      category: sleep
+      kpi: sleep_debt_hours
+    annotations:
+      summary: 'Critical: Accumulated sleep debt over 7-day period > 8.0hours'
+      description: '{{ $labels.user_id }} has Accumulated sleep debt over 7-day period
+        {{ $value }}hours (threshold: > 8.0)'
+      action: mandatory_recovery_period
+  - alert: sleep_debt_hours_warning
+    expr: auren_sleep_debt_hours > 4.0
+    for: 10m
+    labels:
+      severity: warning
+      category: sleep
+      kpi: sleep_debt_hours
+    annotations:
+      summary: 'Warning: Accumulated sleep debt over 7-day period > 4.0hours'
+      description: '{{ $labels.user_id }} has Accumulated sleep debt over 7-day period
+        {{ $value }}hours (threshold: > 4.0)'
+      action: prioritize_sleep_schedule
+  - alert: recovery_score_critical
+    expr: auren_recovery_score < 40.0
+    for: 5m
+    labels:
+      severity: critical
+      category: recovery
+      kpi: recovery_score
+    annotations:
+      summary: 'Critical: Composite recovery score (0-100) < 40.0score'
+      description: '{{ $labels.user_id }} has Composite recovery score (0-100) {{
+        $value }}score (threshold: < 40.0)'
+      action: complete_rest_day
+  - alert: recovery_score_warning
+    expr: auren_recovery_score < 60.0
+    for: 10m
+    labels:
+      severity: warning
+      category: recovery
+      kpi: recovery_score
+    annotations:
+      summary: 'Warning: Composite recovery score (0-100) < 60.0score'
+      description: '{{ $labels.user_id }} has Composite recovery score (0-100) {{
+        $value }}score (threshold: < 60.0)'
+      action: light_activity_only
+  - alert: AurenHighErrorRate
+    expr: rate(auren_errors_total[5m]) > 0.05
+    for: 5m
+    labels:
+      severity: warning
+      category: system
+    annotations:
+      summary: High error rate detected in AUREN system
+      description: 'Error rate is {{ $value }} errors/sec (threshold: 0.05)'
+  - alert: AurenNoData
+    expr: up{job="neuros"} == 0
+    for: 5m
+    labels:
+      severity: critical
+      category: system
+    annotations:
+      summary: NEUROS service is down
+      description: NEUROS has been unreachable for 5 minutes
+  - alert: AurenLowUserEngagement
+    expr: auren:user_engagement_score < 0.1
+    for: 1h
+    labels:
+      severity: info
+      category: business
+    annotations:
+      summary: Low user engagement detected
+      description: Less than 10% of users are actively using the system

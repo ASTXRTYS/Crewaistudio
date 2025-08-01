@@ -1,3 +1,157 @@
+// Observability Integration - Real Metrics from AUREN
+const METRICS_API = 'http://144.126.215.218:8002/api/metrics';
+let metricsUpdateInterval;
+let metricsWebSocket;
+
+// Function to update real-time metrics
+async function updateRealTimeMetrics(userId = 'demo') {
+    try {
+        // Fetch all metrics in one batch request
+        const response = await fetch(`${METRICS_API}/batch`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                metrics: [
+                    'auren_hrv_rmssd_ms',
+                    'auren_recovery_score',
+                    'auren_sleep_debt_hours'
+                ],
+                user_id: userId,
+                time_range: '1h'
+            })
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch metrics');
+        
+        const data = await response.json();
+        
+        // Update HRV
+        const hrvData = data.results.find(r => r.metric === 'auren_hrv_rmssd_ms');
+        if (hrvData && hrvData.data.length > 0) {
+            const latestHRV = hrvData.data[hrvData.data.length - 1].value;
+            document.getElementById('hrv-value').textContent = `${Math.round(latestHRV)}ms`;
+            
+            // Update HRV status
+            const hrvStatus = document.getElementById('hrv-status');
+            if (latestHRV < 20) {
+                hrvStatus.textContent = '⚠️ Critical';
+                hrvStatus.className = 'metric-status critical';
+            } else if (latestHRV < 30) {
+                hrvStatus.textContent = '⚡ Low';
+                hrvStatus.className = 'metric-status warning';
+            } else if (latestHRV > 100) {
+                hrvStatus.textContent = '❓ Check';
+                hrvStatus.className = 'metric-status elevated';
+            } else {
+                hrvStatus.textContent = '✅ Good';
+                hrvStatus.className = 'metric-status good';
+            }
+            
+            // Update HRV chart if exists
+            updateHRVChart(hrvData.data);
+        }
+        
+        // Update Recovery Score
+        const recoveryData = data.results.find(r => r.metric === 'auren_recovery_score');
+        if (recoveryData && recoveryData.data.length > 0) {
+            const latestRecovery = recoveryData.data[recoveryData.data.length - 1].value;
+            document.getElementById('recovery-value').textContent = `${Math.round(latestRecovery)}%`;
+            
+            // Update recovery status
+            const recoveryStatus = document.getElementById('recovery-status');
+            if (latestRecovery < 40) {
+                recoveryStatus.textContent = '❌ Rest';
+                recoveryStatus.className = 'metric-status critical';
+            } else if (latestRecovery < 60) {
+                recoveryStatus.textContent = '⚡ Low';
+                recoveryStatus.className = 'metric-status warning';
+            } else {
+                recoveryStatus.textContent = '✅ Good';
+                recoveryStatus.className = 'metric-status good';
+            }
+            
+            // Update recovery chart
+            updateRecoveryChart(recoveryData.data);
+        }
+        
+        // Update Sleep Debt
+        const sleepDebtData = data.results.find(r => r.metric === 'auren_sleep_debt_hours');
+        if (sleepDebtData && sleepDebtData.data.length > 0) {
+            const latestSleepDebt = sleepDebtData.data[sleepDebtData.data.length - 1].value;
+            document.getElementById('sleep-debt-value').textContent = `${latestSleepDebt.toFixed(1)}h`;
+            
+            // Update sleep debt status
+            const sleepDebtStatus = document.getElementById('sleep-debt-status');
+            if (latestSleepDebt > 8) {
+                sleepDebtStatus.textContent = '❌ Critical';
+                sleepDebtStatus.className = 'metric-status critical';
+            } else if (latestSleepDebt > 4) {
+                sleepDebtStatus.textContent = '⚡ High';
+                sleepDebtStatus.className = 'metric-status warning';
+            } else {
+                sleepDebtStatus.textContent = '✅ Good';
+                sleepDebtStatus.className = 'metric-status good';
+            }
+            
+            // Update sleep debt chart
+            updateSleepDebtChart(sleepDebtData.data);
+        }
+        
+    } catch (error) {
+        console.error('Failed to update metrics:', error);
+        // Show error state
+        document.querySelectorAll('.metric-value').forEach(el => {
+            if (el.id.includes('value')) el.textContent = '--';
+        });
+    }
+}
+
+// WebSocket for real-time updates
+function connectMetricsWebSocket(userId = 'demo') {
+    try {
+        metricsWebSocket = new WebSocket('ws://144.126.215.218:8002/api/metrics/stream');
+        
+        metricsWebSocket.onopen = () => {
+            console.log('Connected to metrics stream');
+            // Subscribe to metrics
+            metricsWebSocket.send(JSON.stringify({
+                metrics: ['auren_hrv_rmssd_ms', 'auren_recovery_score', 'auren_sleep_debt_hours'],
+                user_id: userId
+            }));
+        };
+        
+        metricsWebSocket.onmessage = (event) => {
+            const update = JSON.parse(event.data);
+            if (update.type === 'metric_update') {
+                // Update specific metric in real-time
+                switch(update.metric) {
+                    case 'auren_hrv_rmssd_ms':
+                        document.getElementById('hrv-value').textContent = `${Math.round(update.value)}ms`;
+                        break;
+                    case 'auren_recovery_score':
+                        document.getElementById('recovery-value').textContent = `${Math.round(update.value)}%`;
+                        break;
+                    case 'auren_sleep_debt_hours':
+                        document.getElementById('sleep-debt-value').textContent = `${update.value.toFixed(1)}h`;
+                        break;
+                }
+            }
+        };
+        
+        metricsWebSocket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
+        
+        metricsWebSocket.onclose = () => {
+            console.log('WebSocket connection closed, reconnecting in 5s...');
+            setTimeout(() => connectMetricsWebSocket(userId), 5000);
+        };
+        
+    } catch (error) {
+        console.error('Failed to connect WebSocket:', error);
+    }
+}
+
 // 3D Avatar Animation
 function init3DAvatar() {
     const container = document.getElementById('avatar-3d');
@@ -220,10 +374,49 @@ function initWebSocket() {
     }, 5000);
 }
 
+// Chart update functions for real data
+function updateHRVChart(data) {
+    // Update the HRV chart with real data
+    if (window.hrvChart && data.length > 0) {
+        const chartData = data.slice(-20).map(d => d.value);
+        window.hrvChart.data.datasets[0].data = chartData;
+        window.hrvChart.update();
+    }
+}
+
+function updateRecoveryChart(data) {
+    // Update the recovery chart with real data
+    if (window.recoveryChart && data.length > 0) {
+        const chartData = data.slice(-20).map(d => d.value);
+        window.recoveryChart.data.datasets[0].data = chartData;
+        window.recoveryChart.update();
+    }
+}
+
+function updateSleepDebtChart(data) {
+    // Update the sleep debt chart with real data
+    if (window.sleepDebtChart && data.length > 0) {
+        const chartData = data.slice(-20).map(d => d.value);
+        window.sleepDebtChart.data.datasets[0].data = chartData;
+        window.sleepDebtChart.update();
+    }
+}
+
 // Initialize everything
 document.addEventListener('DOMContentLoaded', () => {
     init3DAvatar();
     init3DKnowledgeGraph();
     initBiometricCharts();
     initWebSocket();
+    
+    // Initialize real-time metrics
+    updateRealTimeMetrics();
+    
+    // Connect WebSocket for live updates
+    connectMetricsWebSocket();
+    
+    // Update metrics every 30 seconds as fallback
+    metricsUpdateInterval = setInterval(() => {
+        updateRealTimeMetrics();
+    }, 30000);
 }); 

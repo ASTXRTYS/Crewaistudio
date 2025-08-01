@@ -74,21 +74,24 @@
                             <canvas id="hrv-chart"></canvas>
                             <div class="metric-info">
                                 <span class="metric-label">HRV</span>
-                                <span class="metric-value">62ms</span>
+                                <span class="metric-value" id="hrv-value">--ms</span>
+                                <span class="metric-status" id="hrv-status"></span>
                             </div>
                         </div>
                         <div class="metric">
-                            <canvas id="stress-chart"></canvas>
+                            <canvas id="recovery-chart"></canvas>
                             <div class="metric-info">
-                                <span class="metric-label">Stress Level</span>
-                                <span class="metric-value">Low</span>
+                                <span class="metric-label">Recovery Score</span>
+                                <span class="metric-value" id="recovery-value">--%</span>
+                                <span class="metric-status" id="recovery-status"></span>
                             </div>
                         </div>
                         <div class="metric">
-                            <canvas id="fatigue-chart"></canvas>
+                            <canvas id="sleep-debt-chart"></canvas>
                             <div class="metric-info">
-                                <span class="metric-label">Neural Fatigue</span>
-                                <span class="metric-value">23%</span>
+                                <span class="metric-label">Sleep Debt</span>
+                                <span class="metric-value" id="sleep-debt-value">--h</span>
+                                <span class="metric-status" id="sleep-debt-status"></span>
                             </div>
                         </div>
                     </div>

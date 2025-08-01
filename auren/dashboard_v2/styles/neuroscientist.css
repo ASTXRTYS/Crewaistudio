@@ -151,6 +151,30 @@
     color: var(--accent-blue);
 }
 
+.metric-status {
+    display: block;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.metric-status.good {
+    color: #00ff88;
+}
+
+.metric-status.warning {
+    color: #ffaa00;
+}
+
+.metric-status.critical {
+    color: #ff4444;
+}
+
+.metric-status.elevated {
+    color: #aaaaff;
+}
+
 /* Knowledge Graph Card */
 .knowledge-card {
     grid-column: span 2;

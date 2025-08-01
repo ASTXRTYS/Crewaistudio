@@ -12,14 +12,41 @@
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
         "type": "dashboard"
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "enable": true,
+        "expr": "changes(auren_deployment_version[5m]) > 0",
+        "hide": false,
+        "iconColor": "rgba(255, 96, 96, 1)",
+        "name": "Deployments",
+        "tagKeys": "version",
+        "textFormat": "Deployed {{version}}"
       }
     ]
   },
+  "description": "AUREN Human Performance OS - Real-time KPI monitoring with SLO tracking",
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
+  "graphTooltip": 1,
   "id": null,
-  "links": [],
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": true,
+      "title": "AUREN Docs",
+      "tooltip": "View AUREN documentation",
+      "type": "link",
+      "url": "https://auren-omacln1ad-jason-madrugas-projects.vercel.app"
+    }
+  ],
   "liveNow": false,
   "panels": [
     {

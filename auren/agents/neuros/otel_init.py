@@ -25,15 +25,26 @@ except ImportError:
 
 def configure_otel(app):
     # -------- Resources & Providers --------
-    res = Resource.create({"service.name": "auren-neuros"})
+    res = Resource.create({
+        "service.name": "auren-neuros",
+        "service.version": os.getenv("SERVICE_VERSION", "1.0.0"),
+        "deployment.environment": os.getenv("DEPLOYMENT_ENV", "production"),
+        "agent.type": "neuros"
+    })
     tracer_provider = TracerProvider(resource=res)
     trace.set_tracer_provider(tracer_provider)
 
     # OTLP → Collector (uses env OTEL_EXPORTER_OTLP_ENDPOINT if set)
-    if HAS_OTLP and os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT"):
-        tracer_provider.add_span_processor(
-            BatchSpanProcessor(OTLPSpanExporter())
-        )
+    # Default to local OTel collector if not specified
+    otlp_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://auren-otel-collector:4318/v1/traces")
+    if HAS_OTLP:
+        try:
+            tracer_provider.add_span_processor(
+                BatchSpanProcessor(OTLPSpanExporter(endpoint=otlp_endpoint))
+            )
+            print(f"Configured OTLP trace export to: {otlp_endpoint}")
+        except Exception as e:
+            print(f"Failed to configure OTLP exporter: {e}")
 
     # Prometheus metrics exporter (scraped at /metrics on :8000)
     prom_reader = PrometheusMetricReader()

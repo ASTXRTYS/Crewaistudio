@@ -1,0 +1,60 @@
+# AUREN Chaos Engineering Experiments
+# Uses Litmus Chaos or basic shell scripts for container chaos
+
+version: '1.0'
+experiments:
+  - name: neuros-container-kill
+    description: "Kill NEUROS container and verify system resilience"
+    type: container-kill
+    target: neuros-advanced
+    duration: 30s
+    validations:
+      - name: "Frontend still accessible"
+        endpoint: "https://auren-omacln1ad-jason-madrugas-projects.vercel.app"
+        expected_status: 200
+      - name: "Prometheus still collecting"
+        endpoint: "http://144.126.215.218:9090/api/v1/query?query=up"
+        expected_result: "contains neuros-advanced with value 0"
+    rollback:
+      command: "docker start neuros-advanced"
+      
+  - name: network-partition
+    description: "Simulate network partition between services"
+    type: network-chaos
+    target: auren-network
+    action: "block traffic between neuros and prometheus"
+    duration: 60s
+    validations:
+      - name: "Service degrades gracefully"
+        checks:
+          - "Health endpoint returns degraded status"
+          - "Metrics buffer locally"
+          - "No data loss after recovery"
+    
+  - name: resource-stress
+    description: "CPU and memory stress testing"
+    type: resource-chaos
+    targets:
+      - container: neuros-advanced
+        cpu_percent: 80
+        memory_percent: 90
+        duration: 5m
+    validations:
+      - name: "Performance degradation within SLO"
+        metrics:
+          - "p95_latency < 500ms"
+          - "error_rate < 1%"
+          - "no OOM kills"
+          
+  - name: disk-fill
+    description: "Fill disk to test space handling"
+    type: disk-chaos
+    target: /tmp/prometheus_multiproc
+    fill_percent: 95
+    duration: 2m
+    validations:
+      - name: "Graceful disk handling"
+        checks:
+          - "Old metrics rotated out"
+          - "Service remains operational"
+          - "Alerts fired correctly"

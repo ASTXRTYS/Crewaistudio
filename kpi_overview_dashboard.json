@@ -1,0 +1,120 @@
+{
+  "uid": "auren-kpi-overview",
+  "title": "AUREN KPI Overview",
+  "tags": ["auren", "kpi", "neuros"],
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "💓 HRV RMSSD (ms)",
+      "type": "stat",
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 0},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "yellow", "value": 25},
+              {"color": "green", "value": 60}
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "neuros_hrv_rmssd_ms",
+          "legendFormat": "HRV RMSSD"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "😴 Sleep Debt (hours)",
+      "type": "stat",
+      "gridPos": {"h": 8, "w": 8, "x": 8, "y": 0},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "h",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 6},
+              {"color": "red", "value": 9}
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "neuros_sleep_debt_hours",
+          "legendFormat": "Sleep Debt"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "🏃 Recovery Score (%)",
+      "type": "stat", 
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 0},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "yellow", "value": 70},
+              {"color": "green", "value": 85}
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "neuros_recovery_score",
+          "legendFormat": "Recovery Score"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "📈 KPI Trends (30min)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8},
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "neuros_hrv_rmssd_ms",
+          "legendFormat": "HRV RMSSD (ms)"
+        },
+        {
+          "expr": "neuros_sleep_debt_hours * 10",
+          "legendFormat": "Sleep Debt (hours x10)"
+        },
+        {
+          "expr": "neuros_recovery_score",
+          "legendFormat": "Recovery Score (%)"
+        }
+      ]
+    }
+  ]
+}

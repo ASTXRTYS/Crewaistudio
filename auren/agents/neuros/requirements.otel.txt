@@ -5,6 +5,10 @@
 # Known-good OpenTelemetry bundle (resolves API/SDK/exporter version conflicts)
 opentelemetry-distro==0.45b0
 opentelemetry-exporter-prometheus==0.45b0
+opentelemetry-instrumentation-fastapi==0.45b0
+
+# Battle-tested prometheus integration (per guidance)
+prometheus-fastapi-instrumentator==1.1.1
 
 # Core LangGraph/LangChain - PRODUCTION VERSIONS
 langgraph==0.2.56

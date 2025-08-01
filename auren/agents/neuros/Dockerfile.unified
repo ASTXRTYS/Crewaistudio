@@ -1,0 +1,47 @@
+# AUREN NEUROS Unified - Multi-stage Docker Build
+# LangGraph + KPIs + OpenTelemetry in single container
+
+FROM python:3.11-slim AS builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy requirements and install to /install prefix
+COPY requirements.unified.txt .
+RUN pip install --prefix=/install --no-cache-dir -r requirements.unified.txt
+
+# Production stage
+FROM python:3.11-slim
+
+# Environment setup
+ENV PYTHONUNBUFFERED=1 \
+    OTEL_ENABLED=true \
+    OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318 \
+    PROMETHEUS_MULTIPROC_DIR=/tmp/prometheus_multiproc
+
+# Copy installed packages from builder
+COPY --from=builder /install /usr/local
+
+# Create app directory and copy source
+WORKDIR /app
+COPY . .
+
+# KPI emitter is already copied with the source code
+# Copy the KPI registry for reference
+RUN mkdir -p /app/shared_modules
+COPY kpi_registry.yaml /app/shared_modules/
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Expose port
+EXPOSE 8000
+
+# Start command
+CMD ["uvicorn", "neuros_advanced_reasoning_simple:app", "--host", "0.0.0.0", "--port", "8000"]

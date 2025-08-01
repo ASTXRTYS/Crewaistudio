@@ -1,0 +1,36 @@
+# NEUROS KPI-enabled Docker build
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements first for better caching
+COPY requirements.freeze .
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.freeze && \
+    pip check  # Guard-rail G-1: verify no conflicts
+
+# Copy application code
+COPY main_kpi.py main.py
+COPY shared_modules/ shared_modules/
+
+# Create directory for Prometheus multiprocess mode
+RUN mkdir -p /tmp/prometheus_multiproc
+
+# Environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PROMETHEUS_MULTIPROC_DIR=/tmp/prometheus_multiproc
+
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Run the application
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

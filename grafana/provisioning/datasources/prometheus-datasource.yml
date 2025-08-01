@@ -1,0 +1,9 @@
+apiVersion: 1
+
+datasources:
+  - name: AUREN-Prometheus
+    type: prometheus
+    access: proxy
+    url: http://auren-prometheus:9090
+    isDefault: true
+    editable: false

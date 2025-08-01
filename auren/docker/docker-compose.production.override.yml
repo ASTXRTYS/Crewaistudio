@@ -56,9 +56,9 @@ services:
     
     depends_on:
       - otel-collector
-      - auren-postgres
-      - auren-redis
-      - auren-kafka
+      - postgres
+      - redis
+      - kafka
 
   # Enhanced OTel Collector with memory limiter  
   otel-collector:

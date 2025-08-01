@@ -1,0 +1,64 @@
+name: Infrastructure Guard Rails
+on:
+  pull_request:
+    branches: [main, neuros-cognitive-architecture-v2]
+  push:
+    branches: [main]
+
+jobs:
+  security-and-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          pip install pip-tools pydantic pyyaml yamllint
+          pip install -r requirements.txt
+          
+      - name: Dependency Check
+        run: |
+          pip check
+          echo "✅ No dependency conflicts"
+          
+      - name: Security Scan with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          
+      - name: YAML Lint
+        run: |
+          yamllint agents/shared_modules/kpi_registry.yaml
+          yamllint agents/*/kpi_bindings.yaml
+          echo "✅ YAML files valid"
+          
+      - name: KPI Registry Validation
+        run: |
+          python -c "
+          import yaml
+          from pydantic import BaseModel, Field
+          from typing import List, Dict, Any
+          
+          class KPIDefinition(BaseModel):
+              name: str
+              description: str
+              unit: str
+              normal_range: Dict[str, Any]
+              risk_thresholds: Dict[str, Any]
+              
+          with open('agents/shared_modules/kpi_registry.yaml') as f:
+              data = yaml.safe_load(f)
+              
+          for kpi in data.get('kpis', []):
+              KPIDefinition(**kpi)
+              
+          print('✅ KPI Registry validation passed')
+          " 

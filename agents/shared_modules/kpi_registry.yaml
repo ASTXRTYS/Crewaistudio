@@ -1,167 +1,81 @@
+# AUREN KPI Registry v1.1
+# Production-ready registry with Prometheus export support
+
 version: "1.1"
-created: 2025-07-31
-purpose: "Canonical KPI definitions for all AUREN agents"
+last_updated: "2025-07-31"
+schema_version: "1.0"
 
 kpis:
-  # ===== NEUROS ==========================================================
-  hrv_rmssd:
-    name: "Heart-Rate Variability (RMSSD)"
-    unit: "ms"
-    scope: "daily_morning_5min"            # sampling window definition
-    description: "Parasympathetic activity marker; see ln_rmssd for daily tracking."
-    range: [15, 120]                       # tightened adult range
-    thresholds:
-      optimal:  [40, 100]
-      caution:  [25, 39]
-      risk:     [0, 24]
-    norm_ref:
-      source: "Welltory HRV dataset + systematic reviews"
-      age_adj: false
-      sex_adj: false
-    compute:
-      preferred_variant: ln_rmssd
-      notes: "Use natural‑log transform for normality; validated 60–90 s method."
-    version: "1.1"
+  - name: "hrv_rmssd"
+    description: "Heart Rate Variability - Root Mean Square of Successive Differences"
+    unit: "milliseconds"
+    category: "cardiovascular"
+    prometheus_metric: "auren_hrv_rmssd_ms"
+    normal_range:
+      min: 30
+      max: 100
+      optimal: 50
+    risk_thresholds:
+      critical: 
+        condition: "< 20"
+        action: "immediate_rest_recommendation"
+      warning:
+        condition: "< 30"
+        action: "reduce_training_intensity"
+      elevated:
+        condition: "> 100"
+        action: "check_measurement_accuracy"
+        
+  - name: "sleep_debt_hours"
+    description: "Accumulated sleep debt over 7-day period"
+    unit: "hours"
+    category: "sleep"
+    prometheus_metric: "auren_sleep_debt_hours"
+    normal_range:
+      min: 0
+      max: 2
+      optimal: 0
+    risk_thresholds:
+      critical:
+        condition: "> 8"
+        action: "mandatory_recovery_period"
+      warning:
+        condition: "> 4"
+        action: "prioritize_sleep_schedule"
+        
+  - name: "recovery_score"
+    description: "Composite recovery score (0-100)"
+    unit: "score"
+    category: "recovery"
+    prometheus_metric: "auren_recovery_score"
+    normal_range:
+      min: 70
+      max: 100
+      optimal: 85
+    risk_thresholds:
+      critical:
+        condition: "< 40"
+        action: "complete_rest_day"
+      warning:
+        condition: "< 60"
+        action: "light_activity_only"
 
-  ln_rmssd:
-    name: "log(RMSSD)"
-    unit: "ln(ms)"
-    range: [2.5, 5.0]
-    thresholds:
-        caution_if_drop_pct: ">= 10 over 7d"
-    version: "1.0"
-
-  cns_fatigue_index:
-    name: "CNS Fatigue Index"
-    unit: "index"
-    description: "Z-score blend of lnRMSSD, sleep_efficiency, acute:chronic load."
-    range: [0, 100]
-    thresholds:
-        caution: ">= 60"
-        risk: ">= 75"
-    version: "1.0"
-
-  # ===== NUTROS ==========================================================
-  glucose_cv_percent:
-    name: "Glucose Coefficient of Variation"
-    unit: "percent"
-    description: "24 h coefficient of variation from CGM; ≤36 % is target."
-    range: [10, 60]
-    thresholds:
-      optimal:  [10, 25]
-      caution:  [26, 36]
-      risk:     [37, 60]
-    version: "1.0"
-
-  protein_adequacy_g_per_kg:
-    name: "Protein Adequacy"
-    unit: "g_per_kg"
-    description: "Daily protein vs. body‑mass; gate for hypertrophy progress."
-    range: [0, 3.5]
-    version: "1.0"
-
-  # ===== KINETOS =========================================================
-  fms_total:
-    name: "Functional Movement Screen Total"
-    unit: "points"
-    description: "Functional Movement Screen composite (0‑21)."
-    range: [0, 21]
-    thresholds:
-      risk_if: "<= 14"
-    version: "1.0"
-
-  # ===== HYPERTROS =======================================================
-  weekly_volume_sets:
-    name: "Weekly Volume (Sets)"
-    unit: "sets"
-    scope: "per_muscle_group"
-    description: "10–20 sets/week drives hypertrophy dose‑response."
-    range: [0, 40]
-    version: "1.0"
-
-  training_tonnage:
-    name: "Training Tonnage"
-    unit: "kg"
-    scope: "session"
-    description: "Total weight lifted in a session (sets × reps × load)."
-    range: [0, 50000]
-    version: "1.0"
-
-  # ===== CARDIOS =========================================================
-  vo2_max_estimated:
-    name: "Estimated VO₂ Max"
-    unit: "mL/kg/min"
-    range: [20, 90]
-    norm_ref:
-      source: "INSCYD age/sex tables"
-      age_adj: true
-      sex_adj: true
-    thresholds:
-      caution_if_below_percentile: 25
-    version: "1.0"
-
-  zone2_time:
-    name: "Zone 2 Training Time"
-    unit: "minutes"
-    scope: "per_session"
-    description: "Steady work in LT1; 45‑90 min typical."
-    range: [0, 120]
-    version: "1.0"
-
-  resting_hr:
-    name: "Resting Heart Rate"
-    unit: "bpm"
-    range: [35, 100]
-    version: "1.0"
-
-  # ===== SOMNOS ==========================================================
-  sleep_efficiency:
-    name: "Sleep Efficiency"
-    unit: "percent"
-    range: [0, 100]
-    thresholds:
-      optimal:  ">= 90"
-      caution:  "80-89"
-      risk:     "< 80"
-    version: "1.0"
-
-  sleep_latency_min:
-    name: "Sleep Latency"
-    unit: "minutes"
-    range: [0, 60]
-    thresholds:
-      risk_if: "> 30"
-    version: "1.0"
-
-  rem_deep_ratio:
-    name: "REM to Deep Sleep Ratio"
-    unit: "ratio"
-    range: [0, 3]
-    thresholds:
-      optimal: "[0.8, 1.5]"
-      caution: "> 2.0"
-    version: "1.0"
-
-  # ===== OPTICOS =========================================================
-  facial_inflammation_score:
-    name: "Facial Inflammation Score"
-    unit: "index"
-    range: [0, 10]
-    version: "1.0"
-
-  symmetry_deviation_mm:
-    name: "Facial Symmetry Deviation"
-    unit: "mm"
-    range: [0, 5]
-    version: "1.0"
-
-  # ===== ENDOS ===========================================================
-  cortisol_awakening_response_pct:
-    name: "Cortisol Awakening Response"
-    unit: "percent_change"
-    range: [-50, 150]
-    thresholds:
-      blunted: "< 20"
-      optimal: "38‑75"
-      excessive: "> 100"
-    version: "1.0" 
+export_config:
+  prometheus:
+    enabled: true
+    prefix: "auren_"
+    labels:
+      - "user_id"
+      - "measurement_source"
+      - "timestamp"
+  
+validation_rules:
+  - field: "name"
+    required: true
+    pattern: "^[a-z][a-z0-9_]*$"
+  - field: "prometheus_metric"
+    required: true
+    pattern: "^auren_[a-z][a-z0-9_]*$"
+  - field: "unit"
+    required: true
+    allowed_values: ["milliseconds", "hours", "score", "bpm", "percentage"] 

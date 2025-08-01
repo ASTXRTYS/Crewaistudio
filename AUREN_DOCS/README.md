@@ -255,6 +255,10 @@ curl -X POST https://auren-b1tuli19i-jason-madrugas-projects.vercel.app/api/neur
 3. **Follow**: SOP-001 for daily operations
 4. **Build**: New features on stable foundation
 
+### Engineering Handoffs
+- **OTel Collector Setup**: See `../OTEL_COLLECTOR_HANDOFF_DOCUMENT.md` (distributed tracing completion)
+- **Observability-as-Code Pipeline**: See `../OBSERVABILITY_AS_CODE_HANDOFF.md` (GitOps automation for KPI → Dashboard pipeline)
+
 ### Development Guidelines
 - Backend changes: SSH to server, modify code, restart containers
 - Frontend changes: Edit PWA, commit, push, `vercel --prod --public`

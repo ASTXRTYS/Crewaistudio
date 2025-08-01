@@ -29,128 +29,75 @@ async function updateRealTimeMetrics(userId = 'demo') {
         const hrvData = data.results.find(r => r.metric === 'auren_hrv_rmssd_ms');
         if (hrvData && hrvData.data.length > 0) {
             const latestHRV = hrvData.data[hrvData.data.length - 1].value;
+            document.getElementById('hrv-value').textContent = `${Math.round(latestHRV)}ms`;
             
-            // Check if this is demo/synthetic data (no real biometric input)
-            // Real HRV should vary, if it's consistently around 36-37, it's synthetic
-            if (latestHRV > 35 && latestHRV < 38) {
-                document.getElementById('hrv-value').textContent = '--ms';
-                const hrvStatus = document.getElementById('hrv-status');
-                hrvStatus.textContent = '📊 No Input';
-                hrvStatus.className = 'metric-status no-data';
-            } else if (latestHRV === 0) {
-                document.getElementById('hrv-value').textContent = '0ms';
-                const hrvStatus = document.getElementById('hrv-status');
-                hrvStatus.textContent = '❌ No Signal';
-                hrvStatus.className = 'metric-status no-data';
-            } else {
-                document.getElementById('hrv-value').textContent = `${Math.round(latestHRV)}ms`;
-                
-                // Update HRV status
-                const hrvStatus = document.getElementById('hrv-status');
-                if (latestHRV < 20) {
-                    hrvStatus.textContent = '⚠️ Critical';
-                    hrvStatus.className = 'metric-status critical';
-                } else if (latestHRV < 30) {
-                    hrvStatus.textContent = '⚡ Low';
-                    hrvStatus.className = 'metric-status warning';
-                } else if (latestHRV > 100) {
-                    hrvStatus.textContent = '❓ Check';
-                    hrvStatus.className = 'metric-status elevated';
-                } else {
-                    hrvStatus.textContent = '✅ Good';
-                    hrvStatus.className = 'metric-status good';
-                }
-            }
+            // Clear any status - we want clean display
+            const hrvStatus = document.getElementById('hrv-status');
+            hrvStatus.textContent = '';
+            hrvStatus.className = '';
             
             // Update HRV chart if exists
             updateHRVChart(hrvData.data);
         } else {
-            // No data at all
-            document.getElementById('hrv-value').textContent = '--ms';
+            // No data at all - show zero
+            document.getElementById('hrv-value').textContent = '0ms';
             const hrvStatus = document.getElementById('hrv-status');
-            hrvStatus.textContent = '📊 No Data';
-            hrvStatus.className = 'metric-status no-data';
+            hrvStatus.textContent = '';
+            hrvStatus.className = '';
         }
         
         // Update Recovery Score
         const recoveryData = data.results.find(r => r.metric === 'auren_recovery_score');
         if (recoveryData && recoveryData.data.length > 0) {
             const latestRecovery = recoveryData.data[recoveryData.data.length - 1].value;
+            document.getElementById('recovery-value').textContent = `${Math.round(latestRecovery)}%`;
             
-            // Check for synthetic data
-            if (latestRecovery === 0 || (latestRecovery > 74 && latestRecovery < 76)) {
-                document.getElementById('recovery-value').textContent = '--%';
-                const recoveryStatus = document.getElementById('recovery-status');
-                recoveryStatus.textContent = '📊 No Input';
-                recoveryStatus.className = 'metric-status no-data';
-            } else {
-                document.getElementById('recovery-value').textContent = `${Math.round(latestRecovery)}%`;
-                
-                // Update recovery status
-                const recoveryStatus = document.getElementById('recovery-status');
-                if (latestRecovery < 40) {
-                    recoveryStatus.textContent = '❌ Rest';
-                    recoveryStatus.className = 'metric-status critical';
-                } else if (latestRecovery < 60) {
-                    recoveryStatus.textContent = '⚡ Low';
-                    recoveryStatus.className = 'metric-status warning';
-                } else {
-                    recoveryStatus.textContent = '✅ Good';
-                    recoveryStatus.className = 'metric-status good';
-                }
-            }
+            // Clear any status - we want clean display
+            const recoveryStatus = document.getElementById('recovery-status');
+            recoveryStatus.textContent = '';
+            recoveryStatus.className = '';
             
             // Update recovery chart
             updateRecoveryChart(recoveryData.data);
         } else {
-            document.getElementById('recovery-value').textContent = '--%';
+            // No data at all - show zero
+            document.getElementById('recovery-value').textContent = '0%';
             const recoveryStatus = document.getElementById('recovery-status');
-            recoveryStatus.textContent = '📊 No Data';
-            recoveryStatus.className = 'metric-status no-data';
+            recoveryStatus.textContent = '';
+            recoveryStatus.className = '';
         }
         
         // Update Sleep Debt
         const sleepDebtData = data.results.find(r => r.metric === 'auren_sleep_debt_hours');
         if (sleepDebtData && sleepDebtData.data.length > 0) {
             const latestSleepDebt = sleepDebtData.data[sleepDebtData.data.length - 1].value;
+            document.getElementById('sleep-debt-value').textContent = `${latestSleepDebt.toFixed(1)}h`;
             
-            // Check for synthetic data
-            if (latestSleepDebt === 0 || (latestSleepDebt > 2.4 && latestSleepDebt < 2.6)) {
-                document.getElementById('sleep-debt-value').textContent = '--h';
-                const sleepDebtStatus = document.getElementById('sleep-debt-status');
-                sleepDebtStatus.textContent = '📊 No Input';
-                sleepDebtStatus.className = 'metric-status no-data';
-            } else {
-                document.getElementById('sleep-debt-value').textContent = `${latestSleepDebt.toFixed(1)}h`;
-                
-                // Update sleep debt status
-                const sleepDebtStatus = document.getElementById('sleep-debt-status');
-                if (latestSleepDebt > 8) {
-                    sleepDebtStatus.textContent = '❌ Critical';
-                    sleepDebtStatus.className = 'metric-status critical';
-                } else if (latestSleepDebt > 4) {
-                    sleepDebtStatus.textContent = '⚡ High';
-                    sleepDebtStatus.className = 'metric-status warning';
-                } else {
-                    sleepDebtStatus.textContent = '✅ Good';
-                    sleepDebtStatus.className = 'metric-status good';
-                }
-            }
+            // Clear any status - we want clean display
+            const sleepDebtStatus = document.getElementById('sleep-debt-status');
+            sleepDebtStatus.textContent = '';
+            sleepDebtStatus.className = '';
             
             // Update sleep debt chart
             updateSleepDebtChart(sleepDebtData.data);
         } else {
-            document.getElementById('sleep-debt-value').textContent = '--h';
+            // No data at all - show zero
+            document.getElementById('sleep-debt-value').textContent = '0.0h';
             const sleepDebtStatus = document.getElementById('sleep-debt-status');
-            sleepDebtStatus.textContent = '📊 No Data';
-            sleepDebtStatus.className = 'metric-status no-data';
+            sleepDebtStatus.textContent = '';
+            sleepDebtStatus.className = '';
         }
         
     } catch (error) {
         console.error('Failed to update metrics:', error);
-        // Show error state
-        document.querySelectorAll('.metric-value').forEach(el => {
-            if (el.id.includes('value')) el.textContent = '--';
+        // Show zeros on error - clean display
+        document.getElementById('hrv-value').textContent = '0ms';
+        document.getElementById('recovery-value').textContent = '0%';
+        document.getElementById('sleep-debt-value').textContent = '0.0h';
+        // Clear all status text
+        document.querySelectorAll('.metric-status').forEach(el => {
+            el.textContent = '';
+            el.className = '';
         });
     }
 }

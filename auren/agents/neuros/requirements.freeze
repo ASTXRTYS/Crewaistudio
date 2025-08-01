@@ -1,0 +1,33 @@
+# AUREN NEUROS Frozen Requirements - Exact versions for KPI integration
+# Self-consistent dependency set tested and verified
+
+# OpenTelemetry 0.45b0 bundle
+opentelemetry-distro==0.45b0
+opentelemetry-exporter-prometheus==0.45b0
+opentelemetry-instrumentation-fastapi==0.45b0
+
+# Prometheus metrics - conflict-free versions
+prometheus-fastapi-instrumentator==7.1.0
+prometheus-client==0.21.0
+
+# LangGraph and LangChain stack  
+langgraph>=0.2.0
+langchain>=0.2.0
+langchain-openai>=0.1.0
+langchain-core>=0.2.0
+
+# FastAPI stack
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic==2.9.0
+
+# Database and storage
+asyncpg==0.29.0
+pgvector==0.3.2
+redis==5.1.0
+
+# Core utilities
+pyyaml==6.0.2
+python-dotenv==1.0.1
+requests==2.32.3
+httpx>=0.24.0

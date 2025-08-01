@@ -1,0 +1,81 @@
+# AUREN KPI Registry v1.1
+# Production-ready registry with Prometheus export support
+
+version: "1.1"
+last_updated: "2025-07-31"
+schema_version: "1.0"
+
+kpis:
+  - name: "hrv_rmssd"
+    description: "Heart Rate Variability - Root Mean Square of Successive Differences"
+    unit: "milliseconds"
+    category: "cardiovascular"
+    prometheus_metric: "auren_hrv_rmssd_ms"
+    normal_range:
+      min: 30
+      max: 100
+      optimal: 50
+    risk_thresholds:
+      critical: 
+        condition: "< 20"
+        action: "immediate_rest_recommendation"
+      warning:
+        condition: "< 30"
+        action: "reduce_training_intensity"
+      elevated:
+        condition: "> 100"
+        action: "check_measurement_accuracy"
+        
+  - name: "sleep_debt_hours"
+    description: "Accumulated sleep debt over 7-day period"
+    unit: "hours"
+    category: "sleep"
+    prometheus_metric: "auren_sleep_debt_hours"
+    normal_range:
+      min: 0
+      max: 2
+      optimal: 0
+    risk_thresholds:
+      critical:
+        condition: "> 8"
+        action: "mandatory_recovery_period"
+      warning:
+        condition: "> 4"
+        action: "prioritize_sleep_schedule"
+        
+  - name: "recovery_score"
+    description: "Composite recovery score (0-100)"
+    unit: "score"
+    category: "recovery"
+    prometheus_metric: "auren_recovery_score"
+    normal_range:
+      min: 70
+      max: 100
+      optimal: 85
+    risk_thresholds:
+      critical:
+        condition: "< 40"
+        action: "complete_rest_day"
+      warning:
+        condition: "< 60"
+        action: "light_activity_only"
+
+export_config:
+  prometheus:
+    enabled: true
+    prefix: "auren_"
+    labels:
+      - "user_id"
+      - "measurement_source"
+      - "timestamp"
+  
+validation_rules:
+  - field: "name"
+    required: true
+    pattern: "^[a-z][a-z0-9_]*$"
+  - field: "prometheus_metric"
+    required: true
+    pattern: "^auren_[a-z][a-z0-9_]*$"
+  - field: "unit"
+    required: true
+    allowed_values: ["milliseconds", "hours", "score", "bpm", "percentage"] 

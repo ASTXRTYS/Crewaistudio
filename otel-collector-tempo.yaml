@@ -1,0 +1,57 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+    
+  memory_limiter:
+    limit_mib: 180
+    spike_limit_mib: 20
+    check_interval: 1s
+    
+  probabilistic_sampler:
+    sampling_percentage: 10  # 10% sampling rate
+
+exporters:
+  # Send traces to Tempo
+  otlp/tempo:
+    endpoint: http://tempo:4318
+    tls:
+      insecure: true
+    headers:
+      "X-Scope-OrgID": "auren-staging"
+      
+  # Export metrics to Prometheus  
+  prometheus:
+    endpoint: "0.0.0.0:9464"
+    const_labels:
+      environment: "staging"
+      service: "otel-collector"
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, probabilistic_sampler, batch]
+      exporters: [otlp/tempo]
+      
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [prometheus]
+      
+  extensions: []
+  
+  telemetry:
+    logs:
+      level: "info"
+    metrics:
+      address: "0.0.0.0:8888" 

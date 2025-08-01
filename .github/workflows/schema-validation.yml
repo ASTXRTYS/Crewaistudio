@@ -1,0 +1,195 @@
+name: 🛡️ Schema Validation & Linting
+
+on:
+  push:
+    branches: [ main, develop, neuros-*, "*-v2" ]
+    paths: 
+      - 'agents/**/*.yaml'
+      - 'agents/**/*.yml'
+      - 'agents/schemas/**/*.json'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'agents/**/*.yaml'
+      - 'agents/**/*.yml'
+      - 'agents/schemas/**/*.json'
+
+jobs:
+  yaml-validation:
+    name: 🔍 YAML Schema & Lint Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📦 Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: 📋 Install validation dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install yamllint jsonschema pyyaml>=5.4.0
+        
+    - name: 🧹 YAML Lint Check
+      run: |
+        echo "🔍 Running yamllint on agent configurations..."
+        yamllint agents/ --config-data '{
+          rules: {
+            line-length: {max: 120},
+            trailing-spaces: enable,
+            empty-lines: {max-end: 1},
+            document-start: enable,
+            brackets: {max-spaces-inside: 1},
+            colons: {max-spaces-before: 0, max-spaces-after: 1}
+          }
+        }'
+        
+    - name: 🔎 JSON Schema Validation
+      run: |
+        echo "🛡️ Validating roster.yaml against JSON schema..."
+        python agents/validate_agents.py --check-schemas
+        
+    - name: ✅ Agent Configuration Validation
+      run: |
+        echo "🤖 Running comprehensive agent validation..."
+        cd agents && python validate_agents.py --full-validation
+        
+    - name: 🏷️ Kafka Topic Validation
+      run: |
+        echo "📡 Validating Kafka topic naming conventions..."
+        python -c "
+        import sys
+        sys.path.append('agents')
+        from shared_utils import validate_kafka_topic_name
+        from my_agent import MyAgent
+        
+        # Test topic generation for all agent types
+        test_agents = [
+            'NEUROS CNS Specialist',
+            'NUTROS Nutrition Expert', 
+            'KINETOS Movement Coach',
+            'HYPERTROS Strength Optimizer'
+        ]
+        
+        for role in test_agents:
+            agent = MyAgent(role=role, domain='testing')
+            topics = [agent.ingest_topic, agent.output_topic, agent.status_topic]
+            
+            for topic in topics:
+                if not validate_kafka_topic_name(topic):
+                    print(f'❌ Invalid Kafka topic: {topic}')
+                    sys.exit(1)
+                else:
+                    print(f'✅ Valid Kafka topic: {topic}')
+        
+        print('🎉 All Kafka topics pass Confluent naming validation!')
+        "
+        
+    - name: 🔐 Security Validation
+      run: |
+        echo "🛡️ Running security checks..."
+        python -c "
+        import yaml
+        
+        # Verify PyYAML version for security
+        version_parts = yaml.__version__.split('.')
+        major, minor = int(version_parts[0]), int(version_parts[1])
+        
+        if not (major > 5 or (major == 5 and minor >= 4)):
+            print(f'❌ PyYAML {yaml.__version__} is vulnerable. Requires ≥ 5.4')
+            exit(1)
+        else:
+            print(f'✅ PyYAML {yaml.__version__} meets security requirements')
+        
+        # Check for safe_load usage
+        import os
+        for root, dirs, files in os.walk('agents'):
+            for file in files:
+                if file.endswith('.py'):
+                    filepath = os.path.join(root, file)
+                    with open(filepath, 'r') as f:
+                        content = f.read()
+                        if 'yaml.load(' in content and 'yaml.safe_load(' not in content:
+                            print(f'❌ Unsafe yaml.load() found in {filepath}')
+                            exit(1)
+        
+        print('✅ All YAML loading uses safe_load() - secure!')
+        "
+
+  agent-integration-test:
+    name: 🧪 Agent Integration Test
+    runs-on: ubuntu-latest
+    needs: yaml-validation
+    
+    steps:
+    - name: 📦 Checkout repository  
+      uses: actions/checkout@v4
+      
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: 📦 Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pyyaml>=5.4.0 pydantic
+        
+    - name: 🔧 Test Agent Creation & Configuration
+      run: |
+        echo "🤖 Testing agent creation without external dependencies..."
+        python -c "
+        import sys
+        sys.path.append('agents')
+        
+        # Test deep merge
+        from shared_utils import deep_merge, generate_kafka_topics
+        
+        a = {'config': {'temp': 0.1, 'tools': {'tool1': 'enabled'}}}
+        b = {'config': {'temp': 0.3, 'tools': {'tool2': 'enabled'}}}
+        result = deep_merge(a, b)
+        
+        assert result['config']['temp'] == 0.3
+        assert result['config']['tools']['tool1'] == 'enabled'
+        assert result['config']['tools']['tool2'] == 'enabled'
+        print('✅ Deep merge working correctly')
+        
+        # Test Kafka topic generation
+        topics = generate_kafka_topics('NEUROS & HRV Specialist', 'testing')
+        expected = 'neuros_and_hrv_specialist.testing.analyze'
+        assert topics['ingest'] == expected
+        print('✅ Kafka topic generation working')
+        
+        print('🎉 All agent integration tests passed!')
+        "
+
+  schema-coverage-report:
+    name: 📊 Schema Coverage Report
+    runs-on: ubuntu-latest
+    needs: [yaml-validation, agent-integration-test]
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: 📦 Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: 📋 Generate Coverage Report
+      run: |
+        echo "📊 Schema Validation Coverage Report" >> $GITHUB_STEP_SUMMARY
+        echo "=====================================" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Count YAML files
+        yaml_count=$(find agents -name "*.yaml" -o -name "*.yml" | wc -l)
+        schema_count=$(find agents/schemas -name "*.json" | wc -l)
+        
+        echo "- 📄 YAML files validated: $yaml_count" >> $GITHUB_STEP_SUMMARY
+        echo "- 📋 JSON schemas available: $schema_count" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ yamllint compliance: PASSED" >> $GITHUB_STEP_SUMMARY
+        echo "- 🛡️ Security checks: PASSED" >> $GITHUB_STEP_SUMMARY
+        echo "- 📡 Kafka topic validation: PASSED" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "🎉 **All agent configurations are production-ready!**" >> $GITHUB_STEP_SUMMARY 

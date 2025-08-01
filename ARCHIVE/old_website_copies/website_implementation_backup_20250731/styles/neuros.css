@@ -1,0 +1,616 @@
+/* NEUROS Specific Colors - Black Steel and Space Theme */
+:root {
+    --neuros-black: #0A0A0B;
+    --neuros-steel: #1C1E26;
+    --neuros-steel-light: #2A2D3A;
+    --neuros-space: #0F1419;
+    --neuros-accent: #4A9EFF;
+    --neuros-neural: #00D4FF;
+    --neuros-text: #E7E9EA;
+    --neuros-text-dim: #71767B;
+}
+
+/* NEUROS Page Specific Styling */
+body {
+    background: var(--neuros-black) !important;
+    color: var(--neuros-text) !important;
+}
+
+/* Gradient for neural effects */
+.neural-gradient {
+    background: linear-gradient(135deg, 
+        var(--neuros-space) 0%, 
+        var(--neuros-steel) 50%, 
+        var(--neuros-black) 100%
+    );
+}
+
+/* NEUROS Typography */
+.neuros-page {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 
+                 "Helvetica Neue", Arial, sans-serif;
+    background: var(--neuros-black);
+    color: var(--neuros-text);
+}
+
+/* Agent Header */
+.agent-header {
+    padding: 120px 0 60px;
+    background: linear-gradient(180deg, 
+        var(--neuros-steel) 0%, 
+        var(--neuros-black) 100%
+    );
+    position: relative;
+    overflow: hidden;
+}
+
+.agent-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        radial-gradient(circle at 20% 50%, rgba(0, 217, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 50%, rgba(153, 69, 255, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.agent-intro {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 4rem;
+    align-items: center;
+}
+
+.agent-avatar {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    border-radius: 30px;
+    overflow: hidden;
+    background: rgba(0, 217, 255, 0.1);
+    border: 2px solid var(--accent-blue);
+    box-shadow: var(--glow-blue);
+}
+
+#avatar-3d {
+    width: 100%;
+    height: 100%;
+}
+
+.agent-info h1 {
+    font-size: 3.5rem;
+    font-weight: 900;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.02em;
+}
+
+/* NEUROS Enhanced Styles */
+.agent-name {
+    font-size: 4rem !important;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    background: linear-gradient(to right, 
+        #E7E9EA 0%, 
+        #00D4FF 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+}
+
+.agent-description {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: rgba(255, 255, 255, 0.8);
+    max-width: 600px;
+    margin: 1.5rem 0;
+    font-weight: 400;
+}
+
+.agent-meta {
+    display: flex;
+    gap: 2rem;
+    margin: 2rem 0;
+    font-size: 0.9rem;
+}
+
+.agent-meta span {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.agent-meta .version {
+    background: rgba(0, 217, 255, 0.1);
+    border-color: rgba(0, 217, 255, 0.3);
+    color: var(--accent-blue);
+}
+
+.agent-meta .framework {
+    background: rgba(153, 69, 255, 0.1);
+    border-color: rgba(153, 69, 255, 0.3);
+    color: var(--accent-purple);
+}
+
+.agent-meta .status {
+    background: rgba(0, 255, 136, 0.1);
+    border-color: rgba(0, 255, 136, 0.3);
+    color: var(--accent-green);
+    font-weight: 600;
+}
+
+.agent-meta .status.live::before {
+    content: '●';
+    margin-right: 0.5rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.agent-tagline {
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+.agent-stats {
+    display: flex;
+    gap: 3rem;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent-blue);
+}
+
+.stat-value.live {
+    color: var(--accent-green);
+    position: relative;
+}
+
+.stat-value.live::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -20px;
+    width: 8px;
+    height: 8px;
+    background: var(--accent-green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+/* Dashboard Grid */
+.agent-dashboard {
+    padding: 60px 0;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+}
+
+/* Dashboard Cards - Updated for NEUROS Theme */
+.dashboard-card {
+    background: var(--neuros-steel);
+    border: 1px solid var(--neuros-steel-light);
+    border-radius: 20px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.dashboard-card:hover {
+    background: var(--neuros-steel-light);
+    border-color: var(--neuros-accent);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 40px rgba(74, 158, 255, 0.1);
+}
+
+.dashboard-card h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: var(--neuros-text);
+}
+
+/* Metrics Card */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+.metric {
+    text-align: center;
+}
+
+.metric canvas {
+    width: 100%;
+    height: 120px;
+    margin-bottom: 1rem;
+}
+
+.metric-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.metric-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.metric-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent-blue);
+}
+
+/* Knowledge Graph Card */
+.knowledge-card {
+    grid-column: span 2;
+}
+
+.knowledge-controls {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.control-btn {
+    padding: 0.5rem 1.5rem;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.control-btn.active,
+.control-btn:hover {
+    background: var(--accent-blue);
+    color: var(--bg-primary);
+    border-color: var(--accent-blue);
+}
+
+#knowledge-graph {
+    width: 100%;
+    height: 400px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 15px;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.knowledge-stats {
+    display: flex;
+    gap: 2rem;
+    color: var(--text-secondary);
+}
+
+.knowledge-stats strong {
+    color: var(--accent-blue);
+}
+
+/* Hypothesis Card */
+.hypothesis-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.hypothesis-item {
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+    transition: all 0.3s ease;
+}
+
+.hypothesis-item.active {
+    border-color: var(--accent-blue);
+    background: rgba(0, 217, 255, 0.05);
+}
+
+.hypothesis-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.hypothesis-header h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.confidence {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--accent-blue);
+}
+
+.hypothesis-progress {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+    border-radius: 2px;
+    transition: width 0.5s ease;
+}
+
+.hypothesis-item p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+/* Insights Card */
+.insights-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.insight-item {
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.insight-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.insight-time {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.insight-item h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.insight-item p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.6;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .agent-intro {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+    
+    .agent-avatar {
+        margin: 0 auto;
+    }
+    
+    .agent-stats {
+        justify-content: center;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .knowledge-card {
+        grid-column: span 1;
+    }
+    
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+} 
+
+/* NEUROS Navigation Override */
+.main-nav {
+    background: var(--neuros-black) !important;
+    border-bottom: 1px solid var(--neuros-steel-light);
+}
+
+.nav-link {
+    color: var(--neuros-text-dim) !important;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: var(--neuros-neural) !important;
+}
+
+.nav-cta {
+    background: var(--neuros-accent) !important;
+    color: white !important;
+    border: none;
+}
+
+.nav-cta:hover {
+    background: var(--neuros-neural) !important;
+    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+} 
+
+/* Core Specializations Section */
+.specializations {
+    padding: 80px 0;
+    background: var(--neuros-black);
+    position: relative;
+}
+
+.specializations h2 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 3rem;
+    background: linear-gradient(to right, var(--neuros-text), var(--neuros-neural));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.spec-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.spec-card {
+    background: var(--neuros-steel);
+    border: 1px solid var(--neuros-steel-light);
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.spec-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, transparent 0%, rgba(74, 158, 255, 0.1) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.spec-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--neuros-accent);
+    box-shadow: 0 10px 40px rgba(74, 158, 255, 0.2);
+}
+
+.spec-card:hover::before {
+    opacity: 1;
+}
+
+.spec-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(74, 158, 255, 0.1);
+    border-radius: 20px;
+    color: var(--neuros-neural);
+    transition: all 0.3s ease;
+}
+
+.spec-card:hover .spec-icon {
+    background: rgba(0, 212, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.spec-card h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--neuros-text);
+}
+
+.spec-card p {
+    font-size: 0.9rem;
+    color: var(--neuros-text-dim);
+    margin-bottom: 1.5rem;
+}
+
+.spec-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--neuros-steel-light);
+}
+
+.spec-metrics .metric-label {
+    font-size: 0.75rem;
+    color: var(--neuros-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.spec-metrics .metric-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--neuros-neural);
+}
+
+/* Specialization-specific colors */
+.spec-card[data-spec="autonomic"] .spec-icon {
+    color: #00D9FF;
+    background: rgba(0, 217, 255, 0.1);
+}
+
+.spec-card[data-spec="hrv"] .spec-icon {
+    color: #FF6B6B;
+    background: rgba(255, 107, 107, 0.1);
+}
+
+.spec-card[data-spec="fatigue"] .spec-icon {
+    color: #9945FF;
+    background: rgba(153, 69, 255, 0.1);
+}
+
+.spec-card[data-spec="recovery"] .spec-icon {
+    color: #00FF88;
+    background: rgba(0, 255, 136, 0.1);
+}
+
+.spec-card[data-spec="stress"] .spec-icon {
+    color: #FFB800;
+    background: rgba(255, 184, 0, 0.1);
+}
+
+.spec-card[data-spec="circadian"] .spec-icon {
+    color: #FF45FF;
+    background: rgba(255, 69, 255, 0.1);
+}
+
+.spec-card[data-spec="cognitive"] .spec-icon {
+    color: #45FFFF;
+    background: rgba(69, 255, 255, 0.1);
+} 

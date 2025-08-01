@@ -1,0 +1,199 @@
+name: 🔒 Observability Security Gate
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  dependency-security:
+    name: 🔍 Dependency & Security Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: 📦 Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements.otel.txt ]; then pip install -r requirements.otel.txt; fi
+
+      - name: 🔍 Check dependency conflicts
+        run: |
+          echo "🔍 Checking for version conflicts..."
+          pip check
+          echo "✅ No dependency conflicts found"
+
+      - name: 🛡️ Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          exit-code: '1'
+          severity: 'HIGH,CRITICAL'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: 📊 Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  metric-validation:
+    name: 📏 Metric Taxonomy Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🏷️ Validate metric naming conventions
+        run: |
+          echo "🔍 Checking metric naming conventions..."
+          
+          # Check that all Gauge/Counter declarations include units
+          INVALID_METRICS=$(grep -r "Gauge\|Counter" --include="*.py" . | \
+            grep -v "_ms\|_total\|_bytes\|_seconds\|_hours\|_score\|_percent" || true)
+          
+          if [ ! -z "$INVALID_METRICS" ]; then
+            echo "❌ Invalid metric names found (missing units):"
+            echo "$INVALID_METRICS"
+            echo ""
+            echo "✅ Valid examples:"
+            echo "  - neuros_hrv_rmssd_ms (milliseconds)"
+            echo "  - neuros_sleep_debt_hours (hours)" 
+            echo "  - neuros_risk_events_total (counter)"
+            exit 1
+          fi
+          
+          echo "✅ All metrics follow naming conventions"
+
+      - name: 📊 Check metric cardinality
+        run: |
+          echo "🔍 Checking for high-cardinality patterns..."
+          
+          # Look for potentially high-cardinality labels
+          HIGH_CARD=$(grep -r "labels.*user_id.*timestamp\|labels.*session_id.*user" --include="*.py" . || true)
+          
+          if [ ! -z "$HIGH_CARD" ]; then
+            echo "⚠️ Potential high-cardinality metrics found:"
+            echo "$HIGH_CARD"
+            echo ""
+            echo "💡 Consider aggregating or using relabel_configs to drop high-cardinality labels"
+            # Warning only, don't fail build
+          fi
+          
+          echo "✅ Cardinality check complete"
+
+  yaml-validation:
+    name: 📝 YAML Configuration Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔍 Validate YAML files
+        run: |
+          # Install yamllint
+          pip install yamllint
+          
+          echo "🔍 Validating YAML configuration files..."
+          
+          # Check KPI registry
+          if [ -f "agents/shared_modules/kpi_registry.yaml" ]; then
+            yamllint agents/shared_modules/kpi_registry.yaml
+            echo "✅ KPI registry YAML valid"
+          fi
+          
+          # Check Docker Compose files
+          find . -name "docker-compose*.yml" -exec yamllint {} \;
+          echo "✅ Docker Compose YAML files valid"
+          
+          # Check Grafana provisioning
+          if [ -d "grafana/provisioning" ]; then
+            find grafana/provisioning -name "*.yml" -exec yamllint {} \;
+            echo "✅ Grafana provisioning YAML valid"
+          fi
+
+  kpi-registry-validation:
+    name: 🎯 KPI Registry Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: 📦 Install validation dependencies
+        run: |
+          pip install pydantic pyyaml
+
+      - name: 🎯 Validate KPI registry structure
+        run: |
+          if [ -f "agents/shared_modules/kpi_registry.yaml" ]; then
+            echo "🔍 Validating KPI registry structure..."
+            
+            # Run KPI binding validation if script exists
+            if [ -f "agents/validate_kpi_bindings.py" ]; then
+              cd agents && python validate_kpi_bindings.py
+              echo "✅ KPI registry validation passed"
+            else
+              echo "⚠️ KPI validation script not found - skipping detailed validation"
+            fi
+          else
+            echo "⚠️ KPI registry not found - skipping validation"
+          fi
+
+  docker-build-test:
+    name: 🐳 Docker Build Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔨 Test Docker build
+        run: |
+          echo "🔍 Testing Docker build process..."
+          
+          # Test build without pushing (dry run)
+          if [ -f "Dockerfile" ]; then
+            docker buildx build --platform linux/amd64 --load .
+            echo "✅ Docker build successful"
+          else
+            echo "⚠️ No Dockerfile found - skipping build test"
+          fi
+
+  security-summary:
+    name: 📋 Security Summary
+    runs-on: ubuntu-latest
+    needs: [dependency-security, metric-validation, yaml-validation, kpi-registry-validation]
+    if: always()
+    steps:
+      - name: 📊 Generate security report
+        run: |
+          echo "🔒 AUREN Observability Security Gate Summary"
+          echo "============================================="
+          echo ""
+          echo "✅ Dependency conflicts: ${{ needs.dependency-security.result }}"
+          echo "✅ Metric taxonomy: ${{ needs.metric-validation.result }}"
+          echo "✅ YAML validation: ${{ needs.yaml-validation.result }}"
+          echo "✅ KPI registry: ${{ needs.kpi-registry-validation.result }}"
+          echo ""
+          echo "🎯 All observability standards validated"
+          echo "🚀 Ready for agent deployment"

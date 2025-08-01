@@ -1,0 +1,131 @@
+---
+# AUREN Agent Roster – v1.1
+# Includes all nine specialists; non-implemented agents set enabled: false
+
+version: 1.1
+last_updated: "2025-07-31"
+
+# Deep-merge override guard (Hydra/PyYAML compatibility)
+merge_strategy: recursive_last_win
+
+common:
+  tone_shift_labels: true
+  shareable_hook_default: false
+  ethical_guardrails: true          # pulls shared_modules/ethical_guardrails.yaml
+  kpi_schema:
+    - "metric"
+    - "value"
+    - "unit"
+    - "confidence"
+    - "timestamp"
+
+agents:
+
+  #######################################################################
+  # 1. Implemented Specialist
+  #######################################################################
+  NEUROS:
+    enabled: true
+    status: "alpha"                 # alpha | beta | prod
+    tags: ["implemented", "core_biometrics"]
+    role: "Central Nervous System Specialist"
+    emotional_anchors:
+      - "Curious"
+      - "Structured"
+      - "Empathetic"
+    shareable_hook: false
+    responsibilities:
+      - "analyze_biometrics"
+      - "cognitive_mode_switching"
+      - "conversation_optimization"
+    kpis:
+      - "HRV_trend"
+      - "Fatigue_index"
+      - "CNS_load"
+    upstream_topics:
+      - "wearables.biometric"
+      - "user.interaction"
+    downstream_topics:
+      - "insights"
+      - "recommendations"
+    include:
+      - "shared_modules/integration_protocols.yaml"
+      - "neuros_modules/core_personality.yaml"
+      - "neuros_modules/cognitive_modes.yaml"
+      - "shared_modules/ethical_guardrails.yaml"
+
+  #######################################################################
+  # 2-9. Skeleton Specialists (placeholders)
+  #######################################################################
+  NUTROS:
+    enabled: false
+    status: "todo"
+    tags: ["beta", "nutrition"]
+    role: "Nutrition & Supplement Strategist"
+    include:
+      - "shared_modules/integration_protocols.yaml"
+      - "nutros_modules/core_personality.yaml"
+
+  KINETOS:
+    enabled: false
+    status: "todo"
+    tags: ["beta", "movement"]
+    role: "Mobility & Injury-Prevention Specialist"
+    include:
+      - "shared_modules/integration_protocols.yaml"
+      - "kinetos_modules/core_personality.yaml"
+
+  HYPERTROS:
+    enabled: false
+    status: "todo"
+    tags: ["beta", "strength"]
+    role: "Strength & Hypertrophy Coach"
+    include:
+      - "shared_modules/integration_protocols.yaml"
+      - "hypertros_modules/core_personality.yaml"
+
+  CARDIOS:
+    enabled: false
+    status: "todo"
+    tags: ["beta", "cardio"]
+    role: "Cardiometabolic Engine Optimizer"
+    include:
+      - "shared_modules/integration_protocols.yaml"
+      - "cardios_modules/core_personality.yaml"
+
+  ENDOS:
+    enabled: false
+    status: "todo"
+    tags: ["research_only", "compliance_heavy"]
+    role: "Peptide & Endocrine Strategist"
+    include:
+      - "shared_modules/integration_protocols.yaml"
+      - "endos_modules/core_personality.yaml"
+
+  OPTICOS:
+    enabled: false
+    status: "todo"
+    tags: ["future", "computer_vision"]
+    role: "Visual Biometrics Analyst"
+    include:
+      - "shared_modules/integration_protocols.yaml"
+      - "opticos_modules/core_personality.yaml"
+
+  SOMNOS:
+    enabled: false
+    status: "todo"
+    tags: ["beta", "recovery"]
+    role: "Sleep & Recovery Architect"
+    include:
+      - "shared_modules/integration_protocols.yaml"
+      - "somnos_modules/core_personality.yaml"
+
+  AUREN:
+    enabled: false
+    status: "todo"
+    tags: ["orchestrator", "core_system"]
+    role: "Chief-of-Staff Orchestrator"
+    include:
+      - "shared_modules/integration_protocols.yaml"
+      - "auren_modules/core_personality.yaml"
+

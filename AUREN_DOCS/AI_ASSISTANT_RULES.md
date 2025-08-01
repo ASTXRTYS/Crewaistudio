@@ -1,23 +1,23 @@
 # AI ASSISTANT OPERATIONAL RULES FOR AUREN
 
-**Version**: 3.0  
-**Last Updated**: January 30, 2025  
-**Status**: ✅ LOCKED CONFIGURATION - PRODUCTION READY
+**Version**: 4.0  
+**Last Updated**: July 31, 2025  
+**Status**: ✅ PRODUCTION READY - Comprehensive Blueprint Deployed
 
 ---
 
-## 🎯 PRIMARY DIRECTIVE: The SOP Funnel
+## 🎯 PRIMARY DIRECTIVE: The Source of Truth Funnel
 
-**ALWAYS START HERE**. This is the single entry point for all operations.
+**ALWAYS START HERE**. This is the single entry point for all operations, ensuring every action is grounded in the most current strategic and technical reality.
 
-1.  **START WITH THE MASTER CONFIGURATION**:
-    - Read `FULL_PIPELINE_CONFIG_WITH_PWA.md` (in the repository root). This is the single source of truth for **what the system is**.
+1.  **START WITH THE MASTER BLUEPRINT (NEW SOURCE OF TRUTH)**:
+    - Read `AUREN_DOCS/AUREN_MASTER_SYSTEM_BLUEPRINT_v22_COMPREHENSIVE.md`. This is the single source of truth for **what the system is, what it will become, and its current operational status**. It is a hybrid document combining strategic vision, technical reality, and documented implementation gaps.
 
 2.  **CONSULT THE MASTER OPERATIONS GUIDE**:
-    - Read `AUREN_DOCS/SOPs/SOP-001-AUREN-MASTER-OPERATIONS-GUIDE.md`. This is the single source of truth for **how to operate the system**.
+    - Read `AUREN_DOCS/SOPs/SOP-001-AUREN-MASTER-OPERATIONS-GUIDE.md`. This is the single source of truth for **how to operate the system on a daily basis**.
 
 3.  **REVIEW THE MASTER TECHNICAL SPECIFICATION**:
-    - Read `AUREN_DOCS/SOPs/SOP-003-AUREN-MASTER-TECHNICAL-SPECIFICATION.md` for in-depth technical details.
+    - Read `AUREN_DOCS/SOPs/SOP-003-AUREN-MASTER-TECHNICAL-SPECIFICATION.md` for in-depth technical details on specific components.
 
 4.  **CHECK CREDENTIALS**:
     - Reference `AUREN_DOCS/00_QUICK_START/CREDENTIALS_VAULT.md` for all access.
@@ -26,8 +26,8 @@
 
 ## 📋 OPERATIONAL RULES (LOCKED CONFIGURATION)
 
-### Rule 1: Trust the Locked Configuration
-- **ALWAYS** reference the master documents listed in the Primary Directive.
+### Rule 1: Trust the Master Blueprint
+- **ALWAYS** reference the `AUREN_MASTER_SYSTEM_BLUEPRINT_v22_COMPREHENSIVE.md` as the primary source of truth.
 - **NEVER** deviate from the documented architecture or procedures.
 - **UPDATE** documentation if a change is approved by the Lead Architect.
 
@@ -43,19 +43,19 @@
 ### Rule 4: Post-Implementation Protocol (CRITICAL)
 1.  **VERIFY**: Use the `SYSTEM_VERIFICATION_CHECKLIST.md` after every deployment.
 2.  **LOG**: Update the `CHANGELOG.md` with a summary of the changes.
-3.  **UPDATE**: If any part of the locked configuration was changed (with approval), update the master SOPs.
+3.  **UPDATE**: If any part of the locked configuration was changed (with approval), update the master SOPs and the Master Blueprint.
 
 ---
 
-## 🚀 QUICK REFERENCE PATHS (LOCKED)
+## 🚀 QUICK REFERENCE PATHS (UPDATED)
 
 ```
 # --------------------------------------------------
 #          LOCKED CONFIGURATION - DO NOT CHANGE
 # --------------------------------------------------
 
-# MASTER SOURCE OF TRUTH (WHAT THE SYSTEM IS)
-Master Config:      /FULL_PIPELINE_CONFIG_WITH_PWA.md
+# MASTER SOURCE OF TRUTH (WHAT THE SYSTEM IS & WILL BECOME)
+Master Blueprint:   /AUREN_DOCS/AUREN_MASTER_SYSTEM_BLUEPRINT_v22_COMPREHENSIVE.md
 
 # MASTER OPERATIONS GUIDE (HOW TO RUN THE SYSTEM)
 Operations:         /AUREN_DOCS/SOPs/SOP-001-AUREN-MASTER-OPERATIONS-GUIDE.md
@@ -79,9 +79,9 @@ Monitoring Script:  /root/monitor-auren.sh (on server)
 
 ---
 
-## ⚡ GOLDEN RULES (LOCKED)
+## ⚡ GOLDEN RULES (UPDATED)
 
-1.  **TRUST THE MASTER DOCS** - Start with `FULL_PIPELINE_CONFIG_WITH_PWA.md` and the master SOPs.
+1.  **TRUST THE MASTER BLUEPRINT** - Start with `AUREN_MASTER_SYSTEM_BLUEPRINT_v22_COMPREHENSIVE.md` and the master SOPs.
 2.  **DOCUMENT EVERYTHING** - Update the `CHANGELOG.md` after every change.
 3.  **VERIFY DEPLOYMENTS** - Use the `SYSTEM_VERIFICATION_CHECKLIST.md`.
 4.  **SSHPASS ALWAYS** - No exceptions.

@@ -1,0 +1,21 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install dependencies
+RUN pip install --no-cache-dir \
+    fastapi==0.104.1 \
+    uvicorn[standard]==0.24.0 \
+    httpx==0.25.2 \
+    pyyaml==6.0.1 \
+    websockets==12.0
+
+# Copy the metrics bridge API
+COPY metrics_bridge.py /app/
+
+# Copy KPI registry (will be mounted in production)
+COPY ../../agents/shared_modules/kpi_registry.yaml /app/shared_modules/
+
+EXPOSE 8002
+
+CMD ["uvicorn", "metrics_bridge:app", "--host", "0.0.0.0", "--port", "8002"]

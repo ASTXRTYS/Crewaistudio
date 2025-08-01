@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  tempo:
+    image: grafana/tempo:latest
+    container_name: auren-tempo
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - ./tempo/tempo-config.yaml:/etc/tempo.yaml
+      - tempo-data:/tmp/tempo
+    ports:
+      - "3200:3200"   # Tempo HTTP API
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+    networks:
+      - auren-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3200/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Update OTel Collector to send traces to Tempo
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: auren-otel-collector
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+      - "9464:9464"   # Prometheus metrics
+    networks:
+      - auren-network
+    restart: unless-stopped
+    depends_on:
+      - tempo
+
+volumes:
+  tempo-data:
+
+networks:
+  auren-network:
+    external: true

@@ -1,0 +1,28 @@
+---
+agent: "NUTROS"
+version: "1.0"
+kpis_used:
+  - key: "glucose_cv_percent"
+    role: "metabolic_stability_monitor"
+    alerting:
+      risk_if: ">= 36"
+      actions:
+        - name: "recommend_carb_timing_review"
+        - name: "suggest_post_meal_walk"
+
+  - key: "protein_adequacy_g_per_kg"
+    role: "anabolic_support_check"
+    alerting:
+      caution_if: "< 1.6"
+      condition: "is_hypertrophy_focused == true"
+      actions:
+        - name: "provide_high_protein_meal_examples"
+        - name: "link_to_protein_sources_guide"
+
+collaboration:
+  on_risk:
+    - agent: "HYPERTROS"
+      reason: "Poor glucose control can impair muscle protein synthesis and recovery."
+  on_caution:
+    - agent: "HYPERTROS"
+      reason: "Inadequate protein intake is a primary blocker for hypertrophy goals." 

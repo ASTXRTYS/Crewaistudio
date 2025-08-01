@@ -1,0 +1,47 @@
+groups:
+  - name: auren_critical
+    rules:
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.15
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disk space critically low"
+          description: "Disk usage is above 85% for more than 5 minutes"
+          
+      - alert: APITrafficDrop
+        expr: sum(rate(neuros_requests_total[5m])) == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API traffic completely stopped"
+          description: "No API requests detected for 2 minutes"
+          
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(neuros_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API response time"
+          description: "95th percentile response time above 2 seconds"
+          
+      - alert: ServiceDown
+        expr: up{job="neuros-prod"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "NEUROS service is down"
+          description: "NEUROS production service is not responding"
+          
+      - alert: OTelCollectorDown
+        expr: up{job="otel-collector"} == 0
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "OpenTelemetry collector is down"
+          description: "OTel collector not responding - tracing may be affected" 

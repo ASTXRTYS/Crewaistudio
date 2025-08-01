@@ -1,0 +1,8 @@
+---
+# KINETOS Core Personality Configuration (Placeholder)
+# Status: todo - awaiting implementation
+
+placeholder: true
+agent_name: "KINETOS"
+role: "Mobility & Injury-Prevention Specialist"
+implementation_status: "skeleton"

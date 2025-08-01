@@ -1,0 +1,109 @@
+# OpenTelemetry Collector Configuration for AUREN
+# Routes traces to Tempo and metrics to Prometheus
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+        
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: 'otel-collector'
+          scrape_interval: 10s
+          static_configs:
+            - targets: ['0.0.0.0:8888']
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+    
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+    spike_limit_mib: 128
+    
+  resource:
+    attributes:
+      - key: service.namespace
+        value: auren
+        action: upsert
+      - key: deployment.environment
+        value: production
+        action: upsert
+        
+  span:
+    name:
+      to_attributes:
+        rules:
+          - ^(?P<operation_name>.*)$
+    status:
+      code:
+        - ERROR
+        - UNSET
+        
+  attributes:
+    actions:
+      - key: http.user_agent
+        action: delete
+      - key: http.request.header.authorization
+        action: delete
+
+exporters:
+  # Send traces to Tempo
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+      
+  # Send metrics to Prometheus
+  prometheus:
+    endpoint: "0.0.0.0:9464"
+    namespace: otel
+    const_labels:
+      source: collector
+    metric_expiration: 10m
+    
+  # Debug exporter for troubleshooting
+  debug:
+    verbosity: detailed
+    sampling_initial: 5
+    sampling_thereafter: 200
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+  pprof:
+    endpoint: 0.0.0.0:1777
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+service:
+  extensions: [health_check, pprof, zpages]
+  
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, resource, span, attributes]
+      exporters: [otlp/tempo]
+      
+    metrics:
+      receivers: [prometheus, otlp]
+      processors: [memory_limiter, batch, resource]
+      exporters: [prometheus]
+      
+    # Enable debug pipeline for troubleshooting
+    # Uncomment to see sample traces/metrics in logs
+    # traces/debug:
+    #   receivers: [otlp]
+    #   processors: [batch]
+    #   exporters: [debug]

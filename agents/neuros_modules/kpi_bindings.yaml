@@ -1,0 +1,34 @@
+# agents/neuros/kpi_bindings.yaml
+agent: "NEUROS"
+version: "1.1"
+
+kpis_used:
+  - key: hrv_rmssd
+    role: "primary_signal"
+    alerting:
+      risk_if: "< 25"
+      actions:
+        - name: "reduce_training_intensity"   # -20 %
+        - name: "trigger_somnos_review"
+
+  - key: ln_rmssd
+    role: "trend_check"
+    alerting:
+      caution_if_drop_pct: ">= 10 over 7d"
+      actions:
+        - name: "flag_cns_fatigue"
+
+  - key: cns_fatigue_index
+    role: "composite_gate"
+    alerting:
+      risk_if: ">= 75"
+      actions:
+        - name: "hard_stop_power_training"
+        - name: "notify_user_cns_rest_day"
+
+collaboration:
+  on_risk:
+    - agent: "SOMNOS"
+      reason: "Low HRV is often linked to poor sleep quality and circadian misalignment."
+    - agent: "CARDIOS"
+      reason: "Sustained low HRV may indicate systemic overtraining or poor aerobic adaptation." 

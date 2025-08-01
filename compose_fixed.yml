@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg14
+    container_name: auren-postgres
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    environment:
+      POSTGRES_USER: auren_user
+      POSTGRES_PASSWORD: auren_secure_2025
+      POSTGRES_DB: auren_production
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: auren-redis
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  biometric-bridge:
+    image: auren-biometric:latest
+    container_name: biometric-production
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    ports:
+      - "8888:8888"
+    environment:
+      - ENVIRONMENT=production
+      - DISABLE_TEST_EVENTS=true
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
+  kafka:
+    image: bitnami/kafka:3.5
+    container_name: auren-kafka
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+    volumes:
+      - kafka_data:/bitnami/kafka
+    restart: unless-stopped
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.95.0
+    command: ["--config=/etc/otel.yaml"]
+    volumes:
+      - ./otel.yaml:/etc/otel.yaml
+    ports:
+      - "4318:4318"
+      - "9464:9464"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  kafka_data:
+
+networks:
+  default:
+    name: auren-network
+    external: true
+

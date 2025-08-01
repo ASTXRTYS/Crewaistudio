@@ -1,0 +1,8 @@
+---
+# NUTROS Core Personality Configuration (Placeholder)
+# Status: todo - awaiting implementation
+
+placeholder: true
+agent_name: "NUTROS"
+role: "Nutrition & Supplement Strategist"
+implementation_status: "skeleton"

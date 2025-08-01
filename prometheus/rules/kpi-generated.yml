@@ -1,0 +1,45 @@
+groups:
+- name: auren_kpi_aggregations
+  interval: 30s
+  rules:
+  - record: auren_hrv_rmssd_ms:rate5m
+    expr: rate(auren_hrv_rmssd_ms[5m])
+  - record: auren_hrv_rmssd_ms:avg1h
+    expr: avg_over_time(auren_hrv_rmssd_ms[1h])
+  - record: auren_hrv_rmssd_ms:avg24h
+    expr: avg_over_time(auren_hrv_rmssd_ms[24h])
+  - record: auren_hrv_rmssd_ms:by_user
+    expr: avg by (user_id) (auren_hrv_rmssd_ms)
+  - record: auren_hrv_rmssd_ms:p95
+    expr: quantile(0.95, auren_hrv_rmssd_ms)
+  - record: auren_hrv_rmssd_ms:p99
+    expr: quantile(0.99, auren_hrv_rmssd_ms)
+  - record: auren_hrv_rmssd_ms:critical_low
+    expr: auren_hrv_rmssd_ms < 20.0
+  - record: auren_sleep_debt_hours:rate5m
+    expr: rate(auren_sleep_debt_hours[5m])
+  - record: auren_sleep_debt_hours:avg1h
+    expr: avg_over_time(auren_sleep_debt_hours[1h])
+  - record: auren_sleep_debt_hours:avg24h
+    expr: avg_over_time(auren_sleep_debt_hours[24h])
+  - record: auren_sleep_debt_hours:by_user
+    expr: avg by (user_id) (auren_sleep_debt_hours)
+  - record: auren_sleep_debt_hours:critical_high
+    expr: auren_sleep_debt_hours > 8.0
+  - record: auren_recovery_score:rate5m
+    expr: rate(auren_recovery_score[5m])
+  - record: auren_recovery_score:avg1h
+    expr: avg_over_time(auren_recovery_score[1h])
+  - record: auren_recovery_score:avg24h
+    expr: avg_over_time(auren_recovery_score[24h])
+  - record: auren_recovery_score:by_user
+    expr: avg by (user_id) (auren_recovery_score)
+  - record: auren_recovery_score:critical_low
+    expr: auren_recovery_score < 40.0
+  - record: auren:system_health_score
+    expr: "\n                (\n                    (clamp_max(auren_recovery_score\
+      \ / 100, 1)) * 0.4 +\n                    (clamp_max((100 - auren_sleep_debt_hours\
+      \ * 10) / 100, 1)) * 0.3 +\n                    (clamp_max(auren_hrv_rmssd_ms\
+      \ / 100, 1)) * 0.3\n                ) * 100\n            "
+  - record: auren:user_engagement_score
+    expr: count by (user_id) (rate(auren_hrv_rmssd_ms[5m]) > 0)

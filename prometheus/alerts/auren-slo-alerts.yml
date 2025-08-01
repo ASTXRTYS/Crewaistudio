@@ -1,0 +1,195 @@
+groups:
+  - name: auren_slo_alerts
+    interval: 30s
+    rules:
+      # Multi-window burn rate alerts for latency SLO
+      - alert: AurenHighLatencyBurnRate
+        expr: |
+          (
+            # 5m/1h windows for fast burn
+            (
+              1 - (
+                sum(rate(http_request_duration_seconds_bucket{le="0.25"}[5m])) / 
+                sum(rate(http_request_duration_seconds_count[5m]))
+              )
+            ) > 0.14
+            AND
+            (
+              1 - (
+                sum(rate(http_request_duration_seconds_bucket{le="0.25"}[1h])) / 
+                sum(rate(http_request_duration_seconds_count[1h]))
+              )
+            ) > 0.14
+          )
+          OR
+          (
+            # 30m/6h windows for medium burn
+            (
+              1 - (
+                sum(rate(http_request_duration_seconds_bucket{le="0.25"}[30m])) / 
+                sum(rate(http_request_duration_seconds_count[30m]))
+              )
+            ) > 0.07
+            AND
+            (
+              1 - (
+                sum(rate(http_request_duration_seconds_bucket{le="0.25"}[6h])) / 
+                sum(rate(http_request_duration_seconds_count[6h]))
+              )
+            ) > 0.07
+          )
+        for: 2m
+        labels:
+          severity: critical
+          slo: latency
+          team: auren-platform
+        annotations:
+          summary: "High latency burn rate detected"
+          description: |
+            AUREN is burning through its latency error budget too quickly.
+            Current burn rate indicates we'll exceed our 99% SLO within the evaluation window.
+            
+            Actions:
+            1. Check recent deployments
+            2. Review current traffic patterns
+            3. Investigate slow endpoints via Grafana
+
+      # Availability SLO alerts
+      - alert: AurenLowAvailability
+        expr: |
+          (
+            # Fast burn: 5m/1h windows
+            (
+              sum(rate(http_requests_total{status!~"5.."}[5m])) / 
+              sum(rate(http_requests_total[5m]))
+            ) < 0.95
+            AND
+            (
+              sum(rate(http_requests_total{status!~"5.."}[1h])) / 
+              sum(rate(http_requests_total[1h]))
+            ) < 0.95
+          )
+          OR
+          (
+            # Slow burn: 30m/6h windows
+            (
+              sum(rate(http_requests_total{status!~"5.."}[30m])) / 
+              sum(rate(http_requests_total[30m]))
+            ) < 0.985
+            AND
+            (
+              sum(rate(http_requests_total{status!~"5.."}[6h])) / 
+              sum(rate(http_requests_total[6h]))
+            ) < 0.985
+          )
+        for: 2m
+        labels:
+          severity: critical
+          slo: availability
+          team: auren-platform
+        annotations:
+          summary: "Low availability detected"
+          description: |
+            AUREN availability has dropped below acceptable levels.
+            Current availability: {{ $value | humanizePercentage }}
+            
+            Immediate actions:
+            1. Check service health endpoints
+            2. Review error logs
+            3. Consider rolling back recent changes
+
+      # KPI-specific alerts
+      - alert: AbnormalHRVReading
+        expr: |
+          auren_hrv_rmssd_ms < 20 OR auren_hrv_rmssd_ms > 100
+        for: 5m
+        labels:
+          severity: warning
+          kpi: hrv
+          team: auren-clinical
+        annotations:
+          summary: "Abnormal HRV reading detected"
+          description: |
+            HRV reading is outside normal range (20-100ms).
+            Current value: {{ $value }}ms
+            
+            This could indicate:
+            - Sensor malfunction
+            - Critical health state requiring attention
+            - Data processing error
+
+      - alert: HighSleepDebt
+        expr: |
+          auren_sleep_debt_hours > 10
+        for: 10m
+        labels:
+          severity: warning
+          kpi: sleep_debt
+          team: auren-clinical
+        annotations:
+          summary: "High sleep debt detected"
+          description: |
+            Sleep debt has exceeded 10 hours.
+            Current debt: {{ $value }} hours
+            
+            Recommendations:
+            - Alert user about sleep hygiene
+            - Adjust recovery protocols
+            - Monitor fatigue indicators
+
+      - alert: LowRecoveryScore
+        expr: |
+          auren_recovery_score < 50
+        for: 15m
+        labels:
+          severity: warning
+          kpi: recovery
+          team: auren-clinical
+        annotations:
+          summary: "Low recovery score"
+          description: |
+            Recovery score has dropped below 50%.
+            Current score: {{ $value }}%
+            
+            System should:
+            - Recommend reduced training load
+            - Increase recovery interventions
+            - Monitor for overtraining
+
+      # Infrastructure alerts
+      - alert: HighMemoryUsage
+        expr: |
+          (
+            container_memory_usage_bytes{container="neuros-advanced"} / 
+            container_spec_memory_limit_bytes{container="neuros-advanced"}
+          ) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+          container: neuros-advanced
+        annotations:
+          summary: "High memory usage in NEUROS container"
+          description: |
+            NEUROS container is using {{ $value | humanizePercentage }} of memory limit.
+            
+            Actions:
+            - Check for memory leaks
+            - Review recent code changes
+            - Consider scaling up resources
+
+      - alert: PrometheusTargetDown
+        expr: up{job=~"neuros-advanced-prod|biometric-bridge"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          component: monitoring
+        annotations:
+          summary: "Prometheus target is down"
+          description: |
+            {{ $labels.job }} has been down for more than 5 minutes.
+            
+            Immediate actions:
+            1. Check container status
+            2. Review container logs
+            3. Verify network connectivity

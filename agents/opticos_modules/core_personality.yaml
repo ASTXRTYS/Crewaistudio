@@ -1,0 +1,8 @@
+---
+# OPTICOS Core Personality Configuration (Placeholder)
+# Status: todo - awaiting implementation
+
+placeholder: true
+agent_name: "OPTICOS"
+role: "Visual Biometrics Analyst"
+implementation_status: "skeleton"

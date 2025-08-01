@@ -1,0 +1,15 @@
+apiVersion: 1
+
+providers:
+  - name: 'AUREN KPI Dashboards'
+    folder: 'AUREN'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
+
+# This file enables GitOps for Grafana dashboards
+# All dashboard JSON files in this directory auto-load on startup
+# Changes to dashboard files trigger automatic reload within 30 seconds

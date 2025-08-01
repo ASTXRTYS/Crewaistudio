@@ -1,0 +1,33 @@
+# AUREN NEUROS Unified Requirements - KPI + LangGraph + OTel
+# Pinned versions for stability (exact trio from handoff report)
+
+# OpenTelemetry 0.45b0 trio (proven working)
+opentelemetry-distro==0.45b0
+opentelemetry-exporter-prometheus==0.45b0
+opentelemetry-instrumentation-fastapi==0.45b0
+# Note: OTLP exporter is optional - install separately if needed
+
+# Prometheus metrics (battle-tested) - Fixed version triangle
+prometheus-fastapi-instrumentator==7.1.0   # Released Mar 2025, relaxed prometheus-client pin
+prometheus-client==0.21.0                  # Any <1.0.0 works
+
+# LangGraph and LangChain stack  
+langgraph>=0.2.0
+langchain>=0.2.0
+langchain-openai>=0.1.0
+langchain-core>=0.2.0
+
+# FastAPI stack
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic==2.9.0
+
+# Database and storage
+asyncpg==0.29.0
+pgvector==0.3.2
+redis==5.1.0
+
+# Core utilities
+pyyaml==6.0.2
+python-dotenv==1.0.1
+requests==2.32.3

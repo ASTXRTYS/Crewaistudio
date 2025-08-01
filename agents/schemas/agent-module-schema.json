@@ -1,0 +1,197 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://auren.ai/schemas/agent-module.json",
+  "title": "AUREN Agent Module Schema",
+  "description": "Validation schema for individual AUREN agent module files",
+  "type": "object",
+  "anyOf": [
+    { "$ref": "#/definitions/core_personality" },
+    { "$ref": "#/definitions/cognitive_modes" },
+    { "$ref": "#/definitions/memory_architecture" },
+    { "$ref": "#/definitions/protocol_execution" },
+    { "$ref": "#/definitions/shared_module" }
+  ],
+  "definitions": {
+    "core_personality": {
+      "type": "object",
+      "properties": {
+        "personality": {
+          "type": "object",
+          "properties": {
+            "voice_characteristics": {
+              "type": "object",
+              "properties": {
+                "base_tone": {
+                  "type": "string",
+                  "enum": ["curious", "structured", "empathetic", "analytical", "supportive"]
+                },
+                "communication_style": {
+                  "type": "string"
+                },
+                "expertise_level": {
+                  "type": "string",
+                  "enum": ["foundational", "intermediate", "advanced", "expert"]
+                }
+              }
+            },
+            "identity": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "role": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "background": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "cognitive_modes": {
+      "type": "object",
+      "properties": {
+        "cognitive_modes": {
+          "type": "object",
+          "properties": {
+            "baseline": {
+              "$ref": "#/definitions/cognitive_mode"
+            },
+            "reflex": {
+              "$ref": "#/definitions/cognitive_mode"
+            },
+            "hypothesis": {
+              "$ref": "#/definitions/cognitive_mode"
+            },
+            "companion": {
+              "$ref": "#/definitions/cognitive_mode"
+            },
+            "sentinel": {
+              "$ref": "#/definitions/cognitive_mode"
+            }
+          }
+        }
+      }
+    },
+    "cognitive_mode": {
+      "type": "object",
+      "properties": {
+        "trigger": {
+          "type": "string"
+        },
+        "response_style": {
+          "type": "string"
+        },
+        "analysis_depth": {
+          "type": "string",
+          "enum": ["surface", "moderate", "deep", "comprehensive"]
+        },
+        "time_horizon": {
+          "type": "string"
+        }
+      }
+    },
+    "memory_architecture": {
+      "type": "object",
+      "properties": {
+        "memory_tiers": {
+          "type": "object",
+          "properties": {
+            "hot": {
+              "$ref": "#/definitions/memory_tier"
+            },
+            "warm": {
+              "$ref": "#/definitions/memory_tier"
+            },
+            "cold": {
+              "$ref": "#/definitions/memory_tier"
+            }
+          }
+        }
+      }
+    },
+    "memory_tier": {
+      "type": "object",
+      "properties": {
+        "duration": {
+          "type": "string"
+        },
+        "latency": {
+          "type": "string"
+        },
+        "storage_backend": {
+          "type": "string",
+          "enum": ["redis", "postgresql", "s3", "chromadb"]
+        }
+      }
+    },
+    "protocol_execution": {
+      "type": "object",
+      "properties": {
+        "protocols": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-z_]+$": {
+              "$ref": "#/definitions/protocol"
+            }
+          }
+        }
+      }
+    },
+    "protocol": {
+      "type": "object",
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string"
+              },
+              "parameters": {
+                "type": "object"
+              },
+              "conditions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "timeout": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "retry_policy": {
+          "type": "object"
+        }
+      }
+    },
+    "shared_module": {
+      "type": "object",
+      "properties": {
+        "ethical_boundaries": {
+          "type": "object"
+        },
+        "kafka_topic_patterns": {
+          "type": "object"
+        },
+        "communication_patterns": {
+          "type": "object"
+        },
+        "safety_protocols": {
+          "type": "object"
+        }
+      }
+    }
+  }
+} 

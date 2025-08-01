@@ -1,0 +1,8 @@
+---
+# ENDOS Core Personality Configuration (Placeholder)
+# Status: todo - awaiting implementation
+
+placeholder: true
+agent_name: "ENDOS"
+role: "Peptide & Endocrine Strategist"
+implementation_status: "skeleton"

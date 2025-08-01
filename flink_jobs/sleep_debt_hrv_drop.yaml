@@ -1,0 +1,30 @@
+---
+# Flink CEP Job: Sleep Debt & HRV Drop Detection
+# Version: 1.0
+# Created: 2025-07-31
+
+# This is a placeholder for the Flink CEP YAML configuration.
+# It defines the patterns for detecting correlations between
+# sleep debt accumulation and significant HRV drops.
+
+description: >
+  Detects when a user accumulates significant sleep debt
+  followed by a drop in HRV RMSSD, indicating a potential
+  maladaptive state requiring intervention.
+
+patterns:
+  - name: "HighSleepDebtFollowedByHRVDrop"
+    sequence:
+      - name: "high_debt"
+        condition: "metric_name = 'sleep_debt' AND value > 3" # e.g., >3 hours
+        within: "2 days"
+      - name: "hrv_drop"
+        condition: "metric_name = 'hrv_rmssd' AND value_change < -15" # e.g., 15ms drop
+        within: "1 day"
+
+actions:
+  - name: "trigger_neuros_alert"
+    topic: "neuros.biometric.alert"
+    payload:
+      alert_type: "SLEEP_DEBT_HRV_IMPACT"
+      details: "High sleep debt detected, followed by a significant drop in HRV." 

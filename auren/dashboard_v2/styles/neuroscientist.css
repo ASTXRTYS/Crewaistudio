@@ -175,6 +175,11 @@
     color: #aaaaff;
 }
 
+.metric-status.no-data {
+    color: #666666;
+    font-style: italic;
+}
+
 /* Knowledge Graph Card */
 .knowledge-card {
     grid-column: span 2;

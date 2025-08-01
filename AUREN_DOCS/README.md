@@ -90,7 +90,13 @@ Organizational Scaling:     ✅ Any engineer can implement via systematic proced
 - **[🛠️ SOP-008: Troubleshooting](SOPs/SOP-008-MODULAR-ARCHITECTURE-TROUBLESHOOTING.md)** - Emergency response procedures
 - **[🎯 Current Priorities](../CURRENT_PRIORITIES.md)** - Technical gaps requiring resolution
 
-### 3. Access Production Systems
+### 3. Observability & Monitoring
+- **[🔭 Observability-as-Code Guide](../auren-pwa/observability-as-code/README.md)** - **NEW!** Complete observability pipeline
+- **[⚡ Quick Start](../auren-pwa/observability-as-code/QUICK_START.md)** - Add metrics in 5 minutes
+- **[🔧 Troubleshooting](../auren-pwa/observability-as-code/TROUBLESHOOTING.md)** - Common issues & fixes
+- **[📊 KPI System Architecture](03_DEVELOPMENT/KPI_SYSTEM_ARCHITECTURE.md)** - How KPIs and bindings work
+
+### 4. Access Production Systems
 ```bash
 # Test Human Performance OS foundation
 curl https://auren-b1tuli19i-jason-madrugas-projects.vercel.app/

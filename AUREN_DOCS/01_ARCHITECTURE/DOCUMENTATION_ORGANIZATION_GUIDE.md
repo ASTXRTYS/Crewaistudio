@@ -178,6 +178,18 @@ CrewAI-Studio-main/
 - **Startup Sequence**: Infrastructure-first startup with delays (from SOPs)
 - **Production Enhancements**: CircuitBreaker pattern + Enhanced Kafka Producer (operational)
 
+### 3.7. 🔭 OBSERVABILITY-AS-CODE IMPLEMENTATION (August 1, 2025)
+- **`auren-pwa/observability-as-code/README.md`** - Complete observability pipeline documentation
+- **`auren-pwa/observability-as-code/QUICK_START.md`** - 5-minute guide for adding metrics
+- **`auren-pwa/observability-as-code/TROUBLESHOOTING.md`** - Common issues and solutions
+- **`AUREN_DOCS/03_DEVELOPMENT/KPI_SYSTEM_ARCHITECTURE.md`** - KPI registry and bindings explained
+- **`scripts/generate_dashboards.py`** - Auto-generate Grafana dashboards from YAML
+- **`scripts/generate_recording_rules.py`** - Auto-generate Prometheus rules
+- **`scripts/generate_alerts.py`** - Auto-generate alert rules from thresholds
+- **`auren/api/metrics_bridge.py`** - Front-end API for selective metric display
+- **Metrics Bridge**: Port 8002 - Serves real-time metrics to front-end
+- **Achievement**: One YAML line → Complete observability (backend to frontend)
+
 ### 4. 🌐 PWA CONFIGURATION (LOCKED)
 - **`auren-pwa/vercel.json`** - Proxy routing configuration
 - **`auren-pwa/src/utils/api.js`** - API endpoint configuration
